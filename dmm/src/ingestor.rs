@@ -1,5 +1,7 @@
 use crate::db::Db;
 use crate::hashlist::{self, Hashlist, ParseError};
+use crate::log;
+use crate::logs::LogBuffer;
 use crate::title_parser;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
@@ -42,11 +44,12 @@ pub struct HashlistStatus {
 #[derive(Clone)]
 pub struct AppState {
     pub db: Db,
+    pub logs: LogBuffer,
 }
 
 impl AppState {
-    pub fn new(db: Db) -> Self {
-        Self { db }
+    pub fn new(db: Db, logs: LogBuffer) -> Self {
+        Self { db, logs }
     }
 
     pub fn is_processed(&self, name: &str) -> bool {
@@ -55,7 +58,7 @@ impl AppState {
 
     pub fn mark_processed(&self, name: &str) {
         if let Err(e) = self.db.mark_processed(name) {
-            println!("[ERROR] Failed to mark {name} as processed: {e}");
+            log!(self.logs, "[ERROR] Failed to mark {name} as processed: {e}");
         }
     }
 
@@ -91,7 +94,7 @@ impl AppState {
                     .collect();
 
                 if let Err(e) = self.db.insert_records(&records) {
-                    println!("[ERROR] Failed to insert records for {name}: {e}");
+                    log!(self.logs, "[ERROR] Failed to insert records for {name}: {e}");
                     return;
                 }
 
@@ -102,10 +105,10 @@ impl AppState {
                     processed_at: now,
                 };
                 if let Err(e) = self.db.insert_hashlist(&status) {
-                    println!("[ERROR] Failed to insert hashlist status for {name}: {e}");
+                    log!(self.logs, "[ERROR] Failed to insert hashlist status for {name}: {e}");
                 }
                 self.mark_processed(name);
-                println!("[OK] {name}: {count} records ingested");
+                log!(self.logs, "[OK] {name}: {count} records ingested");
             }
             Err(e) => {
                 let status = HashlistStatus {
@@ -115,9 +118,9 @@ impl AppState {
                     processed_at: now,
                 };
                 if let Err(db_err) = self.db.insert_hashlist(&status) {
-                    println!("[ERROR] Failed to insert error status for {name}: {db_err}");
+                    log!(self.logs, "[ERROR] Failed to insert error status for {name}: {db_err}");
                 }
-                println!("[ERROR] {name}: {e}");
+                log!(self.logs, "[ERROR] {name}: {e}");
             }
         }
     }
@@ -203,11 +206,8 @@ pub async fn run_ingest_loop(state: AppState, poll_interval: std::time::Duration
         .map(|n| n.get())
         .unwrap_or(4);
 
-    println!("[INGESTOR] Workers: {num_workers} (auto-detected CPU cores)");
-    println!(
-        "[INGESTOR] Poll interval: {}s",
-        poll_interval.as_secs()
-    );
+    log!(state.logs, "[INGESTOR] Workers: {num_workers} (auto-detected CPU cores)");
+    log!(state.logs, "[INGESTOR] Poll interval: {}s", poll_interval.as_secs());
 
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(30))
@@ -217,7 +217,7 @@ pub async fn run_ingest_loop(state: AppState, poll_interval: std::time::Duration
     let semaphore = Arc::new(Semaphore::new(num_workers));
 
     loop {
-        println!("\n[INGESTOR] Polling GitHub for new hashlists...");
+        log!(state.logs, "[INGESTOR] Polling GitHub for new hashlists...");
 
         match fetch_hashlist_names(&client).await {
             Ok(names) => {
@@ -227,9 +227,7 @@ pub async fn run_ingest_loop(state: AppState, poll_interval: std::time::Duration
                     .filter(|name| !state.is_processed(name))
                     .collect();
                 let new_count = new_names.len();
-                println!(
-                    "[INGESTOR] Found {total} hashlists total, {new_count} new to process"
-                );
+                log!(state.logs, "[INGESTOR] Found {total} hashlists total, {new_count} new to process");
 
                 if new_count > 0 {
                     let mut handles = Vec::with_capacity(new_count);
@@ -241,7 +239,6 @@ pub async fn run_ingest_loop(state: AppState, poll_interval: std::time::Duration
 
                         let handle = tokio::spawn(async move {
                             let result = fetch_and_parse_hashlist(&client, &name).await;
-                            // DB operations are sync but fast; run on blocking pool
                             let state_clone = state.clone();
                             let name_clone = name.clone();
                             tokio::task::spawn_blocking(move || {
@@ -262,38 +259,26 @@ pub async fn run_ingest_loop(state: AppState, poll_interval: std::time::Duration
                             Ok(()) => ok_count += 1,
                             Err(e) => {
                                 err_count += 1;
-                                println!("[ERROR] Task panicked: {e}");
+                                log!(state.logs, "[ERROR] Task panicked: {e}");
                             }
                         }
                     }
-                    println!(
-                        "[INGESTOR] Batch complete: {ok_count} succeeded, {err_count} failed"
-                    );
+                    log!(state.logs, "[INGESTOR] Batch complete: {ok_count} succeeded, {err_count} failed");
                 }
             }
             Err(e) => {
-                println!("[INGESTOR] Failed to poll GitHub: {e}");
+                log!(state.logs, "[INGESTOR] Failed to poll GitHub: {e}");
             }
         }
 
-        // Run the metadata enrichment pipeline (expand season packs via DHT)
         crate::pipeline::run_enrichment_pipeline(&state).await;
 
         let counts = state.db.count_records().unwrap_or(crate::db::RecordCounts {
-            total: 0,
-            movies: 0,
-            episodes: 0,
-            seasons: 0,
+            total: 0, movies: 0, episodes: 0, seasons: 0,
         });
         let hl_count = state.db.count_hashlists().unwrap_or(0);
-        println!(
-            "[INGESTOR] State: {} total records, {hl_count} hashlists processed",
-            counts.total
-        );
-        println!(
-            "[INGESTOR] Sleeping {}s until next poll...",
-            poll_interval.as_secs()
-        );
+        log!(state.logs, "[INGESTOR] State: {} total records, {hl_count} hashlists processed", counts.total);
+        log!(state.logs, "[INGESTOR] Sleeping {}s until next poll...", poll_interval.as_secs());
         tokio::time::sleep(poll_interval).await;
     }
 }
@@ -304,7 +289,7 @@ mod tests {
     use crate::hashlist::Hashlist;
 
     fn test_state() -> AppState {
-        AppState::new(Db::open_in_memory().unwrap())
+        AppState::new(Db::open_in_memory().unwrap(), LogBuffer::new())
     }
 
     // === GitHub Tree API response parsing ===

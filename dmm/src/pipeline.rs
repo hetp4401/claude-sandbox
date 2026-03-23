@@ -1,5 +1,7 @@
 use crate::dht::{self, TorrentFile};
 use crate::ingestor::{AppState, MagnetRecord};
+use crate::log;
+use crate::logs::LogBuffer;
 use crate::title_parser::{self, ContentType};
 use chrono::Utc;
 use std::sync::Arc;
@@ -48,6 +50,7 @@ pub fn parse_episode_from_file(file: &TorrentFile, parent_title: &str, parent_se
 async fn expand_season_pack(
     record: &MagnetRecord,
     dht_timeout: Duration,
+    logs: &LogBuffer,
 ) -> Vec<MagnetRecord> {
     let parent_title = match &record.title {
         Some(t) => t.clone(),
@@ -58,29 +61,18 @@ async fn expand_season_pack(
         None => return vec![],
     };
 
-    println!(
-        "[PIPELINE] Expanding season pack: {} S{:02} ({})",
-        parent_title, parent_season, &record.hash[..8]
-    );
+    log!(logs, "[PIPELINE] Expanding season pack: {} S{:02} ({})", parent_title, parent_season, &record.hash[..8]);
 
     let files = match dht::fetch_torrent_files(&record.hash, dht_timeout).await {
         Ok(f) => f,
         Err(e) => {
-            println!(
-                "[PIPELINE] DHT fetch failed for {}: {e}",
-                &record.hash[..8]
-            );
+            log!(logs, "[PIPELINE] DHT fetch failed for {}: {e}", &record.hash[..8]);
             return vec![];
         }
     };
 
     let video_files = filter_video_files(&files);
-    println!(
-        "[PIPELINE] Found {} files ({} video) in {}",
-        files.len(),
-        video_files.len(),
-        &record.hash[..8]
-    );
+    log!(logs, "[PIPELINE] Found {} files ({} video) in {}", files.len(), video_files.len(), &record.hash[..8]);
 
     let mut episodes = Vec::new();
     for file in video_files {
@@ -102,11 +94,7 @@ async fn expand_season_pack(
         }
     }
 
-    println!(
-        "[PIPELINE] Created {} episode records from season pack {}",
-        episodes.len(),
-        &record.hash[..8]
-    );
+    log!(logs, "[PIPELINE] Created {} episode records from season pack {}", episodes.len(), &record.hash[..8]);
 
     episodes
 }
@@ -123,7 +111,7 @@ pub async fn run_enrichment_pipeline(state: &AppState) {
     let season_packs = match state.db.get_unprocessed_season_packs() {
         Ok(packs) => packs,
         Err(e) => {
-            println!("[PIPELINE] Failed to query season packs: {e}");
+            log!(state.logs, "[PIPELINE] Failed to query season packs: {e}");
             return;
         }
     };
@@ -132,10 +120,7 @@ pub async fn run_enrichment_pipeline(state: &AppState) {
         return;
     }
 
-    println!(
-        "[PIPELINE] Found {} season packs to expand",
-        season_packs.len()
-    );
+    log!(state.logs, "[PIPELINE] Found {} season packs to expand", season_packs.len());
 
     let mut handles = Vec::new();
     for record in season_packs {
@@ -143,19 +128,18 @@ pub async fn run_enrichment_pipeline(state: &AppState) {
         let state = state.clone();
 
         let handle = tokio::spawn(async move {
-            let episodes = expand_season_pack(&record, dht_timeout).await;
+            let episodes = expand_season_pack(&record, dht_timeout, &state.logs).await;
             let hash = record.hash.clone();
 
-            // Insert episode records and mark season pack as processed
             let state_clone = state.clone();
             tokio::task::spawn_blocking(move || {
                 if !episodes.is_empty() {
                     if let Err(e) = state_clone.db.insert_records(&episodes) {
-                        println!("[PIPELINE] Failed to insert episodes: {e}");
+                        log!(state_clone.logs, "[PIPELINE] Failed to insert episodes: {e}");
                     }
                 }
                 if let Err(e) = state_clone.db.mark_season_pack_processed(&hash) {
-                    println!("[PIPELINE] Failed to mark season pack processed: {e}");
+                    log!(state_clone.logs, "[PIPELINE] Failed to mark season pack processed: {e}");
                 }
             })
             .await
@@ -174,14 +158,12 @@ pub async fn run_enrichment_pipeline(state: &AppState) {
             Ok(()) => ok_count += 1,
             Err(e) => {
                 err_count += 1;
-                println!("[PIPELINE] Task panicked: {e}");
+                log!(state.logs, "[PIPELINE] Task panicked: {e}");
             }
         }
     }
 
-    println!(
-        "[PIPELINE] Season expansion complete: {ok_count} succeeded, {err_count} failed"
-    );
+    log!(state.logs, "[PIPELINE] Season expansion complete: {ok_count} succeeded, {err_count} failed");
 }
 
 #[cfg(test)]
@@ -193,7 +175,7 @@ mod tests {
     use crate::ingestor::AppState;
 
     fn test_state() -> AppState {
-        AppState::new(Db::open_in_memory().unwrap())
+        AppState::new(Db::open_in_memory().unwrap(), LogBuffer::new())
     }
 
     // =====================================================================
