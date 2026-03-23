@@ -4,6 +4,7 @@ use crate::log;
 use crate::logs::LogBuffer;
 use crate::title_parser;
 use serde::Serialize;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use tokio::sync::Semaphore;
 
@@ -15,16 +16,45 @@ pub struct HashlistStatus {
     pub status: String,
 }
 
+/// Tracks which pipeline workers are actively processing.
+#[derive(Clone)]
+pub struct QueueActivity {
+    pub hashlist: Arc<AtomicBool>,
+    pub imdb: Arc<AtomicBool>,
+    pub singles: Arc<AtomicBool>,
+    pub packs: Arc<AtomicBool>,
+    pub dht: Arc<AtomicBool>,
+}
+
+impl QueueActivity {
+    pub fn new() -> Self {
+        Self {
+            hashlist: Arc::new(AtomicBool::new(false)),
+            imdb: Arc::new(AtomicBool::new(false)),
+            singles: Arc::new(AtomicBool::new(false)),
+            packs: Arc::new(AtomicBool::new(false)),
+            dht: Arc::new(AtomicBool::new(false)),
+        }
+    }
+}
+
 /// Shared application state backed by PostgreSQL.
 #[derive(Clone)]
 pub struct AppState {
     pub db: Db,
     pub logs: LogBuffer,
+    pub queues: QueueActivity,
+    pub metrics: crate::metrics::Metrics,
 }
 
 impl AppState {
     pub fn new(db: Db, logs: LogBuffer) -> Self {
-        Self { db, logs }
+        Self {
+            db,
+            logs,
+            queues: QueueActivity::new(),
+            metrics: crate::metrics::Metrics::new(),
+        }
     }
 
     pub async fn is_processed(&self, name: &str) -> bool {
@@ -96,6 +126,8 @@ impl AppState {
                     );
                 }
                 self.mark_processed(name).await;
+                self.metrics.bump("torrents_ingested", count as u64);
+                self.metrics.bump("hashlists_processed", 1);
                 log!(self.logs, "[OK] {name}: {count} records ingested");
             }
             Err(e) => {
@@ -191,36 +223,50 @@ async fn fetch_and_parse_hashlist(
     hashlist::parse_hashlist_html(&html)
 }
 
-/// Run the ingestion loop: poll GitHub, process new hashlists concurrently,
-/// then run IMDb resolution pipeline.
-pub async fn run_ingest_loop(
-    state: AppState,
-    resolver: crate::imdb_resolver::ImdbResolver,
-    poll_interval: std::time::Duration,
-) {
+/// Run the hashlist ingestion worker independently.
+/// Polls GitHub for new hashlists, fetches and parses them concurrently.
+pub async fn run_hashlist_worker(state: AppState, poll_interval: std::time::Duration) {
     let num_workers = std::thread::available_parallelism()
         .map(|n| n.get())
         .unwrap_or(4);
 
     log!(
         state.logs,
-        "[INGESTOR] Workers: {num_workers} (auto-detected CPU cores)"
-    );
-    log!(
-        state.logs,
-        "[INGESTOR] Poll interval: {}s",
+        "[HASHLIST-Q] Workers: {num_workers}, poll interval: {}s",
         poll_interval.as_secs()
     );
 
     let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(30))
+        .timeout(std::time::Duration::from_secs(120))
         .build()
         .expect("Failed to build HTTP client");
 
     let semaphore = Arc::new(Semaphore::new(num_workers));
 
     loop {
-        log!(state.logs, "[INGESTOR] Polling GitHub for new hashlists...");
+        // Check if manually paused
+        if state.metrics.controls.is_paused("hashlist") {
+            state.queues.hashlist.store(false, Ordering::Relaxed);
+            tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+            continue;
+        }
+
+        // Backpressure: if IMDb pipeline has >2000 pending, pause hashlist ingestion
+        if let Ok(depths) = state.db.get_queue_depths().await {
+            if depths.imdb.unresolved > 2000 {
+                log!(
+                    state.logs,
+                    "[HASHLIST-Q] Paused — {} IMDb unresolved (>2000), waiting...",
+                    depths.imdb.unresolved
+                );
+                state.queues.hashlist.store(false, Ordering::Relaxed);
+                tokio::time::sleep(std::time::Duration::from_secs(30)).await;
+                continue;
+            }
+        }
+
+        state.queues.hashlist.store(true, Ordering::Relaxed);
+        log!(state.logs, "[HASHLIST-Q] Polling GitHub for new hashlists...");
 
         match fetch_hashlist_names(&client).await {
             Ok(names) => {
@@ -234,7 +280,7 @@ pub async fn run_ingest_loop(
                 let new_count = new_names.len();
                 log!(
                     state.logs,
-                    "[INGESTOR] Found {total} hashlists total, {new_count} new to process"
+                    "[HASHLIST-Q] Found {total} total, {new_count} new to process"
                 );
 
                 if new_count > 0 {
@@ -267,34 +313,22 @@ pub async fn run_ingest_loop(
                     }
                     log!(
                         state.logs,
-                        "[INGESTOR] Batch complete: {ok_count} succeeded, {err_count} failed"
+                        "[HASHLIST-Q] Batch complete: {ok_count} succeeded, {err_count} failed"
                     );
                 }
             }
             Err(e) => {
-                log!(state.logs, "[INGESTOR] Failed to poll GitHub: {e}");
+                log!(state.logs, "[HASHLIST-Q] Failed to poll GitHub: {e}, retrying in 30s...");
+                state.queues.hashlist.store(false, Ordering::Relaxed);
+                tokio::time::sleep(std::time::Duration::from_secs(30)).await;
+                continue;
             }
         }
 
-        // Run IMDb resolution pipeline
-        crate::imdb_pipeline::run_imdb_pipeline(&state, &resolver).await;
-
-        let counts = state.db.counts().await.unwrap_or(crate::db::RecordCounts {
-            total_torrents: 0,
-            total_parsed: 0,
-            total_imdb: 0,
-        });
-        let hl_count = state.db.count_hashlists().await.unwrap_or(0);
+        state.queues.hashlist.store(false, Ordering::Relaxed);
         log!(
             state.logs,
-            "[INGESTOR] State: {} torrents, {} parsed, {} IMDb, {hl_count} hashlists",
-            counts.total_torrents,
-            counts.total_parsed,
-            counts.total_imdb
-        );
-        log!(
-            state.logs,
-            "[INGESTOR] Sleeping {}s until next poll...",
+            "[HASHLIST-Q] Sleeping {}s until next poll...",
             poll_interval.as_secs()
         );
         tokio::time::sleep(poll_interval).await;

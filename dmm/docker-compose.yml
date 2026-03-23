@@ -7,8 +7,8 @@ services:
       POSTGRES_PASSWORD: dmm
     ports:
       - "5432:5432"
-    volumes:
-      - pg-data:/var/lib/postgresql/data
+    tmpfs:
+      - /var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U dmm"]
       interval: 5s
@@ -24,6 +24,4 @@ services:
         condition: service_healthy
     environment:
       - DATABASE_URL=postgres://dmm:dmm@postgres:5432/dmm
-
-volumes:
-  pg-data:
+      - RD_API_KEY=VG4AOFSADDR4SAOHBJBGRA4LZYOSHZ3D52CZQZGMULAHUDV67VUA

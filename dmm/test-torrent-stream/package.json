@@ -1,0 +1,7 @@
+{
+  "name": "test-torrent-stream",
+  "private": true,
+  "dependencies": {
+    "torrent-stream": "^1.2.1"
+  }
+}

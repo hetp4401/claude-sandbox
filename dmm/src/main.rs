@@ -1,12 +1,19 @@
 mod db;
 mod dht;
+mod dht_worker;
 mod hashlist;
 mod imdb_pipeline;
 mod imdb_resolver;
 mod ingestor;
 mod logs;
+mod metrics;
+mod packs_worker;
 mod pipeline;
+mod qbit;
+mod rqbit_client;
+mod singles_worker;
 mod title_parser;
+mod torrent_cache;
 
 use axum::{extract::Query, extract::State, response::Html, routing::get, Router};
 use imdb_resolver::ImdbResolver;
@@ -80,6 +87,7 @@ async fn api_stats(State(state): State<AppState>) -> axum::Json<serde_json::Valu
         total_torrents: 0,
         total_parsed: 0,
         total_imdb: 0,
+        total_streams: 0,
     });
     let total_hl = state.db.count_hashlists().await.unwrap_or(0);
     let done_hl = state.db.count_hashlists_done().await.unwrap_or(0);
@@ -88,9 +96,69 @@ async fn api_stats(State(state): State<AppState>) -> axum::Json<serde_json::Valu
         "total_torrents": counts.total_torrents,
         "total_parsed": counts.total_parsed,
         "total_imdb": counts.total_imdb,
+        "total_streams": counts.total_streams,
         "total_hashlists": total_hl,
         "done_hashlists": done_hl,
     }))
+}
+
+async fn api_queues(State(state): State<AppState>) -> axum::Json<serde_json::Value> {
+    use std::sync::atomic::Ordering;
+
+    let zero = db::PipelineStats { unresolved: 0, completed: 0, failed: 0 };
+    let depths = state.db.get_queue_depths().await.unwrap_or(db::QueueDepths {
+        hashlist: zero.clone(), imdb: zero.clone(), singles: zero.clone(), packs: zero.clone(), dht: zero,
+    });
+
+    axum::Json(serde_json::json!({
+        "hashlist": {
+            "active": state.queues.hashlist.load(Ordering::Relaxed),
+            "unresolved": depths.hashlist.unresolved,
+            "completed": depths.hashlist.completed,
+            "failed": depths.hashlist.failed,
+        },
+        "imdb": {
+            "active": state.queues.imdb.load(Ordering::Relaxed),
+            "unresolved": depths.imdb.unresolved,
+            "completed": depths.imdb.completed,
+            "failed": depths.imdb.failed,
+        },
+        "singles": {
+            "active": state.queues.singles.load(Ordering::Relaxed),
+            "unresolved": depths.singles.unresolved,
+            "completed": depths.singles.completed,
+            "failed": depths.singles.failed,
+        },
+        "packs": {
+            "active": state.queues.packs.load(Ordering::Relaxed),
+            "unresolved": depths.packs.unresolved,
+            "completed": depths.packs.completed,
+            "failed": depths.packs.failed,
+        },
+        "dht": {
+            "active": state.queues.dht.load(Ordering::Relaxed),
+            "unresolved": depths.dht.unresolved,
+            "completed": depths.dht.completed,
+            "failed": depths.dht.failed,
+        },
+    }))
+}
+
+async fn api_streams(
+    State(state): State<AppState>,
+    Query(params): Query<PageQuery>,
+) -> axum::Json<serde_json::Value> {
+    let page = params.page.unwrap_or(1).max(1);
+    let per_page = params.per_page.unwrap_or(50).clamp(1, 200);
+    match state.db.get_streams_page(page, per_page).await {
+        Ok(p) => axum::Json(serde_json::json!({
+            "items": p.items,
+            "total": p.total,
+            "page": p.page,
+            "per_page": p.per_page,
+        })),
+        Err(e) => axum::Json(serde_json::json!({ "error": e.to_string() })),
+    }
 }
 
 #[derive(Deserialize)]
@@ -108,6 +176,67 @@ async fn api_logs(
         "lines": lines,
         "next": next,
     }))
+}
+
+async fn api_dht_queue(
+    State(state): State<AppState>,
+    Query(params): Query<PageQuery>,
+) -> axum::Json<serde_json::Value> {
+    let page = params.page.unwrap_or(1).max(1);
+    let per_page = params.per_page.unwrap_or(50).clamp(1, 200);
+    match state.db.get_dht_queue_page(page, per_page).await {
+        Ok(p) => axum::Json(serde_json::json!({
+            "items": p.items,
+            "total": p.total,
+            "page": p.page,
+            "per_page": p.per_page,
+        })),
+        Err(e) => axum::Json(serde_json::json!({ "error": e.to_string() })),
+    }
+}
+
+async fn api_metrics(State(state): State<AppState>) -> axum::Json<serde_json::Value> {
+    let histories = state.metrics.get_all().await;
+    axum::Json(serde_json::json!({ "counters": histories }))
+}
+
+#[derive(Deserialize)]
+struct PipelineAction {
+    pipeline: String,
+    action: String, // "pause" or "resume"
+}
+
+async fn api_pipeline_control(
+    State(state): State<AppState>,
+    axum::Json(body): axum::Json<PipelineAction>,
+) -> axum::Json<serde_json::Value> {
+    let paused = body.action == "pause";
+    state.metrics.controls.set_paused(&body.pipeline, paused);
+    log!(
+        state.logs,
+        "[CONTROL] {} {}",
+        body.pipeline,
+        if paused { "PAUSED" } else { "RESUMED" }
+    );
+    let status: Vec<_> = state
+        .metrics
+        .controls
+        .status()
+        .into_iter()
+        .map(|(name, enabled)| serde_json::json!({ "name": name, "enabled": enabled }))
+        .collect();
+    axum::Json(serde_json::json!({ "pipelines": status }))
+}
+
+async fn api_pipeline_status(State(state): State<AppState>) -> axum::Json<serde_json::Value> {
+    let status: Vec<_> = state
+        .metrics
+        .controls
+        .status()
+        .into_iter()
+        .map(|(name, enabled)| serde_json::json!({ "name": name, "enabled": enabled }))
+        .collect();
+    axum::Json(serde_json::json!({ "pipelines": status }))
 }
 
 #[tokio::main]
@@ -131,6 +260,9 @@ async fn main() {
 
     let state = AppState::new(database, log_buf);
 
+    // Start metrics snapshot task (every 60s)
+    state.metrics.clone().start_snapshot_task();
+
     // Build a shared HTTP client and IMDb resolver for the pipeline
     let http_client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(15))
@@ -138,15 +270,31 @@ async fn main() {
         .expect("Failed to build HTTP client");
     let resolver = ImdbResolver::new(http_client);
 
-    let ingest_state = state.clone();
-    let ingest_resolver = resolver.clone();
+    // Spawn 3 independent pipeline workers
+    let hl_state = state.clone();
     tokio::spawn(async move {
-        ingestor::run_ingest_loop(
-            ingest_state,
-            ingest_resolver,
-            std::time::Duration::from_secs(poll_secs),
-        )
-        .await;
+        ingestor::run_hashlist_worker(hl_state, std::time::Duration::from_secs(poll_secs)).await;
+    });
+
+    let imdb_state = state.clone();
+    let imdb_resolver = resolver.clone();
+    tokio::spawn(async move {
+        imdb_pipeline::run_imdb_worker(imdb_state, imdb_resolver).await;
+    });
+
+    let singles_state = state.clone();
+    tokio::spawn(async move {
+        singles_worker::run_singles_worker(singles_state).await;
+    });
+
+    let packs_state = state.clone();
+    tokio::spawn(async move {
+        packs_worker::run_packs_worker(packs_state).await;
+    });
+
+    let dht_state = state.clone();
+    tokio::spawn(async move {
+        dht_worker::run_dht_worker(dht_state).await;
     });
 
     log!(state.logs, "Starting web dashboard on http://0.0.0.0:3000");
@@ -156,8 +304,14 @@ async fn main() {
         .route("/api/torrents", get(api_torrents))
         .route("/api/parsed", get(api_parsed))
         .route("/api/imdb", get(api_imdb))
+        .route("/api/streams", get(api_streams))
         .route("/api/stats", get(api_stats))
+        .route("/api/queues", get(api_queues))
         .route("/api/logs", get(api_logs))
+        .route("/api/dht-queue", get(api_dht_queue))
+        .route("/api/metrics", get(api_metrics))
+        .route("/api/pipelines", get(api_pipeline_status))
+        .route("/api/pipelines/control", axum::routing::post(api_pipeline_control))
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
@@ -178,6 +332,32 @@ const DASHBOARD_HTML: &str = r##"<!DOCTYPE html>
   .stat { background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 14px 20px; min-width: 110px; }
   .stat .num { font-size: 1.8em; font-weight: bold; color: #58a6ff; }
   .stat .label { color: #8b949e; font-size: 0.82em; }
+
+  .queues { display: flex; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
+  .queue-card { background: #161b22; border: 1px solid #21262d; border-radius: 10px; padding: 16px 20px;
+                flex: 1; min-width: 220px; }
+  .q-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .q-name { font-weight: 600; font-size: 0.95em; color: #c9d1d9; }
+  .q-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .q-dot.active { background: #3fb950; animation: pulse 2s infinite; }
+  .q-dot.idle { background: #484f58; }
+  .q-status { font-size: 0.75em; color: #8b949e; margin-left: auto; text-transform: uppercase;
+              letter-spacing: 0.05em; font-weight: 500; }
+  .q-status.active { color: #3fb950; }
+  .q-rows { display: flex; flex-direction: column; gap: 6px; }
+  .q-row { display: flex; justify-content: space-between; align-items: center; }
+  .q-label { color: #8b949e; font-size: 0.82em; }
+  .q-val { font-weight: 600; font-size: 0.95em; }
+  .q-val.pending { color: #d29922; }
+  .q-val.done { color: #3fb950; }
+  .q-val.failed { color: #f85149; }
+  .q-bar { height: 4px; background: #21262d; border-radius: 2px; margin-top: 10px; overflow: hidden; }
+  .q-bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
+  .q-bar-fill.green { background: linear-gradient(90deg, #238636, #3fb950); }
+  .q-bar-fill.yellow { background: linear-gradient(90deg, #9e6a03, #d29922); }
+
+  .section-label { color: #8b949e; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.08em;
+                   margin-bottom: 8px; font-weight: 600; }
 
   .tabs { display: flex; gap: 0; margin-bottom: 0; border-bottom: 2px solid #21262d; }
   .tab { padding: 10px 24px; cursor: pointer; color: #8b949e; font-size: 0.9em; font-weight: 500;
@@ -208,6 +388,7 @@ const DASHBOARD_HTML: &str = r##"<!DOCTYPE html>
   .imdb-link:hover { text-decoration: underline; }
   .tbl-wrap { max-height: 600px; overflow-y: auto; border-radius: 8px; }
   .empty { color: #484f58; padding: 40px; text-align: center; font-size: 0.95em; }
+  .loading-msg { color: #8b949e; padding: 40px; text-align: center; font-size: 0.95em; }
 
   .pagination { display: flex; align-items: center; gap: 8px; margin-top: 12px; justify-content: center; }
   .pagination button { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; border-radius: 6px;
@@ -215,6 +396,8 @@ const DASHBOARD_HTML: &str = r##"<!DOCTYPE html>
   .pagination button:hover:not(:disabled) { background: #30363d; }
   .pagination button:disabled { opacity: 0.4; cursor: default; }
   .pagination .page-info { color: #8b949e; font-size: 0.85em; }
+  .pagination select { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; border-radius: 6px;
+                        padding: 4px 8px; font-size: 0.82em; }
 
   #log-box { background: #0d1117; border: 1px solid #21262d; border-radius: 8px; padding: 12px;
              font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.8em; line-height: 1.6;
@@ -242,31 +425,133 @@ const DASHBOARD_HTML: &str = r##"<!DOCTYPE html>
 
 <div class="stats" id="stats"></div>
 
+<div class="section-label">Pipeline Queues</div>
+<div class="queues" id="queues">
+  <div class="queue-card" id="q-hashlist">
+    <div class="q-header">
+      <span class="q-dot idle" id="q-hashlist-dot"></span>
+      <span class="q-name">Hashlist Ingestion</span>
+      <span class="q-status" id="q-hashlist-status">idle</span>
+    </div>
+    <div class="q-rows">
+      <div class="q-row"><span class="q-label">Unresolved</span><span class="q-val pending" id="q-hashlist-unresolved">-</span></div>
+      <div class="q-row"><span class="q-label">Completed</span><span class="q-val done" id="q-hashlist-completed">-</span></div>
+      <div class="q-row"><span class="q-label">Failed</span><span class="q-val failed" id="q-hashlist-failed">-</span></div>
+    </div>
+    <div class="q-bar"><div class="q-bar-fill green" id="q-hashlist-bar" style="width:0%"></div></div>
+  </div>
+  <div class="queue-card" id="q-imdb">
+    <div class="q-header">
+      <span class="q-dot idle" id="q-imdb-dot"></span>
+      <span class="q-name">IMDb Resolution</span>
+      <span class="q-status" id="q-imdb-status">idle</span>
+    </div>
+    <div class="q-rows">
+      <div class="q-row"><span class="q-label">Unresolved</span><span class="q-val pending" id="q-imdb-unresolved">-</span></div>
+      <div class="q-row"><span class="q-label">Completed</span><span class="q-val done" id="q-imdb-completed">-</span></div>
+      <div class="q-row"><span class="q-label">Failed</span><span class="q-val failed" id="q-imdb-failed">-</span></div>
+    </div>
+    <div class="q-bar"><div class="q-bar-fill green" id="q-imdb-bar" style="width:0%"></div></div>
+  </div>
+  <div class="queue-card" id="q-singles">
+    <div class="q-header">
+      <span class="q-dot idle" id="q-singles-dot"></span>
+      <span class="q-name">Singles (Movies+Episodes)</span>
+      <span class="q-status" id="q-singles-status">idle</span>
+    </div>
+    <div class="q-rows">
+      <div class="q-row"><span class="q-label">Unresolved</span><span class="q-val pending" id="q-singles-unresolved">-</span></div>
+      <div class="q-row"><span class="q-label">Completed</span><span class="q-val done" id="q-singles-completed">-</span></div>
+    </div>
+    <div class="q-bar"><div class="q-bar-fill green" id="q-singles-bar" style="width:0%"></div></div>
+  </div>
+  <div class="queue-card" id="q-packs">
+    <div class="q-header">
+      <span class="q-dot idle" id="q-packs-dot"></span>
+      <span class="q-name">Season Packs (Cache)</span>
+      <span class="q-status" id="q-packs-status">idle</span>
+    </div>
+    <div class="q-rows">
+      <div class="q-row"><span class="q-label">Unresolved</span><span class="q-val pending" id="q-packs-unresolved">-</span></div>
+      <div class="q-row"><span class="q-label">Completed</span><span class="q-val done" id="q-packs-completed">-</span></div>
+    </div>
+    <div class="q-bar"><div class="q-bar-fill green" id="q-packs-bar" style="width:0%"></div></div>
+  </div>
+  <div class="queue-card" id="q-dht">
+    <div class="q-header">
+      <span class="q-dot idle" id="q-dht-dot"></span>
+      <span class="q-name">Unpack Queue (Swarm)</span>
+      <span class="q-status" id="q-dht-status">idle</span>
+    </div>
+    <div class="q-rows">
+      <div class="q-row"><span class="q-label">Unresolved</span><span class="q-val pending" id="q-dht-unresolved">-</span></div>
+      <div class="q-row"><span class="q-label">Completed</span><span class="q-val done" id="q-dht-completed">-</span></div>
+      <div class="q-row"><span class="q-label">Failed</span><span class="q-val failed" id="q-dht-failed">-</span></div>
+    </div>
+    <div class="q-bar"><div class="q-bar-fill green" id="q-dht-bar" style="width:0%"></div></div>
+  </div>
+</div>
+
 <div class="tabs">
   <div class="tab active" data-tab="torrents">Torrents</div>
   <div class="tab" data-tab="parsed">Parsed Metadata</div>
   <div class="tab" data-tab="imdb">IMDb Mappings</div>
+  <div class="tab" data-tab="streams">Streams</div>
+  <div class="tab" data-tab="dht-queue">Unpack Queue</div>
+  <div class="tab" data-tab="metrics">Metrics</div>
   <div class="tab" data-tab="logs">Logs</div>
 </div>
 
 <div id="tab-torrents" class="tab-content active">
   <div class="tab-panel">
-    <div class="tbl-wrap" id="torrents-table"></div>
+    <div class="tbl-wrap" id="torrents-table"><div class="loading-msg">Loading...</div></div>
     <div class="pagination" id="torrents-pag"></div>
   </div>
 </div>
 
 <div id="tab-parsed" class="tab-content">
   <div class="tab-panel">
-    <div class="tbl-wrap" id="parsed-table"></div>
+    <div class="tbl-wrap" id="parsed-table"><div class="loading-msg">Click to load</div></div>
     <div class="pagination" id="parsed-pag"></div>
   </div>
 </div>
 
 <div id="tab-imdb" class="tab-content">
   <div class="tab-panel">
-    <div class="tbl-wrap" id="imdb-table"></div>
+    <div class="tbl-wrap" id="imdb-table"><div class="loading-msg">Click to load</div></div>
     <div class="pagination" id="imdb-pag"></div>
+  </div>
+</div>
+
+<div id="tab-streams" class="tab-content">
+  <div class="tab-panel">
+    <div class="tbl-wrap" id="streams-table"><div class="loading-msg">Click to load</div></div>
+    <div class="pagination" id="streams-pag"></div>
+  </div>
+</div>
+
+<div id="tab-dht-queue" class="tab-content">
+  <div class="tab-panel">
+    <div class="tbl-wrap" id="dht-table"><div class="loading-msg">Click to load</div></div>
+    <div class="pagination" id="dht-pag"></div>
+  </div>
+</div>
+
+<div id="tab-metrics" class="tab-content">
+  <div class="tab-panel">
+    <div class="section-label">Pipeline Controls</div>
+    <div id="pipeline-controls" style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap"></div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <span class="section-label" style="margin-bottom:0">Throughput (per minute)</span>
+      <select id="metrics-window" onchange="loadMetrics()" style="background:#21262d;color:#c9d1d9;border:1px solid #30363d;border-radius:6px;padding:4px 10px;font-size:0.82em">
+        <option value="1">Last 1 min</option>
+        <option value="5">Last 5 min</option>
+        <option value="30" selected>Last 30 min</option>
+        <option value="60">Last 60 min</option>
+      </select>
+      <label style="color:#8b949e;font-size:0.82em"><input type="checkbox" id="metrics-autorefresh" checked> Auto-refresh (5s)</label>
+    </div>
+    <div id="metrics-charts"></div>
   </div>
 </div>
 
@@ -283,14 +568,18 @@ const DASHBOARD_HTML: &str = r##"<!DOCTYPE html>
 
 <script>
 let torrentsPage = 1, parsedPage = 1, imdbPage = 1;
-const PER_PAGE = 50;
+let perPage = 25;
+let activeTab = 'torrents';
+const tabLoaded = { torrents: false, parsed: false, imdb: false, streams: false, 'dht-queue': false, metrics: false, logs: false };
 
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     tab.classList.add('active');
-    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+    activeTab = tab.dataset.tab;
+    document.getElementById('tab-' + activeTab).classList.add('active');
+    loadActiveTab();
   });
 });
 
@@ -301,21 +590,74 @@ function esc(s) {
 }
 
 function fmtSize(bytes) {
-  const gb = 1073741824, mb = 1048576;
-  return bytes >= gb ? (bytes / gb).toFixed(2) + ' GB' : (bytes / mb).toFixed(2) + ' MB';
+  if (bytes == null || bytes === 0) return '0 B';
+  const gb = 1073741824, mb = 1048576, kb = 1024;
+  if (bytes >= gb) return (bytes / gb).toFixed(2) + ' GB';
+  if (bytes >= mb) return (bytes / mb).toFixed(1) + ' MB';
+  return (bytes / kb).toFixed(0) + ' KB';
 }
 
 function fmtTime(iso) {
   try { return new Date(iso).toLocaleString(); } catch(e) { return iso; }
 }
 
-function renderPagination(containerId, page, total, perPage, onPageChange) {
-  const totalPages = Math.max(1, Math.ceil(total / perPage));
+function fmtNum(n) {
+  return (n || 0).toLocaleString();
+}
+
+function renderPagination(containerId, page, total, pp, onPageFn) {
+  const totalPages = Math.max(1, Math.ceil(total / pp));
   const el = document.getElementById(containerId);
+  const pageSizes = [25, 50, 100];
+  const opts = pageSizes.map(s => `<option value="${s}" ${s === pp ? 'selected' : ''}>${s}/page</option>`).join('');
   el.innerHTML = `
-    <button ${page <= 1 ? 'disabled' : ''} onclick="(${onPageChange})(${page - 1})">Prev</button>
-    <span class="page-info">Page ${page} of ${totalPages} (${total} total)</span>
-    <button ${page >= totalPages ? 'disabled' : ''} onclick="(${onPageChange})(${page + 1})">Next</button>`;
+    <button ${page <= 1 ? 'disabled' : ''} onclick="${onPageFn}(1)">First</button>
+    <button ${page <= 1 ? 'disabled' : ''} onclick="${onPageFn}(${page - 1})">Prev</button>
+    <span class="page-info">Page ${page} of ${fmtNum(totalPages)} (${fmtNum(total)} rows)</span>
+    <button ${page >= totalPages ? 'disabled' : ''} onclick="${onPageFn}(${page + 1})">Next</button>
+    <button ${page >= totalPages ? 'disabled' : ''} onclick="${onPageFn}(${totalPages})">Last</button>
+    <select onchange="perPage=+this.value;${onPageFn}(1)">${opts}</select>`;
+}
+
+function setQueueCard(prefix, data) {
+  const dot = document.getElementById(prefix + '-dot');
+  const status = document.getElementById(prefix + '-status');
+  if (data.active) {
+    dot.className = 'q-dot active';
+    status.className = 'q-status active';
+    status.textContent = 'active';
+  } else {
+    dot.className = 'q-dot idle';
+    status.className = 'q-status';
+    status.textContent = 'idle';
+  }
+
+  const unEl = document.getElementById(prefix + '-unresolved');
+  const compEl = document.getElementById(prefix + '-completed');
+  const failEl = document.getElementById(prefix + '-failed');
+  if (unEl) unEl.textContent = fmtNum(data.unresolved);
+  if (compEl) compEl.textContent = fmtNum(data.completed);
+  if (failEl) failEl.textContent = fmtNum(data.failed);
+
+  const bar = document.getElementById(prefix + '-bar');
+  if (bar) {
+    const total = (data.completed || 0) + (data.unresolved || 0) + (data.failed || 0);
+    const pct = total > 0 ? Math.round(((data.completed || 0) / total) * 100) : 0;
+    bar.style.width = pct + '%';
+    bar.className = 'q-bar-fill ' + (pct >= 80 ? 'green' : 'yellow');
+  }
+}
+
+async function loadQueues() {
+  try {
+    const r = await fetch('/api/queues');
+    const q = await r.json();
+    setQueueCard('q-hashlist', q.hashlist);
+    setQueueCard('q-imdb', q.imdb);
+    setQueueCard('q-singles', q.singles);
+    setQueueCard('q-packs', q.packs);
+    setQueueCard('q-dht', q.dht);
+  } catch(e) {}
 }
 
 async function loadStats() {
@@ -323,13 +665,13 @@ async function loadStats() {
     const r = await fetch('/api/stats');
     const s = await r.json();
     document.getElementById('stats').innerHTML = `
-      <div class="stat"><div class="num">${s.total_torrents}</div><div class="label">Torrents</div></div>
-      <div class="stat"><div class="num">${s.total_parsed}</div><div class="label">Parsed</div></div>
-      <div class="stat"><div class="num">${s.total_imdb}</div><div class="label">IMDb</div></div>
-      <div class="stat"><div class="num">${s.total_hashlists}</div><div class="label">Hashlists</div></div>
-      <div class="stat"><div class="num">${s.done_hashlists}</div><div class="label">Done</div></div>`;
+      <div class="stat"><div class="num">${fmtNum(s.total_torrents)}</div><div class="label">Torrents</div></div>
+      <div class="stat"><div class="num">${fmtNum(s.total_parsed)}</div><div class="label">Parsed</div></div>
+      <div class="stat"><div class="num">${fmtNum(s.total_imdb)}</div><div class="label">IMDb Mapped</div></div>
+      <div class="stat"><div class="num">${fmtNum(s.total_streams)}</div><div class="label">Streams</div></div>
+      <div class="stat"><div class="num">${fmtNum(s.total_hashlists)}</div><div class="label">Hashlists</div></div>`;
     document.getElementById('subtitle').textContent =
-      `${s.total_torrents} torrents, ${s.total_parsed} parsed, ${s.total_imdb} IMDb mapped, ${s.total_hashlists} hashlists`;
+      `${fmtNum(s.total_torrents)} torrents | ${fmtNum(s.total_parsed)} parsed | ${fmtNum(s.total_imdb)} IMDb | ${fmtNum(s.total_streams)} streams`;
   } catch(e) {
     document.getElementById('subtitle').textContent = 'Failed to load stats';
   }
@@ -337,8 +679,9 @@ async function loadStats() {
 
 async function loadTorrents(page) {
   if (page !== undefined) torrentsPage = page;
+  document.getElementById('torrents-table').innerHTML = '<div class="loading-msg">Loading...</div>';
   try {
-    const r = await fetch(`/api/torrents?page=${torrentsPage}&per_page=${PER_PAGE}`);
+    const r = await fetch(`/api/torrents?page=${torrentsPage}&per_page=${perPage}`);
     const data = await r.json();
     if (!data.items || data.items.length === 0) {
       document.getElementById('torrents-table').innerHTML = '<div class="empty">No torrents yet</div>';
@@ -348,15 +691,16 @@ async function loadTorrents(page) {
     let html = `<table><tr><th>Hash</th><th>Filename</th><th>Size</th><th>Last Updated</th></tr>`;
     for (const t of data.items) {
       html += `<tr>
-        <td><code>${esc(t.hash.slice(0,12))}</code></td>
-        <td class="fn">${esc(t.filename)}</td>
+        <td><code>${esc(t.hash.slice(0,16))}</code></td>
+        <td class="fn" title="${esc(t.filename)}">${esc(t.filename)}</td>
         <td>${fmtSize(t.size_bytes)}</td>
         <td class="ts">${fmtTime(t.last_updated)}</td>
       </tr>`;
     }
     html += '</table>';
     document.getElementById('torrents-table').innerHTML = html;
-    renderPagination('torrents-pag', data.page, data.total, data.per_page, loadTorrents);
+    renderPagination('torrents-pag', data.page, data.total, data.per_page, 'loadTorrents');
+    tabLoaded.torrents = true;
   } catch(e) {
     document.getElementById('torrents-table').innerHTML = '<div class="empty">Failed to load torrents</div>';
   }
@@ -364,28 +708,30 @@ async function loadTorrents(page) {
 
 async function loadParsed(page) {
   if (page !== undefined) parsedPage = page;
+  document.getElementById('parsed-table').innerHTML = '<div class="loading-msg">Loading...</div>';
   try {
-    const r = await fetch(`/api/parsed?page=${parsedPage}&per_page=${PER_PAGE}`);
+    const r = await fetch(`/api/parsed?page=${parsedPage}&per_page=${perPage}`);
     const data = await r.json();
     if (!data.items || data.items.length === 0) {
       document.getElementById('parsed-table').innerHTML = '<div class="empty">No parsed metadata yet</div>';
       document.getElementById('parsed-pag').innerHTML = '';
       return;
     }
-    let html = `<table><tr><th>Hash</th><th>Title</th><th>Year</th><th>Season</th><th>Episode</th><th>Last Updated</th></tr>`;
+    let html = `<table><tr><th>Hash</th><th>Title</th><th>Year</th><th>S</th><th>E</th><th>Last Updated</th></tr>`;
     for (const p of data.items) {
       html += `<tr>
-        <td><code>${esc(p.hash.slice(0,12))}</code></td>
-        <td>${esc(p.title)}</td>
-        <td>${p.year != null ? p.year : '\u2014'}</td>
-        <td>${p.season != null ? p.season : '\u2014'}</td>
-        <td>${p.episode != null ? p.episode : '\u2014'}</td>
+        <td><code>${esc(p.hash.slice(0,16))}</code></td>
+        <td class="fn" title="${esc(p.title)}">${esc(p.title)}</td>
+        <td>${p.year != null ? p.year : '-'}</td>
+        <td>${p.season != null ? p.season : '-'}</td>
+        <td>${p.episode != null ? p.episode : '-'}</td>
         <td class="ts">${fmtTime(p.last_updated)}</td>
       </tr>`;
     }
     html += '</table>';
     document.getElementById('parsed-table').innerHTML = html;
-    renderPagination('parsed-pag', data.page, data.total, data.per_page, loadParsed);
+    renderPagination('parsed-pag', data.page, data.total, data.per_page, 'loadParsed');
+    tabLoaded.parsed = true;
   } catch(e) {
     document.getElementById('parsed-table').innerHTML = '<div class="empty">Failed to load parsed metadata</div>';
   }
@@ -393,27 +739,186 @@ async function loadParsed(page) {
 
 async function loadImdb(page) {
   if (page !== undefined) imdbPage = page;
+  document.getElementById('imdb-table').innerHTML = '<div class="loading-msg">Loading...</div>';
   try {
-    const r = await fetch(`/api/imdb?page=${imdbPage}&per_page=${PER_PAGE}`);
+    const r = await fetch(`/api/imdb?page=${imdbPage}&per_page=${perPage}`);
     const data = await r.json();
     if (!data.items || data.items.length === 0) {
       document.getElementById('imdb-table').innerHTML = '<div class="empty">No IMDb mappings yet</div>';
       document.getElementById('imdb-pag').innerHTML = '';
       return;
     }
-    let html = `<table><tr><th>Hash</th><th>IMDb ID</th><th>Last Updated</th></tr>`;
+    let html = `<table><tr><th>Hash</th><th>IMDb ID</th><th>Type</th><th>Last Updated</th></tr>`;
     for (const m of data.items) {
+      const badge = m.content_type === 'series'
+        ? '<span style="color:#58a6ff;font-weight:600">series</span>'
+        : '<span style="color:#d29922;font-weight:600">movie</span>';
       html += `<tr>
-        <td><code>${esc(m.hash.slice(0,12))}</code></td>
+        <td><code>${esc(m.hash.slice(0,16))}</code></td>
         <td><a class="imdb-link" href="https://www.imdb.com/title/${esc(m.imdb_id)}/" target="_blank" rel="noopener">${esc(m.imdb_id)}</a></td>
+        <td>${badge}</td>
         <td class="ts">${fmtTime(m.last_updated)}</td>
       </tr>`;
     }
     html += '</table>';
     document.getElementById('imdb-table').innerHTML = html;
-    renderPagination('imdb-pag', data.page, data.total, data.per_page, loadImdb);
+    renderPagination('imdb-pag', data.page, data.total, data.per_page, 'loadImdb');
+    tabLoaded.imdb = true;
   } catch(e) {
     document.getElementById('imdb-table').innerHTML = '<div class="empty">Failed to load IMDb mappings</div>';
+  }
+}
+
+let streamsPage = 1;
+
+async function loadStreams(page) {
+  if (page !== undefined) streamsPage = page;
+  document.getElementById('streams-table').innerHTML = '<div class="loading-msg">Loading...</div>';
+  try {
+    const r = await fetch(`/api/streams?page=${streamsPage}&per_page=${perPage}`);
+    const data = await r.json();
+    if (!data.items || data.items.length === 0) {
+      document.getElementById('streams-table').innerHTML = '<div class="empty">No streams yet</div>';
+      document.getElementById('streams-pag').innerHTML = '';
+      return;
+    }
+    let html = `<table><tr><th>Hash</th><th>Filename</th><th>IMDb</th><th>Type</th><th>Size</th><th>Idx</th><th>S</th><th>E</th><th>Updated</th></tr>`;
+    for (const s of data.items) {
+      const badge = s.stream_type === 'series'
+        ? '<span style="color:#58a6ff;font-weight:600">series</span>'
+        : '<span style="color:#d29922;font-weight:600">movie</span>';
+      html += `<tr>
+        <td><code>${esc(s.torrent_hash.slice(0,12))}</code></td>
+        <td class="fn" title="${esc(s.filename)}">${esc(s.filename)}</td>
+        <td><a class="imdb-link" href="https://www.imdb.com/title/${esc(s.imdb_id)}/" target="_blank" rel="noopener">${esc(s.imdb_id)}</a></td>
+        <td>${badge}</td>
+        <td>${fmtSize(s.size_bytes)}</td>
+        <td>${s.file_index != null ? s.file_index : '-'}</td>
+        <td>${s.season != null ? s.season : '-'}</td>
+        <td>${s.episode != null ? s.episode : '-'}</td>
+        <td class="ts">${fmtTime(s.last_updated)}</td>
+      </tr>`;
+    }
+    html += '</table>';
+    document.getElementById('streams-table').innerHTML = html;
+    renderPagination('streams-pag', data.page, data.total, data.per_page, 'loadStreams');
+    tabLoaded.streams = true;
+  } catch(e) {
+    document.getElementById('streams-table').innerHTML = '<div class="empty">Failed to load streams</div>';
+  }
+}
+
+let dhtPage = 1;
+
+async function loadDhtQueue(page) {
+  if (page !== undefined) dhtPage = page;
+  document.getElementById('dht-table').innerHTML = '<div class="loading-msg">Loading...</div>';
+  try {
+    const r = await fetch(`/api/dht-queue?page=${dhtPage}&per_page=${perPage}`);
+    const data = await r.json();
+    if (!data.items || data.items.length === 0) {
+      document.getElementById('dht-table').innerHTML = '<div class="empty">No unpack queue entries</div>';
+      document.getElementById('dht-pag').innerHTML = '';
+      return;
+    }
+    let html = `<table><tr><th>Hash</th><th>Filename</th><th>IMDb</th><th>Season</th><th>Attempts</th><th>Status</th><th>Last Attempt</th><th>Created</th></tr>`;
+    for (const d of data.items) {
+      const statusColor = d.status === 'resolved' ? '#3fb950' : d.status === 'lost' ? '#f85149' : '#d29922';
+      html += `<tr>
+        <td><code>${esc(d.hash.slice(0,12))}</code></td>
+        <td class="fn" title="${esc(d.filename)}">${esc(d.filename)}</td>
+        <td><a class="imdb-link" href="https://www.imdb.com/title/${esc(d.imdb_id)}/" target="_blank" rel="noopener">${esc(d.imdb_id)}</a></td>
+        <td>${d.season}</td>
+        <td>${d.attempts}</td>
+        <td><span style="color:${statusColor};font-weight:600">${d.status}</span></td>
+        <td class="ts">${d.last_attempt ? fmtTime(d.last_attempt) : '-'}</td>
+        <td class="ts">${fmtTime(d.created_at)}</td>
+      </tr>`;
+    }
+    html += '</table>';
+    document.getElementById('dht-table').innerHTML = html;
+    renderPagination('dht-pag', data.page, data.total, data.per_page, 'loadDhtQueue');
+  } catch(e) {
+    document.getElementById('dht-table').innerHTML = '<div class="empty">Failed to load unpack queue</div>';
+  }
+}
+
+async function loadMetrics() {
+  try {
+    // Load pipeline controls
+    const pr = await fetch('/api/pipelines');
+    const ps = await pr.json();
+    const ctrlEl = document.getElementById('pipeline-controls');
+    ctrlEl.innerHTML = ps.pipelines.map(p => {
+      const color = p.enabled ? '#3fb950' : '#f85149';
+      const label = p.enabled ? 'Running' : 'Paused';
+      const action = p.enabled ? 'pause' : 'resume';
+      return `<div style="background:#161b22;border:1px solid #21262d;border-radius:8px;padding:12px 18px;min-width:140px">
+        <div style="font-weight:600;font-size:0.9em;color:#c9d1d9;margin-bottom:8px">${esc(p.name)}</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="color:${color};font-size:0.82em;font-weight:600">${label}</span>
+          <button onclick="togglePipeline('${p.name}','${action}')"
+            style="background:${p.enabled ? '#f8514922' : '#3fb95022'};color:${p.enabled ? '#f85149' : '#3fb950'};
+            border:1px solid ${p.enabled ? '#f8514944' : '#3fb95044'};border-radius:6px;padding:4px 12px;
+            cursor:pointer;font-size:0.78em;font-weight:600">${p.enabled ? 'Pause' : 'Resume'}</button>
+        </div>
+      </div>`;
+    }).join('');
+
+    // Load metrics charts
+    const mr = await fetch('/api/metrics');
+    const md = await mr.json();
+    const chartsEl = document.getElementById('metrics-charts');
+    const window = parseInt(document.getElementById('metrics-window').value) || 30;
+    chartsEl.innerHTML = md.counters.map(c => {
+      const pts = c.points.slice(-window);
+      const windowTotal = pts.reduce((a, b) => a + b, 0);
+      const w = 480, h = 60, pad = 2;
+      const max = Math.max(...pts, 1);
+      const coords = pts.map((v, i) => {
+        const x = pad + (i / (pts.length - 1 || 1)) * (w - pad * 2);
+        const y = h - pad - (v / max) * (h - pad * 2);
+        return `${x},${y}`;
+      });
+      const line = coords.join(' ');
+      const area = `${pad},${h - pad} ${line} ${w - pad},${h - pad}`;
+      const lastPt = coords.length > 0 ? coords[coords.length - 1].split(',') : null;
+      const svg = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="width:100%;height:${h}px">
+        <polygon points="${area}" fill="#58a6ff11" />
+        <polyline points="${line}" fill="none" stroke="#58a6ff" stroke-width="1.5" stroke-linejoin="round" />
+        ${lastPt ? `<circle cx="${lastPt[0]}" cy="${lastPt[1]}" r="3" fill="#58a6ff" />` : ''}
+      </svg>`;
+      return `<div style="background:#161b22;border:1px solid #21262d;border-radius:8px;padding:14px 18px;margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-weight:600;font-size:0.88em;color:#c9d1d9">${esc(c.name)}</span>
+          <span style="font-size:0.82em;color:#8b949e">last ${window}m: <b style="color:#58a6ff">${fmtNum(windowTotal)}</b> | total: <b style="color:#3fb950">${fmtNum(c.total)}</b></span>
+        </div>
+        ${svg}
+      </div>`;
+    }).join('');
+  } catch(e) {
+    document.getElementById('metrics-charts').innerHTML = '<div class="empty">Failed to load metrics</div>';
+  }
+}
+
+async function togglePipeline(name, action) {
+  await fetch('/api/pipelines/control', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({pipeline: name, action: action})
+  });
+  loadMetrics();
+}
+
+function loadActiveTab() {
+  switch(activeTab) {
+    case 'torrents': loadTorrents(); break;
+    case 'parsed': loadParsed(); break;
+    case 'imdb': loadImdb(); break;
+    case 'streams': loadStreams(); break;
+    case 'dht-queue': loadDhtQueue(); break;
+    case 'metrics': loadMetrics(); break;
+    case 'logs': if (!tabLoaded.logs) { tabLoaded.logs = true; pollLogs(); } break;
   }
 }
 
@@ -429,7 +934,7 @@ async function pollLogs() {
         if (line.includes('[OK]')) span.className = 'log-ok';
         else if (line.includes('[ERROR]')) span.className = 'log-err';
         else if (line.includes('[WARN]')) span.className = 'log-warn';
-        else if (line.includes('[INGESTOR]') || line.includes('[PIPELINE]') || line.includes('[IMDB]')) span.className = 'log-info';
+        else if (line.match(/\[(HASHLIST-Q|IMDB-Q|SINGLES-Q|PACKS-Q|UNPACK-Q|INGESTOR|PIPELINE|IMDB)\]/)) span.className = 'log-info';
         span.textContent = line;
         box.appendChild(span);
       }
@@ -448,25 +953,36 @@ async function refreshAll() {
   const btn = document.getElementById('refresh-btn');
   btn.classList.add('loading');
   btn.textContent = 'Loading...';
-  await Promise.all([loadStats(), loadTorrents(), loadParsed(), loadImdb(), pollLogs()]);
+  await Promise.all([loadStats(), loadQueues(), loadActiveTab()]);
   btn.classList.remove('loading');
   btn.textContent = 'Refresh';
 }
 
-let logInterval = null;
-function startLogPolling() {
-  if (logInterval) clearInterval(logInterval);
-  logInterval = setInterval(() => {
-    if (document.getElementById('log-autopoll').checked) pollLogs();
+let pollInterval = null;
+let metricsInterval = null;
+function startPolling() {
+  if (pollInterval) clearInterval(pollInterval);
+  pollInterval = setInterval(() => {
+    if (document.getElementById('log-autopoll').checked) {
+      loadStats();
+      loadQueues();
+      if (activeTab === 'logs') pollLogs();
+    }
   }, 3000);
+  if (metricsInterval) clearInterval(metricsInterval);
+  metricsInterval = setInterval(() => {
+    if (activeTab === 'metrics' && document.getElementById('metrics-autorefresh').checked) {
+      loadMetrics();
+    }
+  }, 5000);
 }
 document.getElementById('log-autopoll').addEventListener('change', (e) => {
-  if (e.target.checked) startLogPolling();
-  else if (logInterval) { clearInterval(logInterval); logInterval = null; }
+  if (e.target.checked) startPolling();
+  else if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
 });
 
 refreshAll();
-startLogPolling();
+startPolling();
 </script>
 </body>
 </html>"##;

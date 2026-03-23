@@ -1,6 +1,4 @@
 use crate::dht::TorrentFile;
-use crate::log;
-use crate::logs::LogBuffer;
 use crate::title_parser::{self, ContentType};
 
 /// Filter video files from a torrent file list (skip .nfo, .txt, .srt, samples, etc.)
@@ -47,11 +45,6 @@ pub fn parse_episode_from_file(
     None
 }
 
-/// Placeholder for future enrichment pipeline.
-/// Previously expanded season packs via DHT; will be re-enabled later.
-pub async fn run_enrichment_pipeline(logs: &LogBuffer) {
-    log!(logs, "[PIPELINE] Enrichment pipeline not yet connected to new schema, skipping");
-}
 
 #[cfg(test)]
 mod tests {

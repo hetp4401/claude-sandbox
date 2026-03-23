@@ -243,89 +243,95 @@ fn parse_multi_file(files_val: &serde_bencode::value::Value) -> Result<Vec<Torre
     Ok(result)
 }
 
-/// Fetch torrent metadata (file list) for a given info hash using DHT + BEP 9.
-///
-/// 1. Queries DHT for peers
-/// 2. Connects to peers and performs BEP 10/9 metadata exchange
-/// 3. Parses the info dictionary to extract file list
-pub async fn fetch_torrent_files(
-    info_hash_hex: &str,
-    timeout: Duration,
-) -> Result<Vec<TorrentFile>, DhtError> {
-    let info_hash = parse_info_hash(info_hash_hex)?;
-    let info_hash_id = mainline::Id::from_bytes(info_hash)
-        .map_err(|e| DhtError::ParseFailed(format!("invalid info hash for DHT: {e}")))?;
+/// A shared, long-lived DHT client that maintains its routing table across lookups.
+/// This is much more reliable than creating a new DHT client per request.
+#[derive(Clone)]
+pub struct SharedDht {
+    dht: mainline::Dht,
+}
 
-    // Create DHT client
-    let dht = mainline::Dht::client().map_err(|e| {
-        DhtError::MetadataFetchFailed(format!("failed to create DHT client: {e}"))
-    })?;
+impl SharedDht {
+    /// Create and bootstrap a shared DHT client. Call once at startup.
+    pub async fn new() -> Result<Self, DhtError> {
+        let dht = mainline::Dht::client().map_err(|e| {
+            DhtError::MetadataFetchFailed(format!("failed to create DHT client: {e}"))
+        })?;
 
-    let async_dht = dht.as_async();
-
-    // Wait for bootstrap
-    let bootstrapped = tokio::time::timeout(Duration::from_secs(15), async {
-        async_dht.bootstrapped().await
-    })
-    .await
-    .map_err(|_| DhtError::Timeout)?;
-
-    if !bootstrapped {
-        return Err(DhtError::MetadataFetchFailed(
-            "DHT bootstrap failed".into(),
-        ));
-    }
-
-    // Query peers
-    let mut peers: Vec<SocketAddrV4> = Vec::new();
-    let mut get_peers = async_dht.get_peers(info_hash_id);
-
-    let collect_timeout = tokio::time::timeout(Duration::from_secs(30), async {
-        use futures_util::StreamExt;
-        while let Some(batch) = get_peers.next().await {
-            peers.extend(batch);
-            if peers.len() >= 20 {
-                break;
-            }
-        }
-    })
-    .await;
-
-    // Ignore timeout — we might have some peers already
-    let _ = collect_timeout;
-
-    if peers.is_empty() {
-        return Err(DhtError::NoPeersFound);
-    }
-
-    // Try connecting to peers and fetching metadata
-    let peer_id = generate_peer_id();
-
-    for peer_addr in peers.iter().take(10) {
-        let addr = std::net::SocketAddr::V4(*peer_addr);
-        match tokio::time::timeout(
-            timeout,
-            fetch_metadata_from_peer(addr, &info_hash, &peer_id),
-        )
+        let async_dht = dht.clone().as_async();
+        let bootstrapped = tokio::time::timeout(Duration::from_secs(30), async {
+            async_dht.bootstrapped().await
+        })
         .await
-        {
-            Ok(Ok(info_bytes)) => {
-                // Verify info hash
-                let mut hasher = Sha1::new();
-                hasher.update(&info_bytes);
-                let computed: [u8; 20] = hasher.finalize().into();
-                if computed != info_hash {
-                    continue; // Hash mismatch, try next peer
-                }
-                return parse_torrent_files(&info_bytes);
-            }
-            _ => continue, // Try next peer
+        .map_err(|_| DhtError::Timeout)?;
+
+        if !bootstrapped {
+            return Err(DhtError::MetadataFetchFailed(
+                "DHT bootstrap failed".into(),
+            ));
         }
+
+        Ok(Self { dht })
     }
 
-    Err(DhtError::MetadataFetchFailed(
-        "all peer connections failed".into(),
-    ))
+    /// Fetch torrent metadata using this shared DHT client.
+    pub async fn fetch_torrent_files(
+        &self,
+        info_hash_hex: &str,
+        timeout: Duration,
+    ) -> Result<Vec<TorrentFile>, DhtError> {
+        let info_hash = parse_info_hash(info_hash_hex)?;
+        let info_hash_id = mainline::Id::from_bytes(info_hash)
+            .map_err(|e| DhtError::ParseFailed(format!("invalid info hash for DHT: {e}")))?;
+
+        let async_dht = self.dht.clone().as_async();
+
+        // Query peers using the long-lived routing table
+        let mut peers: Vec<SocketAddrV4> = Vec::new();
+        let mut get_peers = async_dht.get_peers(info_hash_id);
+
+        let _ = tokio::time::timeout(Duration::from_secs(15), async {
+            use futures_util::StreamExt;
+            while let Some(batch) = get_peers.next().await {
+                peers.extend(batch);
+                if peers.len() >= 20 {
+                    break;
+                }
+            }
+        })
+        .await;
+
+        if peers.is_empty() {
+            return Err(DhtError::NoPeersFound);
+        }
+
+        // Try connecting to peers and fetching metadata
+        let peer_id = generate_peer_id();
+
+        for peer_addr in peers.iter().take(10) {
+            let addr = std::net::SocketAddr::V4(*peer_addr);
+            match tokio::time::timeout(
+                timeout,
+                fetch_metadata_from_peer(addr, &info_hash, &peer_id),
+            )
+            .await
+            {
+                Ok(Ok(info_bytes)) => {
+                    let mut hasher = Sha1::new();
+                    hasher.update(&info_bytes);
+                    let computed: [u8; 20] = hasher.finalize().into();
+                    if computed != info_hash {
+                        continue;
+                    }
+                    return parse_torrent_files(&info_bytes);
+                }
+                _ => continue,
+            }
+        }
+
+        Err(DhtError::MetadataFetchFailed(
+            "all peer connections failed".into(),
+        ))
+    }
 }
 
 /// Generate a random peer ID (-DM0100-<random>).
