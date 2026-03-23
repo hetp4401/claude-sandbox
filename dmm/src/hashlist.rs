@@ -1,18 +1,27 @@
 use serde::{Deserialize, Serialize};
 
 /// A single torrent entry in a hashlist.
+///
+/// The DMM source code uses "bytes" for the size field, but some hashlists
+/// use "size" instead. We accept both via serde alias.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct HashlistEntry {
     pub filename: String,
     pub hash: String,
+    #[serde(alias = "bytes")]
     pub size: u64,
 }
 
 /// A decoded hashlist containing an optional title and a list of torrent entries.
+///
+/// The DMM source uses "torrents" for the list field, but some hashlists use
+/// "list". We accept both. The payload can also be a bare JSON array `[...]`
+/// which is handled by `decode_hashlist`.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Hashlist {
     #[serde(default)]
     pub title: Option<String>,
+    #[serde(alias = "torrents")]
     pub list: Vec<HashlistEntry>,
 }
 
@@ -51,12 +60,29 @@ pub fn extract_encoded_from_html(html: &str) -> Option<&str> {
 }
 
 /// Decode an LZ-string URI-encoded compressed string into a `Hashlist`.
+///
+/// Handles three JSON shapes:
+/// 1. `{"list": [...]}` or `{"torrents": [...]}` with optional `"title"`
+/// 2. A bare JSON array `[{...}, ...]` (used by DMM's handleShare for single torrents)
 pub fn decode_hashlist(encoded: &str) -> Result<Hashlist, ParseError> {
     let decompressed_utf16 = lz_str::decompress_from_encoded_uri_component(encoded)
         .ok_or(ParseError::DecompressionFailed)?;
     let json_str =
         String::from_utf16(&decompressed_utf16).map_err(|_| ParseError::InvalidUtf16)?;
-    serde_json::from_str(&json_str).map_err(ParseError::InvalidJson)
+    parse_hashlist_json(&json_str)
+}
+
+/// Parse a JSON string into a `Hashlist`, handling both object and bare array formats.
+pub fn parse_hashlist_json(json_str: &str) -> Result<Hashlist, ParseError> {
+    let trimmed = json_str.trim_start();
+    if trimmed.starts_with('[') {
+        // Bare array format
+        let list: Vec<HashlistEntry> =
+            serde_json::from_str(json_str).map_err(ParseError::InvalidJson)?;
+        Ok(Hashlist { title: None, list })
+    } else {
+        serde_json::from_str(json_str).map_err(ParseError::InvalidJson)
+    }
 }
 
 /// Parse a full HTML hashlist file into a `Hashlist`.
@@ -78,6 +104,12 @@ mod tests {
     const EMPTY_ENCODED: &str = "N4IgNglgzgLiBcBtAugXyA";
 
     const MINIMAL_ENCODED: &str = "N4IgNglgzgLiBcBtUAzCYCmA7AhgWwwRBg1gDo8BrANxABoQALHKRonAIwGMATDFAIwAmAMwAWAKwA2AOwAOAJwAGTr37Dx0+ctV9BQ+iCgQAXoXgClSgL4Bda0A";
+
+    // DMM source format: uses "torrents" key and "bytes" field
+    const TORRENTS_BYTES_ENCODED: &str = "N4IgLglmA2CmIC4QBECyqAEAxA9gJwFsBDMEAGnHz1gDswBnRAbVADMI4aiD4lUcAbhFgA6AEwAGMQBYRARgkAOCQAcRBANYDyIABZF6uxCCJEARmYDGlgCY25csWIDMz6dICsHgGzeA7H6KigCcwRISphbWdg5OOmYAnmCwjAiS4RkZAL4AullAA";
+
+    // Bare array format (used by handleShare for single torrents)
+    const BARE_ARRAY_ENCODED: &str = "NobwRAZglgNgpgOwIYFs5gFxgMoAskBOcAJgHQCyA9gG5RykBMADAwCykoDW1YANGPgDOuTGACMDAMysArADYA7AA4AnEyQAjAMbE4ECdPnK1mnXoOzFSvmA0BPAC5xBmGU3cf3AXwC6QA";
 
     // === HTML extraction tests ===
 
@@ -294,5 +326,67 @@ mod tests {
                 entry.hash
             );
         }
+    }
+
+    // === DMM source format variant tests (torrents + bytes) ===
+
+    #[test]
+    fn test_decode_torrents_bytes_format() {
+        let hashlist = decode_hashlist(TORRENTS_BYTES_ENCODED).unwrap();
+        assert_eq!(hashlist.title.as_deref(), Some("DMM Format"));
+        assert_eq!(hashlist.list.len(), 1);
+        assert_eq!(hashlist.list[0].filename, "Movie.2024.1080p.mkv");
+        assert_eq!(
+            hashlist.list[0].hash,
+            "aabbccdd11223344556677889900aabbccdd1122"
+        );
+        assert_eq!(hashlist.list[0].size, 2_000_000_000);
+    }
+
+    #[test]
+    fn test_decode_bare_array_format() {
+        let hashlist = decode_hashlist(BARE_ARRAY_ENCODED).unwrap();
+        assert!(hashlist.title.is_none());
+        assert_eq!(hashlist.list.len(), 1);
+        assert_eq!(hashlist.list[0].filename, "Shared.Movie.2024.mkv");
+        assert_eq!(
+            hashlist.list[0].hash,
+            "1234567890abcdef1234567890abcdef12345678"
+        );
+        assert_eq!(hashlist.list[0].size, 500_000_000);
+    }
+
+    // === JSON field alias tests ===
+
+    #[test]
+    fn test_bytes_alias_in_json() {
+        let json = r#"{"filename":"f.mkv","hash":"abc","bytes":42}"#;
+        let entry: HashlistEntry = serde_json::from_str(json).unwrap();
+        assert_eq!(entry.size, 42);
+    }
+
+    #[test]
+    fn test_torrents_alias_in_json() {
+        let json = r#"{"torrents":[{"filename":"f.mkv","hash":"abc","size":1}]}"#;
+        let hashlist: Hashlist = serde_json::from_str(json).unwrap();
+        assert_eq!(hashlist.list.len(), 1);
+    }
+
+    #[test]
+    fn test_parse_hashlist_json_bare_array() {
+        let json = r#"[{"filename":"a.mkv","hash":"abc","size":100},{"filename":"b.mkv","hash":"def","bytes":200}]"#;
+        let hashlist = parse_hashlist_json(json).unwrap();
+        assert!(hashlist.title.is_none());
+        assert_eq!(hashlist.list.len(), 2);
+        assert_eq!(hashlist.list[0].size, 100);
+        assert_eq!(hashlist.list[1].size, 200);
+    }
+
+    #[test]
+    fn test_parse_hashlist_json_object_format() {
+        let json = r#"{"title":"T","list":[{"filename":"f.mkv","hash":"h","size":1}]}"#;
+        let hashlist = parse_hashlist_json(json).unwrap();
+        assert_eq!(hashlist.title.as_deref(), Some("T"));
+        assert_eq!(hashlist.list.len(), 1);
     }
 }
