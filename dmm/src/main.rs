@@ -1,3 +1,4 @@
+mod db;
 mod dht;
 mod hashlist;
 mod ingestor;
@@ -5,7 +6,7 @@ mod pipeline;
 mod title_parser;
 
 use axum::{extract::State, response::Html, routing::get, Router};
-use ingestor::{AppState, MagnetRecord, HashlistStatus};
+use ingestor::{AppState, HashlistStatus, MagnetRecord};
 
 fn format_size(bytes: u64) -> String {
     const GB: f64 = 1_073_741_824.0;
@@ -34,14 +35,18 @@ fn opt_num(val: Option<u32>) -> String {
 }
 
 async fn dashboard(State(state): State<AppState>) -> Html<String> {
-    let records = state.records.read().await;
-    let hashlists = state.hashlists.read().await;
-
-    let mut sorted_records: Vec<_> = records.iter().collect();
-    sorted_records.sort_by(|a, b| b.processed_at.cmp(&a.processed_at));
+    let records = state.db.get_all_records().unwrap_or_default();
+    let hashlists = state.db.get_all_hashlists().unwrap_or_default();
+    let counts = state.db.count_records().unwrap_or(db::RecordCounts {
+        total: 0,
+        movies: 0,
+        episodes: 0,
+        seasons: 0,
+    });
+    let done_count = state.db.count_hashlists_done().unwrap_or(0);
 
     let mut record_rows = String::new();
-    for r in &sorted_records {
+    for r in &records {
         let type_class = match r.content_type.as_deref() {
             Some("movie") => "type-movie",
             Some("episode") => "type-ep",
@@ -61,7 +66,7 @@ async fn dashboard(State(state): State<AppState>) -> Html<String> {
   <td class="src">{}</td>
 </tr>"#,
             html_escape(&r.filename),
-            &r.hash[..8],
+            &r.hash[..std::cmp::min(8, r.hash.len())],
             format_size(r.size_bytes),
             html_escape(opt_str(&r.content_type)),
             html_escape(opt_str(&r.title)),
@@ -72,10 +77,8 @@ async fn dashboard(State(state): State<AppState>) -> Html<String> {
         ));
     }
 
-    let mut sorted_hls: Vec<_> = hashlists.iter().collect();
-    sorted_hls.sort_by(|a, b| b.processed_at.cmp(&a.processed_at));
     let mut hl_rows = String::new();
-    for h in &sorted_hls {
+    for h in &hashlists {
         let status_class = if h.status == "done" { "done" } else { "err" };
         hl_rows.push_str(&format!(
             r#"<tr>
@@ -90,11 +93,6 @@ async fn dashboard(State(state): State<AppState>) -> Html<String> {
             &h.processed_at,
         ));
     }
-
-    let done_count = hashlists.iter().filter(|h| h.status == "done").count();
-    let movie_count = records.iter().filter(|r| r.content_type.as_deref() == Some("movie")).count();
-    let ep_count = records.iter().filter(|r| r.content_type.as_deref() == Some("episode")).count();
-    let season_count = records.iter().filter(|r| r.content_type.as_deref() == Some("season")).count();
 
     let html = format!(
         r##"<!DOCTYPE html>
@@ -171,7 +169,10 @@ setTimeout(() => location.reload(), 3000);
 
 </body>
 </html>"##,
-        total_records = records.len(),
+        total_records = counts.total,
+        movie_count = counts.movies,
+        ep_count = counts.episodes,
+        season_count = counts.seasons,
         total_hl = hashlists.len(),
         done_hl = done_count,
     );
@@ -180,15 +181,13 @@ setTimeout(() => location.reload(), 3000);
 }
 
 async fn api_records(State(state): State<AppState>) -> axum::Json<Vec<MagnetRecord>> {
-    let records = state.records.read().await;
-    let mut sorted: Vec<_> = records.clone();
-    sorted.sort_by(|a, b| b.processed_at.cmp(&a.processed_at));
-    axum::Json(sorted)
+    let records = state.db.get_all_records().unwrap_or_default();
+    axum::Json(records)
 }
 
 async fn api_hashlists(State(state): State<AppState>) -> axum::Json<Vec<HashlistStatus>> {
-    let hashlists = state.hashlists.read().await;
-    axum::Json(hashlists.clone())
+    let hashlists = state.db.get_all_hashlists().unwrap_or_default();
+    axum::Json(hashlists)
 }
 
 #[tokio::main]
@@ -196,14 +195,32 @@ async fn main() {
     println!("=== DMM Hashlist Ingestor ===");
     println!();
 
+    let db_path = std::env::var("DB_PATH").unwrap_or_else(|_| "/data/dmm.db".into());
     let poll_secs: u64 = std::env::var("POLL_INTERVAL_SECS")
         .ok()
         .and_then(|v| v.parse().ok())
-        .unwrap_or(3600); // default: 1 hour
+        .unwrap_or(3600);
 
-    let state = AppState::new();
+    // Ensure data directory exists
+    if let Some(parent) = std::path::Path::new(&db_path).parent() {
+        std::fs::create_dir_all(parent).ok();
+    }
 
-    // Spawn the ingest loop in the background
+    let database = db::Db::open(&db_path).expect("Failed to open database");
+    println!("Database: {db_path}");
+
+    let state = AppState::new(database);
+
+    // Log existing state
+    if let Ok(counts) = state.db.count_records() {
+        if counts.total > 0 {
+            println!(
+                "Resuming with {} records ({} movies, {} episodes, {} seasons)",
+                counts.total, counts.movies, counts.episodes, counts.seasons
+            );
+        }
+    }
+
     let ingest_state = state.clone();
     tokio::spawn(async move {
         ingestor::run_ingest_loop(
@@ -213,7 +230,6 @@ async fn main() {
         .await;
     });
 
-    // Start web server
     println!("Starting web dashboard on http://0.0.0.0:3000");
 
     let app = Router::new()

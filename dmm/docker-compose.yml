@@ -3,3 +3,10 @@ services:
     build: .
     ports:
       - "3000:3000"
+    volumes:
+      - dmm-data:/data
+    environment:
+      - DB_PATH=/data/dmm.db
+
+volumes:
+  dmm-data:

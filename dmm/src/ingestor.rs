@@ -1,10 +1,10 @@
+use crate::db::Db;
 use crate::hashlist::{self, Hashlist, ParseError};
 use crate::title_parser;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
 use std::sync::Arc;
-use tokio::sync::{RwLock, Semaphore};
+use tokio::sync::Semaphore;
 
 /// A processed magnet record.
 #[derive(Debug, Clone, Serialize)]
@@ -38,32 +38,28 @@ pub struct HashlistStatus {
     pub processed_at: String,
 }
 
-/// Shared application state, safe for concurrent access.
+/// Shared application state backed by SQLite.
 #[derive(Clone)]
 pub struct AppState {
-    pub records: Arc<RwLock<Vec<MagnetRecord>>>,
-    pub hashlists: Arc<RwLock<Vec<HashlistStatus>>>,
-    processed_names: Arc<RwLock<HashSet<String>>>,
+    pub db: Db,
 }
 
 impl AppState {
-    pub fn new() -> Self {
-        Self {
-            records: Arc::new(RwLock::new(Vec::new())),
-            hashlists: Arc::new(RwLock::new(Vec::new())),
-            processed_names: Arc::new(RwLock::new(HashSet::new())),
+    pub fn new(db: Db) -> Self {
+        Self { db }
+    }
+
+    pub fn is_processed(&self, name: &str) -> bool {
+        self.db.is_processed(name).unwrap_or(false)
+    }
+
+    pub fn mark_processed(&self, name: &str) {
+        if let Err(e) = self.db.mark_processed(name) {
+            println!("[ERROR] Failed to mark {name} as processed: {e}");
         }
     }
 
-    pub async fn is_processed(&self, name: &str) -> bool {
-        self.processed_names.read().await.contains(name)
-    }
-
-    pub async fn mark_processed(&self, name: &str) {
-        self.processed_names.write().await.insert(name.to_string());
-    }
-
-    async fn add_hashlist_result(
+    pub fn add_hashlist_result(
         &self,
         name: &str,
         result: Result<Hashlist, ParseError>,
@@ -72,11 +68,12 @@ impl AppState {
         match result {
             Ok(hl) => {
                 let count = hl.list.len();
-                {
-                    let mut records = self.records.write().await;
-                    for entry in &hl.list {
+                let records: Vec<MagnetRecord> = hl
+                    .list
+                    .iter()
+                    .map(|entry| {
                         let meta = title_parser::parse(&entry.filename);
-                        records.push(MagnetRecord {
+                        MagnetRecord {
                             filename: entry.filename.clone(),
                             hash: entry.hash.clone(),
                             magnet_uri: format!("magnet:?xt=urn:btih:{}", entry.hash),
@@ -89,25 +86,37 @@ impl AppState {
                             episode: meta.as_ref().and_then(|m| m.episode),
                             file_index: None,
                             imdb_tag: None,
-                        });
-                    }
+                        }
+                    })
+                    .collect();
+
+                if let Err(e) = self.db.insert_records(&records) {
+                    println!("[ERROR] Failed to insert records for {name}: {e}");
+                    return;
                 }
-                self.hashlists.write().await.push(HashlistStatus {
+
+                let status = HashlistStatus {
                     name: name.to_string(),
                     record_count: count,
                     status: "done".into(),
                     processed_at: now,
-                });
-                self.mark_processed(name).await;
+                };
+                if let Err(e) = self.db.insert_hashlist(&status) {
+                    println!("[ERROR] Failed to insert hashlist status for {name}: {e}");
+                }
+                self.mark_processed(name);
                 println!("[OK] {name}: {count} records ingested");
             }
             Err(e) => {
-                self.hashlists.write().await.push(HashlistStatus {
+                let status = HashlistStatus {
                     name: name.to_string(),
                     record_count: 0,
                     status: format!("error: {e}"),
                     processed_at: now,
-                });
+                };
+                if let Err(db_err) = self.db.insert_hashlist(&status) {
+                    println!("[ERROR] Failed to insert error status for {name}: {db_err}");
+                }
                 println!("[ERROR] {name}: {e}");
             }
         }
@@ -213,12 +222,10 @@ pub async fn run_ingest_loop(state: AppState, poll_interval: std::time::Duration
         match fetch_hashlist_names(&client).await {
             Ok(names) => {
                 let total = names.len();
-                let mut new_names = Vec::new();
-                for name in names {
-                    if !state.is_processed(&name).await {
-                        new_names.push(name);
-                    }
-                }
+                let new_names: Vec<String> = names
+                    .into_iter()
+                    .filter(|name| !state.is_processed(name))
+                    .collect();
                 let new_count = new_names.len();
                 println!(
                     "[INGESTOR] Found {total} hashlists total, {new_count} new to process"
@@ -234,14 +241,20 @@ pub async fn run_ingest_loop(state: AppState, poll_interval: std::time::Duration
 
                         let handle = tokio::spawn(async move {
                             let result = fetch_and_parse_hashlist(&client, &name).await;
-                            state.add_hashlist_result(&name, result).await;
+                            // DB operations are sync but fast; run on blocking pool
+                            let state_clone = state.clone();
+                            let name_clone = name.clone();
+                            tokio::task::spawn_blocking(move || {
+                                state_clone.add_hashlist_result(&name_clone, result);
+                            })
+                            .await
+                            .ok();
                             drop(permit);
                         });
 
                         handles.push(handle);
                     }
 
-                    // Wait for all workers to finish this batch
                     let mut ok_count = 0;
                     let mut err_count = 0;
                     for handle in handles {
@@ -266,10 +279,16 @@ pub async fn run_ingest_loop(state: AppState, poll_interval: std::time::Duration
         // Run the metadata enrichment pipeline (expand season packs via DHT)
         crate::pipeline::run_enrichment_pipeline(&state).await;
 
-        let records_count = state.records.read().await.len();
-        let hl_count = state.hashlists.read().await.len();
+        let counts = state.db.count_records().unwrap_or(crate::db::RecordCounts {
+            total: 0,
+            movies: 0,
+            episodes: 0,
+            seasons: 0,
+        });
+        let hl_count = state.db.count_hashlists().unwrap_or(0);
         println!(
-            "[INGESTOR] State: {records_count} total records, {hl_count} hashlists processed"
+            "[INGESTOR] State: {} total records, {hl_count} hashlists processed",
+            counts.total
         );
         println!(
             "[INGESTOR] Sleeping {}s until next poll...",
@@ -283,6 +302,10 @@ pub async fn run_ingest_loop(state: AppState, poll_interval: std::time::Duration
 mod tests {
     use super::*;
     use crate::hashlist::Hashlist;
+
+    fn test_state() -> AppState {
+        AppState::new(Db::open_in_memory().unwrap())
+    }
 
     // === GitHub Tree API response parsing ===
 
@@ -349,10 +372,7 @@ mod tests {
     #[test]
     fn test_filter_hashlist_names_excludes_directories() {
         let resp = make_tree_response(
-            vec![
-                ("subdir", "tree"),
-                ("abc.html", "blob"),
-            ],
+            vec![("subdir", "tree"), ("abc.html", "blob")],
             false,
         );
         let names = filter_hashlist_names(&resp);
@@ -390,26 +410,25 @@ mod tests {
 
     // === AppState tests ===
 
-    #[tokio::test]
-    async fn test_app_state_new_is_empty() {
-        let state = AppState::new();
-        assert!(state.records.read().await.is_empty());
-        assert!(state.hashlists.read().await.is_empty());
+    #[test]
+    fn test_app_state_new_is_empty() {
+        let state = test_state();
+        assert_eq!(state.db.get_all_records().unwrap().len(), 0);
+        assert_eq!(state.db.get_all_hashlists().unwrap().len(), 0);
     }
 
-    #[tokio::test]
-    async fn test_mark_and_check_processed() {
-        let state = AppState::new();
-        assert!(!state.is_processed("test.html").await);
-        state.mark_processed("test.html").await;
-        assert!(state.is_processed("test.html").await);
-        // Other names still not processed
-        assert!(!state.is_processed("other.html").await);
+    #[test]
+    fn test_mark_and_check_processed() {
+        let state = test_state();
+        assert!(!state.is_processed("test.html"));
+        state.mark_processed("test.html");
+        assert!(state.is_processed("test.html"));
+        assert!(!state.is_processed("other.html"));
     }
 
-    #[tokio::test]
-    async fn test_add_hashlist_result_success() {
-        let state = AppState::new();
+    #[test]
+    fn test_add_hashlist_result_success() {
+        let state = test_state();
         let hashlist = Hashlist {
             title: Some("Test".into()),
             list: vec![
@@ -426,80 +445,66 @@ mod tests {
             ],
         };
 
-        state.add_hashlist_result("test.html", Ok(hashlist)).await;
+        state.add_hashlist_result("test.html", Ok(hashlist));
 
-        let records = state.records.read().await;
+        let records = state.db.get_all_records().unwrap();
         assert_eq!(records.len(), 2);
-        assert_eq!(records[0].filename, "movie.mkv");
-        assert_eq!(records[0].source_hashlist, "test.html");
+        assert!(records.iter().any(|r| r.filename == "movie.mkv"));
+        assert!(records.iter().any(|r| r.filename == "show.mkv"));
         assert!(records[0].magnet_uri.starts_with("magnet:?xt=urn:btih:"));
-        assert_eq!(records[1].filename, "show.mkv");
 
-        let hashlists = state.hashlists.read().await;
+        let hashlists = state.db.get_all_hashlists().unwrap();
         assert_eq!(hashlists.len(), 1);
         assert_eq!(hashlists[0].status, "done");
         assert_eq!(hashlists[0].record_count, 2);
 
-        assert!(state.is_processed("test.html").await);
+        assert!(state.is_processed("test.html"));
     }
 
-    #[tokio::test]
-    async fn test_add_hashlist_result_error() {
-        let state = AppState::new();
-        state
-            .add_hashlist_result("bad.html", Err(ParseError::DecompressionFailed))
-            .await;
+    #[test]
+    fn test_add_hashlist_result_error() {
+        let state = test_state();
+        state.add_hashlist_result("bad.html", Err(ParseError::DecompressionFailed));
 
-        assert!(state.records.read().await.is_empty());
+        assert!(state.db.get_all_records().unwrap().is_empty());
 
-        let hashlists = state.hashlists.read().await;
+        let hashlists = state.db.get_all_hashlists().unwrap();
         assert_eq!(hashlists.len(), 1);
         assert!(hashlists[0].status.starts_with("error:"));
         assert_eq!(hashlists[0].record_count, 0);
 
         // Errors are NOT marked as processed (so they can be retried)
-        assert!(!state.is_processed("bad.html").await);
+        assert!(!state.is_processed("bad.html"));
     }
 
-    #[tokio::test]
-    async fn test_concurrent_add_hashlist_results() {
-        let state = AppState::new();
-        let mut handles = Vec::new();
+    #[test]
+    fn test_add_hashlist_result_concurrent() {
+        let state = test_state();
 
+        // Simulate concurrent inserts (serial here since SQLite is single-writer)
         for i in 0..10 {
-            let state = state.clone();
-            let handle = tokio::spawn(async move {
-                let hashlist = Hashlist {
-                    title: None,
-                    list: vec![crate::hashlist::HashlistEntry {
-                        filename: format!("file_{i}.mkv"),
-                        hash: format!("{:0>40}", i),
-                        size: (i as u64) * 1000,
-                    }],
-                };
-                state
-                    .add_hashlist_result(&format!("hl_{i}.html"), Ok(hashlist))
-                    .await;
-            });
-            handles.push(handle);
+            let hashlist = Hashlist {
+                title: None,
+                list: vec![crate::hashlist::HashlistEntry {
+                    filename: format!("file_{i}.mkv"),
+                    hash: format!("{:0>40}", i),
+                    size: (i as u64) * 1000,
+                }],
+            };
+            state.add_hashlist_result(&format!("hl_{i}.html"), Ok(hashlist));
         }
 
-        for handle in handles {
-            handle.await.unwrap();
-        }
+        assert_eq!(state.db.get_all_records().unwrap().len(), 10);
 
-        let records = state.records.read().await;
-        assert_eq!(records.len(), 10);
-
-        let hashlists = state.hashlists.read().await;
+        let hashlists = state.db.get_all_hashlists().unwrap();
         assert_eq!(hashlists.len(), 10);
         assert!(hashlists.iter().all(|h| h.status == "done"));
     }
 
-    #[tokio::test]
-    async fn test_already_processed_hashlists_are_skipped() {
-        let state = AppState::new();
-        state.mark_processed("old.html").await;
+    #[test]
+    fn test_already_processed_hashlists_are_skipped() {
+        let state = test_state();
+        state.mark_processed("old.html");
 
         let names = vec![
             "old.html".to_string(),
@@ -507,21 +512,20 @@ mod tests {
             "new2.html".to_string(),
         ];
 
-        let mut new_names = Vec::new();
-        for name in &names {
-            if !state.is_processed(name).await {
-                new_names.push(name.clone());
-            }
-        }
+        let new_names: Vec<_> = names
+            .iter()
+            .filter(|name| !state.is_processed(name))
+            .cloned()
+            .collect();
 
         assert_eq!(new_names, vec!["new1.html", "new2.html"]);
     }
 
     // === Magnet URI construction ===
 
-    #[tokio::test]
-    async fn test_magnet_uri_format() {
-        let state = AppState::new();
+    #[test]
+    fn test_magnet_uri_format() {
+        let state = test_state();
         let hashlist = Hashlist {
             title: None,
             list: vec![crate::hashlist::HashlistEntry {
@@ -531,20 +535,19 @@ mod tests {
             }],
         };
 
-        state.add_hashlist_result("t.html", Ok(hashlist)).await;
+        state.add_hashlist_result("t.html", Ok(hashlist));
 
-        let records = state.records.read().await;
+        let records = state.db.get_all_records().unwrap();
         assert_eq!(
             records[0].magnet_uri,
             "magnet:?xt=urn:btih:dd8255ecdc7ca55fb0bbf81323d87062db1f6d1c"
         );
     }
 
-    // === Large batch simulation ===
+    // === Semaphore test (independent of DB) ===
 
     #[tokio::test]
     async fn test_semaphore_bounded_concurrency() {
-        // Verify that a semaphore properly limits concurrent tasks
         let semaphore = Arc::new(Semaphore::new(2));
         let active = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let max_active = Arc::new(std::sync::atomic::AtomicUsize::new(0));

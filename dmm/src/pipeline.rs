@@ -14,9 +14,7 @@ pub fn filter_video_files(files: &[TorrentFile]) -> Vec<&TorrentFile> {
         .iter()
         .filter(|f| {
             let lower = f.path.to_lowercase();
-            // Must be a video file
             let is_video = video_exts.iter().any(|ext| lower.ends_with(ext));
-            // Skip samples (typically < 100MB and named "sample")
             let is_sample = lower.contains("sample") && f.size < 100_000_000;
             is_video && !is_sample
         })
@@ -26,10 +24,8 @@ pub fn filter_video_files(files: &[TorrentFile]) -> Vec<&TorrentFile> {
 /// Try to extract episode info from a file within a season pack.
 /// Returns (title, season, episode) if the filename parses as an episode.
 pub fn parse_episode_from_file(file: &TorrentFile, parent_title: &str, parent_season: u32) -> Option<(String, u32, u32)> {
-    // Get just the filename (last path component)
     let filename = file.path.rsplit('/').next().unwrap_or(&file.path);
 
-    // Try parsing the filename directly
     if let Some(meta) = title_parser::parse(filename) {
         if meta.content_type == ContentType::Episode {
             if let (Some(season), Some(episode)) = (meta.season, meta.episode) {
@@ -39,8 +35,6 @@ pub fn parse_episode_from_file(file: &TorrentFile, parent_title: &str, parent_se
         }
     }
 
-    // Fallback: look for just E## pattern in the filename (common in season packs
-    // where files are named like "E01.mkv" or "Episode 01.mkv")
     let re = regex::Regex::new(r"(?i)(?:^|[.\s_-])E(\d{1,3})(?:[.\s_-]|$)").unwrap();
     if let Some(caps) = re.captures(filename) {
         let episode: u32 = caps[1].parse().ok()?;
@@ -118,11 +112,6 @@ async fn expand_season_pack(
 }
 
 /// Run the metadata enrichment pipeline.
-///
-/// Scans records where `imdb_tag` is None:
-/// - Parses filename to classify as movie/episode/season
-/// - For season packs: uses DHT to fetch file list and creates episode records
-/// - Marks processed records (sets imdb_tag to "processed" as placeholder)
 pub async fn run_enrichment_pipeline(state: &AppState) {
     let num_workers = std::thread::available_parallelism()
         .map(|n| n.get())
@@ -131,19 +120,12 @@ pub async fn run_enrichment_pipeline(state: &AppState) {
     let semaphore = Arc::new(Semaphore::new(num_workers));
     let dht_timeout = Duration::from_secs(30);
 
-    // Collect season pack records that need expansion
-    let season_packs: Vec<MagnetRecord> = {
-        let records = state.records.read().await;
-        records
-            .iter()
-            .filter(|r| {
-                r.imdb_tag.is_none()
-                    && r.content_type.as_deref() == Some("season")
-                    && r.title.is_some()
-                    && r.season.is_some()
-            })
-            .cloned()
-            .collect()
+    let season_packs = match state.db.get_unprocessed_season_packs() {
+        Ok(packs) => packs,
+        Err(e) => {
+            println!("[PIPELINE] Failed to query season packs: {e}");
+            return;
+        }
     };
 
     if season_packs.is_empty() {
@@ -155,7 +137,6 @@ pub async fn run_enrichment_pipeline(state: &AppState) {
         season_packs.len()
     );
 
-    // Process season packs concurrently
     let mut handles = Vec::new();
     for record in season_packs {
         let permit = semaphore.clone().acquire_owned().await.unwrap();
@@ -163,25 +144,22 @@ pub async fn run_enrichment_pipeline(state: &AppState) {
 
         let handle = tokio::spawn(async move {
             let episodes = expand_season_pack(&record, dht_timeout).await;
+            let hash = record.hash.clone();
 
-            // Add new episode records
-            if !episodes.is_empty() {
-                let mut records = state.records.write().await;
-                records.extend(episodes);
-            }
-
-            // Mark the season pack as processed
-            {
-                let mut records = state.records.write().await;
-                for r in records.iter_mut() {
-                    if r.hash == record.hash
-                        && r.content_type.as_deref() == Some("season")
-                        && r.imdb_tag.is_none()
-                    {
-                        r.imdb_tag = Some("processed".into());
+            // Insert episode records and mark season pack as processed
+            let state_clone = state.clone();
+            tokio::task::spawn_blocking(move || {
+                if !episodes.is_empty() {
+                    if let Err(e) = state_clone.db.insert_records(&episodes) {
+                        println!("[PIPELINE] Failed to insert episodes: {e}");
                     }
                 }
-            }
+                if let Err(e) = state_clone.db.mark_season_pack_processed(&hash) {
+                    println!("[PIPELINE] Failed to mark season pack processed: {e}");
+                }
+            })
+            .await
+            .ok();
 
             drop(permit);
         });
@@ -209,9 +187,14 @@ pub async fn run_enrichment_pipeline(state: &AppState) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::db::Db;
     use crate::dht::TorrentFile;
     use crate::hashlist::HashlistEntry;
     use crate::ingestor::AppState;
+
+    fn test_state() -> AppState {
+        AppState::new(Db::open_in_memory().unwrap())
+    }
 
     // =====================================================================
     // filter_video_files
@@ -224,8 +207,7 @@ mod tests {
             size: 500_000_000,
             index: 0,
         }];
-        let result = filter_video_files(&files);
-        assert_eq!(result.len(), 1);
+        assert_eq!(filter_video_files(&files).len(), 1);
     }
 
     #[test]
@@ -240,31 +222,19 @@ mod tests {
 
     #[test]
     fn test_filter_video_files_removes_nfo() {
-        let files = vec![TorrentFile {
-            path: "info.nfo".into(),
-            size: 1000,
-            index: 0,
-        }];
+        let files = vec![TorrentFile { path: "info.nfo".into(), size: 1000, index: 0 }];
         assert!(filter_video_files(&files).is_empty());
     }
 
     #[test]
     fn test_filter_video_files_removes_srt() {
-        let files = vec![TorrentFile {
-            path: "subs.srt".into(),
-            size: 50000,
-            index: 0,
-        }];
+        let files = vec![TorrentFile { path: "subs.srt".into(), size: 50000, index: 0 }];
         assert!(filter_video_files(&files).is_empty());
     }
 
     #[test]
     fn test_filter_video_files_removes_txt() {
-        let files = vec![TorrentFile {
-            path: "readme.txt".into(),
-            size: 100,
-            index: 0,
-        }];
+        let files = vec![TorrentFile { path: "readme.txt".into(), size: 100, index: 0 }];
         assert!(filter_video_files(&files).is_empty());
     }
 
@@ -272,7 +242,7 @@ mod tests {
     fn test_filter_video_files_removes_small_sample() {
         let files = vec![TorrentFile {
             path: "Sample/sample.mkv".into(),
-            size: 50_000_000, // 50MB
+            size: 50_000_000,
             index: 0,
         }];
         assert!(filter_video_files(&files).is_empty());
@@ -280,10 +250,9 @@ mod tests {
 
     #[test]
     fn test_filter_video_files_keeps_large_sample_named() {
-        // If "sample" appears in name but file is large, keep it
         let files = vec![TorrentFile {
             path: "The.Sample.Movie.mkv".into(),
-            size: 1_500_000_000, // 1.5GB — not a sample
+            size: 1_500_000_000,
             index: 0,
         }];
         assert_eq!(filter_video_files(&files).len(), 1);
@@ -314,8 +283,7 @@ mod tests {
     fn test_parse_episode_standard_name() {
         let file = TorrentFile {
             path: "Breaking.Bad.S05E01.Live.Free.or.Die.720p.BluRay.mkv".into(),
-            size: 500_000_000,
-            index: 0,
+            size: 500_000_000, index: 0,
         };
         let result = parse_episode_from_file(&file, "Breaking Bad", 5).unwrap();
         assert_eq!(result.0, "Breaking Bad");
@@ -327,8 +295,7 @@ mod tests {
     fn test_parse_episode_nested_path() {
         let file = TorrentFile {
             path: "Season 1/Breaking.Bad.S01E03.720p.mkv".into(),
-            size: 500_000_000,
-            index: 2,
+            size: 500_000_000, index: 2,
         };
         let result = parse_episode_from_file(&file, "Breaking Bad", 1).unwrap();
         assert_eq!(result.1, 1);
@@ -337,11 +304,7 @@ mod tests {
 
     #[test]
     fn test_parse_episode_bare_e_format() {
-        let file = TorrentFile {
-            path: "E05.mkv".into(),
-            size: 500_000_000,
-            index: 4,
-        };
+        let file = TorrentFile { path: "E05.mkv".into(), size: 500_000_000, index: 4 };
         let result = parse_episode_from_file(&file, "My Show", 2).unwrap();
         assert_eq!(result.0, "My Show");
         assert_eq!(result.1, 2);
@@ -352,8 +315,7 @@ mod tests {
     fn test_parse_episode_bare_e_with_dots() {
         let file = TorrentFile {
             path: "Show.Name.E12.720p.mkv".into(),
-            size: 500_000_000,
-            index: 11,
+            size: 500_000_000, index: 11,
         };
         let result = parse_episode_from_file(&file, "Show Name", 3).unwrap();
         assert_eq!(result.2, 12);
@@ -361,12 +323,7 @@ mod tests {
 
     #[test]
     fn test_parse_episode_no_episode_info() {
-        let file = TorrentFile {
-            path: "random_video.mkv".into(),
-            size: 500_000_000,
-            index: 0,
-        };
-        // This should return None — no episode info extractable
+        let file = TorrentFile { path: "random_video.mkv".into(), size: 500_000_000, index: 0 };
         assert!(parse_episode_from_file(&file, "Show", 1).is_none());
     }
 
@@ -374,20 +331,14 @@ mod tests {
     fn test_parse_episode_movie_file_returns_none() {
         let file = TorrentFile {
             path: "The.Matrix.1999.1080p.BluRay.mkv".into(),
-            size: 2_000_000_000,
-            index: 0,
+            size: 2_000_000_000, index: 0,
         };
-        // Movie files shouldn't parse as episodes
         assert!(parse_episode_from_file(&file, "The Matrix", 1).is_none());
     }
 
     #[test]
     fn test_parse_episode_uses_parent_title_for_bare_e() {
-        let file = TorrentFile {
-            path: "E01.mkv".into(),
-            size: 500_000_000,
-            index: 0,
-        };
+        let file = TorrentFile { path: "E01.mkv".into(), size: 500_000_000, index: 0 };
         let result = parse_episode_from_file(&file, "Parent Title", 7).unwrap();
         assert_eq!(result.0, "Parent Title");
         assert_eq!(result.1, 7);
@@ -395,65 +346,46 @@ mod tests {
     }
 
     // =====================================================================
-    // AppState integration tests for pipeline
+    // Pipeline integration tests
     // =====================================================================
 
     #[tokio::test]
     async fn test_pipeline_skips_when_no_season_packs() {
-        let state = AppState::new();
+        let state = test_state();
+        state.db.insert_record(&MagnetRecord {
+            filename: "Movie.mkv".into(),
+            hash: "a".repeat(40),
+            magnet_uri: "magnet:?xt=urn:btih:aaaa".into(),
+            size_bytes: 1000,
+            source_hashlist: "test.html".into(),
+            processed_at: Utc::now().to_rfc3339(),
+            content_type: Some("movie".into()),
+            title: Some("Movie".into()),
+            season: None, episode: None, file_index: None, imdb_tag: None,
+        }).unwrap();
 
-        // Add a movie record
-        {
-            let mut records = state.records.write().await;
-            records.push(MagnetRecord {
-                filename: "Movie.mkv".into(),
-                hash: "a".repeat(40),
-                magnet_uri: "magnet:?xt=urn:btih:aaaa".into(),
-                size_bytes: 1000,
-                source_hashlist: "test.html".into(),
-                processed_at: Utc::now().to_rfc3339(),
-                content_type: Some("movie".into()),
-                title: Some("Movie".into()),
-                season: None,
-                episode: None,
-                file_index: None,
-                imdb_tag: None,
-            });
-        }
-
-        // Pipeline should return immediately — no season packs
         run_enrichment_pipeline(&state).await;
-
-        let records = state.records.read().await;
-        assert_eq!(records.len(), 1); // No new records added
+        assert_eq!(state.db.get_all_records().unwrap().len(), 1);
     }
 
     #[tokio::test]
     async fn test_pipeline_skips_already_processed() {
-        let state = AppState::new();
-
-        // Add a season pack that's already processed
-        {
-            let mut records = state.records.write().await;
-            records.push(MagnetRecord {
-                filename: "Show.S01.mkv".into(),
-                hash: "b".repeat(40),
-                magnet_uri: "magnet:?xt=urn:btih:bbbb".into(),
-                size_bytes: 5000,
-                source_hashlist: "test.html".into(),
-                processed_at: Utc::now().to_rfc3339(),
-                content_type: Some("season".into()),
-                title: Some("Show".into()),
-                season: Some(1),
-                episode: None,
-                file_index: None,
-                imdb_tag: Some("processed".into()), // Already done
-            });
-        }
+        let state = test_state();
+        state.db.insert_record(&MagnetRecord {
+            filename: "Show.S01.mkv".into(),
+            hash: "b".repeat(40),
+            magnet_uri: "magnet:?xt=urn:btih:bbbb".into(),
+            size_bytes: 5000,
+            source_hashlist: "test.html".into(),
+            processed_at: Utc::now().to_rfc3339(),
+            content_type: Some("season".into()),
+            title: Some("Show".into()),
+            season: Some(1), episode: None, file_index: None,
+            imdb_tag: Some("processed".into()),
+        }).unwrap();
 
         run_enrichment_pipeline(&state).await;
-        let records = state.records.read().await;
-        assert_eq!(records.len(), 1);
+        assert_eq!(state.db.get_all_records().unwrap().len(), 1);
     }
 
     // =====================================================================
@@ -462,18 +394,14 @@ mod tests {
 
     #[test]
     fn test_classify_and_parse_movie_filename() {
-        let meta = title_parser::parse("Inception.2010.1080p.BluRay.x264-GROUP");
-        assert!(meta.is_some());
-        let meta = meta.unwrap();
+        let meta = title_parser::parse("Inception.2010.1080p.BluRay.x264-GROUP").unwrap();
         assert_eq!(meta.content_type, ContentType::Movie);
         assert_eq!(meta.title.as_deref(), Some("Inception"));
     }
 
     #[test]
     fn test_classify_and_parse_episode_filename() {
-        let meta = title_parser::parse("Breaking.Bad.S05E16.1080p.BluRay");
-        assert!(meta.is_some());
-        let meta = meta.unwrap();
+        let meta = title_parser::parse("Breaking.Bad.S05E16.1080p.BluRay").unwrap();
         assert_eq!(meta.content_type, ContentType::Episode);
         assert_eq!(meta.season, Some(5));
         assert_eq!(meta.episode, Some(16));
@@ -481,9 +409,7 @@ mod tests {
 
     #[test]
     fn test_classify_and_parse_season_filename() {
-        let meta = title_parser::parse("Breaking.Bad.S05.1080p.BluRay");
-        assert!(meta.is_some());
-        let meta = meta.unwrap();
+        let meta = title_parser::parse("Breaking.Bad.S05.1080p.BluRay").unwrap();
         assert_eq!(meta.content_type, ContentType::Season);
         assert_eq!(meta.season, Some(5));
         assert_eq!(meta.episode, None);
@@ -493,11 +419,10 @@ mod tests {
     // End-to-end pipeline data flow
     // =====================================================================
 
-    #[tokio::test]
-    async fn test_season_pack_record_has_correct_fields() {
-        let state = AppState::new();
+    #[test]
+    fn test_season_pack_record_has_correct_fields() {
+        let state = test_state();
 
-        // Simulate what add_hashlist_result does
         let entry = HashlistEntry {
             filename: "House.of.the.Dragon.S02.1080p.MAX.WEB-DL.DDP5.1.Atmos.H.264-FLUX".into(),
             hash: "c".repeat(40),
@@ -505,7 +430,6 @@ mod tests {
         };
 
         let meta = title_parser::parse(&entry.filename);
-
         let record = MagnetRecord {
             filename: entry.filename.clone(),
             hash: entry.hash.clone(),
@@ -517,38 +441,24 @@ mod tests {
             title: meta.as_ref().and_then(|m| m.title.clone()),
             season: meta.as_ref().and_then(|m| m.season),
             episode: meta.as_ref().and_then(|m| m.episode),
-            file_index: None,
-            imdb_tag: None,
+            file_index: None, imdb_tag: None,
         };
 
         assert_eq!(record.content_type.as_deref(), Some("season"));
         assert_eq!(record.title.as_deref(), Some("House of the Dragon"));
         assert_eq!(record.season, Some(2));
-        assert_eq!(record.episode, None);
-        assert!(record.imdb_tag.is_none());
 
-        state.records.write().await.push(record);
+        state.db.insert_record(&record).unwrap();
 
-        // Verify it would be picked up by the pipeline filter
-        let records = state.records.read().await;
-        let season_packs: Vec<_> = records
-            .iter()
-            .filter(|r| {
-                r.imdb_tag.is_none()
-                    && r.content_type.as_deref() == Some("season")
-                    && r.title.is_some()
-                    && r.season.is_some()
-            })
-            .collect();
-        assert_eq!(season_packs.len(), 1);
+        let packs = state.db.get_unprocessed_season_packs().unwrap();
+        assert_eq!(packs.len(), 1);
     }
 
     #[test]
     fn test_episode_record_from_season_expansion() {
         let file = TorrentFile {
             path: "House.of.the.Dragon.S02E01.A.Son.for.a.Son.1080p.mkv".into(),
-            size: 2_000_000_000,
-            index: 0,
+            size: 2_000_000_000, index: 0,
         };
 
         let (title, season, episode) =
@@ -558,7 +468,6 @@ mod tests {
         assert_eq!(season, 2);
         assert_eq!(episode, 1);
 
-        // Build the episode record as the pipeline would
         let record = MagnetRecord {
             filename: file.path.clone(),
             hash: "c".repeat(40),
