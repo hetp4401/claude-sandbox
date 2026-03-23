@@ -1,12 +1,15 @@
 mod db;
 mod dht;
 mod hashlist;
+mod imdb_pipeline;
+mod imdb_resolver;
 mod ingestor;
 mod logs;
 mod pipeline;
 mod title_parser;
 
 use axum::{extract::Query, extract::State, response::Html, routing::get, Router};
+use imdb_resolver::ImdbResolver;
 use ingestor::AppState;
 use logs::LogBuffer;
 use serde::Deserialize;
@@ -55,10 +58,28 @@ async fn api_parsed(
     }
 }
 
+async fn api_imdb(
+    State(state): State<AppState>,
+    Query(params): Query<PageQuery>,
+) -> axum::Json<serde_json::Value> {
+    let page = params.page.unwrap_or(1).max(1);
+    let per_page = params.per_page.unwrap_or(50).clamp(1, 200);
+    match state.db.get_imdb_mappings_page(page, per_page).await {
+        Ok(p) => axum::Json(serde_json::json!({
+            "items": p.items,
+            "total": p.total,
+            "page": p.page,
+            "per_page": p.per_page,
+        })),
+        Err(e) => axum::Json(serde_json::json!({ "error": e.to_string() })),
+    }
+}
+
 async fn api_stats(State(state): State<AppState>) -> axum::Json<serde_json::Value> {
     let counts = state.db.counts().await.unwrap_or(db::RecordCounts {
         total_torrents: 0,
         total_parsed: 0,
+        total_imdb: 0,
     });
     let total_hl = state.db.count_hashlists().await.unwrap_or(0);
     let done_hl = state.db.count_hashlists_done().await.unwrap_or(0);
@@ -66,6 +87,7 @@ async fn api_stats(State(state): State<AppState>) -> axum::Json<serde_json::Valu
     axum::Json(serde_json::json!({
         "total_torrents": counts.total_torrents,
         "total_parsed": counts.total_parsed,
+        "total_imdb": counts.total_imdb,
         "total_hashlists": total_hl,
         "done_hashlists": done_hl,
     }))
@@ -95,8 +117,8 @@ async fn main() {
     println!("=== DMM Hashlist Ingestor ===");
     println!();
 
-    let database_url =
-        std::env::var("DATABASE_URL").unwrap_or_else(|_| "postgres://dmm:dmm@localhost:5432/dmm".into());
+    let database_url = std::env::var("DATABASE_URL")
+        .unwrap_or_else(|_| "postgres://dmm:dmm@localhost:5432/dmm".into());
     let poll_secs: u64 = std::env::var("POLL_INTERVAL_SECS")
         .ok()
         .and_then(|v| v.parse().ok())
@@ -109,9 +131,22 @@ async fn main() {
 
     let state = AppState::new(database, log_buf);
 
+    // Build a shared HTTP client and IMDb resolver for the pipeline
+    let http_client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(15))
+        .build()
+        .expect("Failed to build HTTP client");
+    let resolver = ImdbResolver::new(http_client);
+
     let ingest_state = state.clone();
+    let ingest_resolver = resolver.clone();
     tokio::spawn(async move {
-        ingestor::run_ingest_loop(ingest_state, std::time::Duration::from_secs(poll_secs)).await;
+        ingestor::run_ingest_loop(
+            ingest_state,
+            ingest_resolver,
+            std::time::Duration::from_secs(poll_secs),
+        )
+        .await;
     });
 
     log!(state.logs, "Starting web dashboard on http://0.0.0.0:3000");
@@ -120,6 +155,7 @@ async fn main() {
         .route("/", get(dashboard))
         .route("/api/torrents", get(api_torrents))
         .route("/api/parsed", get(api_parsed))
+        .route("/api/imdb", get(api_imdb))
         .route("/api/stats", get(api_stats))
         .route("/api/logs", get(api_logs))
         .with_state(state);
@@ -168,10 +204,11 @@ const DASHBOARD_HTML: &str = r##"<!DOCTYPE html>
   code { background: #1c2128; padding: 2px 6px; border-radius: 4px; font-size: 0.82em; color: #79c0ff; }
   .fn { max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ts { color: #8b949e; font-size: 0.82em; white-space: nowrap; }
+  .imdb-link { color: #f5c518; text-decoration: none; font-weight: 600; }
+  .imdb-link:hover { text-decoration: underline; }
   .tbl-wrap { max-height: 600px; overflow-y: auto; border-radius: 8px; }
   .empty { color: #484f58; padding: 40px; text-align: center; font-size: 0.95em; }
 
-  /* Pagination */
   .pagination { display: flex; align-items: center; gap: 8px; margin-top: 12px; justify-content: center; }
   .pagination button { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; border-radius: 6px;
                         padding: 6px 14px; cursor: pointer; font-size: 0.82em; transition: all 0.15s; }
@@ -179,7 +216,6 @@ const DASHBOARD_HTML: &str = r##"<!DOCTYPE html>
   .pagination button:disabled { opacity: 0.4; cursor: default; }
   .pagination .page-info { color: #8b949e; font-size: 0.85em; }
 
-  /* Logs */
   #log-box { background: #0d1117; border: 1px solid #21262d; border-radius: 8px; padding: 12px;
              font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.8em; line-height: 1.6;
              max-height: 400px; overflow-y: auto; color: #8b949e; white-space: pre-wrap; word-break: break-all; }
@@ -209,6 +245,7 @@ const DASHBOARD_HTML: &str = r##"<!DOCTYPE html>
 <div class="tabs">
   <div class="tab active" data-tab="torrents">Torrents</div>
   <div class="tab" data-tab="parsed">Parsed Metadata</div>
+  <div class="tab" data-tab="imdb">IMDb Mappings</div>
   <div class="tab" data-tab="logs">Logs</div>
 </div>
 
@@ -226,6 +263,13 @@ const DASHBOARD_HTML: &str = r##"<!DOCTYPE html>
   </div>
 </div>
 
+<div id="tab-imdb" class="tab-content">
+  <div class="tab-panel">
+    <div class="tbl-wrap" id="imdb-table"></div>
+    <div class="pagination" id="imdb-pag"></div>
+  </div>
+</div>
+
 <div id="tab-logs" class="tab-content">
   <div class="tab-panel">
     <div class="log-controls">
@@ -238,11 +282,9 @@ const DASHBOARD_HTML: &str = r##"<!DOCTYPE html>
 </div>
 
 <script>
-// State
-let torrentsPage = 1, parsedPage = 1;
+let torrentsPage = 1, parsedPage = 1, imdbPage = 1;
 const PER_PAGE = 50;
 
-// Tab switching
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -264,10 +306,7 @@ function fmtSize(bytes) {
 }
 
 function fmtTime(iso) {
-  try {
-    const d = new Date(iso);
-    return d.toLocaleString();
-  } catch(e) { return iso; }
+  try { return new Date(iso).toLocaleString(); } catch(e) { return iso; }
 }
 
 function renderPagination(containerId, page, total, perPage, onPageChange) {
@@ -279,7 +318,6 @@ function renderPagination(containerId, page, total, perPage, onPageChange) {
     <button ${page >= totalPages ? 'disabled' : ''} onclick="(${onPageChange})(${page + 1})">Next</button>`;
 }
 
-// Stats
 async function loadStats() {
   try {
     const r = await fetch('/api/stats');
@@ -287,16 +325,16 @@ async function loadStats() {
     document.getElementById('stats').innerHTML = `
       <div class="stat"><div class="num">${s.total_torrents}</div><div class="label">Torrents</div></div>
       <div class="stat"><div class="num">${s.total_parsed}</div><div class="label">Parsed</div></div>
+      <div class="stat"><div class="num">${s.total_imdb}</div><div class="label">IMDb</div></div>
       <div class="stat"><div class="num">${s.total_hashlists}</div><div class="label">Hashlists</div></div>
       <div class="stat"><div class="num">${s.done_hashlists}</div><div class="label">Done</div></div>`;
     document.getElementById('subtitle').textContent =
-      `${s.total_torrents} torrents, ${s.total_parsed} parsed entries, ${s.total_hashlists} hashlists`;
+      `${s.total_torrents} torrents, ${s.total_parsed} parsed, ${s.total_imdb} IMDb mapped, ${s.total_hashlists} hashlists`;
   } catch(e) {
     document.getElementById('subtitle').textContent = 'Failed to load stats';
   }
 }
 
-// Torrents table
 async function loadTorrents(page) {
   if (page !== undefined) torrentsPage = page;
   try {
@@ -324,7 +362,6 @@ async function loadTorrents(page) {
   }
 }
 
-// Parsed metadata table
 async function loadParsed(page) {
   if (page !== undefined) parsedPage = page;
   try {
@@ -354,7 +391,32 @@ async function loadParsed(page) {
   }
 }
 
-// Logs
+async function loadImdb(page) {
+  if (page !== undefined) imdbPage = page;
+  try {
+    const r = await fetch(`/api/imdb?page=${imdbPage}&per_page=${PER_PAGE}`);
+    const data = await r.json();
+    if (!data.items || data.items.length === 0) {
+      document.getElementById('imdb-table').innerHTML = '<div class="empty">No IMDb mappings yet</div>';
+      document.getElementById('imdb-pag').innerHTML = '';
+      return;
+    }
+    let html = `<table><tr><th>Hash</th><th>IMDb ID</th><th>Last Updated</th></tr>`;
+    for (const m of data.items) {
+      html += `<tr>
+        <td><code>${esc(m.hash.slice(0,12))}</code></td>
+        <td><a class="imdb-link" href="https://www.imdb.com/title/${esc(m.imdb_id)}/" target="_blank" rel="noopener">${esc(m.imdb_id)}</a></td>
+        <td class="ts">${fmtTime(m.last_updated)}</td>
+      </tr>`;
+    }
+    html += '</table>';
+    document.getElementById('imdb-table').innerHTML = html;
+    renderPagination('imdb-pag', data.page, data.total, data.per_page, loadImdb);
+  } catch(e) {
+    document.getElementById('imdb-table').innerHTML = '<div class="empty">Failed to load IMDb mappings</div>';
+  }
+}
+
 let logCursor = 0;
 async function pollLogs() {
   try {
@@ -367,7 +429,7 @@ async function pollLogs() {
         if (line.includes('[OK]')) span.className = 'log-ok';
         else if (line.includes('[ERROR]')) span.className = 'log-err';
         else if (line.includes('[WARN]')) span.className = 'log-warn';
-        else if (line.includes('[INGESTOR]') || line.includes('[PIPELINE]')) span.className = 'log-info';
+        else if (line.includes('[INGESTOR]') || line.includes('[PIPELINE]') || line.includes('[IMDB]')) span.className = 'log-info';
         span.textContent = line;
         box.appendChild(span);
       }
@@ -382,17 +444,15 @@ async function pollLogs() {
   }
 }
 
-// Refresh
 async function refreshAll() {
   const btn = document.getElementById('refresh-btn');
   btn.classList.add('loading');
   btn.textContent = 'Loading...';
-  await Promise.all([loadStats(), loadTorrents(), loadParsed(), pollLogs()]);
+  await Promise.all([loadStats(), loadTorrents(), loadParsed(), loadImdb(), pollLogs()]);
   btn.classList.remove('loading');
   btn.textContent = 'Refresh';
 }
 
-// Log auto-polling
 let logInterval = null;
 function startLogPolling() {
   if (logInterval) clearInterval(logInterval);
@@ -405,7 +465,6 @@ document.getElementById('log-autopoll').addEventListener('change', (e) => {
   else if (logInterval) { clearInterval(logInterval); logInterval = null; }
 });
 
-// Initial load
 refreshAll();
 startLogPolling();
 </script>

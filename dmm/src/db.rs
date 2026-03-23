@@ -38,9 +38,18 @@ pub struct Paginated<T> {
     pub per_page: i64,
 }
 
+/// A row from the `imdb_mappings` table.
+#[derive(Debug, Clone, Serialize)]
+pub struct ImdbMappingRow {
+    pub hash: String,
+    pub imdb_id: String,
+    pub last_updated: String,
+}
+
 pub struct RecordCounts {
     pub total_torrents: i64,
     pub total_parsed: i64,
+    pub total_imdb: i64,
 }
 
 impl Db {
@@ -82,6 +91,12 @@ impl Db {
                 last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW()
             );
 
+            CREATE TABLE IF NOT EXISTS imdb_mappings (
+                hash TEXT PRIMARY KEY,
+                imdb_id TEXT NOT NULL,
+                last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            );
+
             CREATE TABLE IF NOT EXISTS hashlists (
                 id SERIAL PRIMARY KEY,
                 name TEXT NOT NULL,
@@ -113,8 +128,14 @@ impl Db {
                 BEFORE UPDATE ON parsed_metadata
                 FOR EACH ROW EXECUTE FUNCTION update_last_updated();
 
+            DROP TRIGGER IF EXISTS imdb_mappings_update_last_updated ON imdb_mappings;
+            CREATE TRIGGER imdb_mappings_update_last_updated
+                BEFORE UPDATE ON imdb_mappings
+                FOR EACH ROW EXECUTE FUNCTION update_last_updated();
+
             CREATE INDEX IF NOT EXISTS idx_torrents_last_updated ON torrents(last_updated DESC);
             CREATE INDEX IF NOT EXISTS idx_parsed_metadata_last_updated ON parsed_metadata(last_updated DESC);
+            CREATE INDEX IF NOT EXISTS idx_imdb_mappings_last_updated ON imdb_mappings(last_updated DESC);
             ",
             )
             .await?;
@@ -282,6 +303,110 @@ impl Db {
     }
 
     // =========================================================================
+    // IMDb Mappings
+    // =========================================================================
+
+    pub async fn upsert_imdb_mapping(
+        &self,
+        hash: &str,
+        imdb_id: &str,
+    ) -> Result<(), tokio_postgres::Error> {
+        self.client
+            .execute(
+                "INSERT INTO imdb_mappings (hash, imdb_id)
+                 VALUES ($1, $2)
+                 ON CONFLICT (hash) DO UPDATE SET imdb_id = $2",
+                &[&hash, &imdb_id],
+            )
+            .await?;
+        Ok(())
+    }
+
+    /// Get parsed_metadata rows that have no corresponding imdb_mappings entry yet.
+    pub async fn get_unmapped_parsed_entries(
+        &self,
+        limit: i64,
+    ) -> Result<Vec<ParsedMetadataRow>, tokio_postgres::Error> {
+        let rows = self
+            .client
+            .query(
+                "SELECT p.hash, p.title, p.year, p.season, p.episode, p.last_updated
+                 FROM parsed_metadata p
+                 LEFT JOIN imdb_mappings m ON p.hash = m.hash
+                 WHERE m.hash IS NULL
+                 ORDER BY p.last_updated DESC
+                 LIMIT $1",
+                &[&limit],
+            )
+            .await?;
+
+        let items = rows
+            .iter()
+            .map(|r| {
+                let ts: chrono::DateTime<chrono::Utc> = r.get(5);
+                ParsedMetadataRow {
+                    hash: r.get(0),
+                    title: r.get(1),
+                    year: r.get(2),
+                    season: r.get(3),
+                    episode: r.get(4),
+                    last_updated: ts.to_rfc3339(),
+                }
+            })
+            .collect();
+
+        Ok(items)
+    }
+
+    pub async fn get_imdb_mappings_page(
+        &self,
+        page: i64,
+        per_page: i64,
+    ) -> Result<Paginated<ImdbMappingRow>, tokio_postgres::Error> {
+        let offset = (page - 1) * per_page;
+        let total: i64 = self
+            .client
+            .query_one("SELECT COUNT(*) FROM imdb_mappings", &[])
+            .await?
+            .get(0);
+        let rows = self
+            .client
+            .query(
+                "SELECT hash, imdb_id, last_updated
+                 FROM imdb_mappings ORDER BY last_updated DESC LIMIT $1 OFFSET $2",
+                &[&per_page, &offset],
+            )
+            .await?;
+
+        let items = rows
+            .iter()
+            .map(|r| {
+                let ts: chrono::DateTime<chrono::Utc> = r.get(2);
+                ImdbMappingRow {
+                    hash: r.get(0),
+                    imdb_id: r.get(1),
+                    last_updated: ts.to_rfc3339(),
+                }
+            })
+            .collect();
+
+        Ok(Paginated {
+            items,
+            total,
+            page,
+            per_page,
+        })
+    }
+
+    pub async fn count_imdb_mappings(&self) -> Result<i64, tokio_postgres::Error> {
+        let row = self
+            .client
+            .query_one("SELECT COUNT(*) FROM imdb_mappings", &[])
+            .await?;
+        Ok(row.get(0))
+    }
+
+    // =========================================================================
     // Hashlists
     // =========================================================================
 
@@ -355,9 +480,15 @@ impl Db {
             .query_one("SELECT COUNT(*) FROM parsed_metadata", &[])
             .await?
             .get(0);
+        let i: i64 = self
+            .client
+            .query_one("SELECT COUNT(*) FROM imdb_mappings", &[])
+            .await?
+            .get(0);
         Ok(RecordCounts {
             total_torrents: t,
             total_parsed: p,
+            total_imdb: i,
         })
     }
 }

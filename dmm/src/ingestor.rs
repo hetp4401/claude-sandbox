@@ -191,8 +191,13 @@ async fn fetch_and_parse_hashlist(
     hashlist::parse_hashlist_html(&html)
 }
 
-/// Run the ingestion loop: poll GitHub, process new hashlists concurrently.
-pub async fn run_ingest_loop(state: AppState, poll_interval: std::time::Duration) {
+/// Run the ingestion loop: poll GitHub, process new hashlists concurrently,
+/// then run IMDb resolution pipeline.
+pub async fn run_ingest_loop(
+    state: AppState,
+    resolver: crate::imdb_resolver::ImdbResolver,
+    poll_interval: std::time::Duration,
+) {
     let num_workers = std::thread::available_parallelism()
         .map(|n| n.get())
         .unwrap_or(4);
@@ -271,16 +276,21 @@ pub async fn run_ingest_loop(state: AppState, poll_interval: std::time::Duration
             }
         }
 
+        // Run IMDb resolution pipeline
+        crate::imdb_pipeline::run_imdb_pipeline(&state, &resolver).await;
+
         let counts = state.db.counts().await.unwrap_or(crate::db::RecordCounts {
             total_torrents: 0,
             total_parsed: 0,
+            total_imdb: 0,
         });
         let hl_count = state.db.count_hashlists().await.unwrap_or(0);
         log!(
             state.logs,
-            "[INGESTOR] State: {} torrents, {} parsed, {hl_count} hashlists processed",
+            "[INGESTOR] State: {} torrents, {} parsed, {} IMDb, {hl_count} hashlists",
             counts.total_torrents,
-            counts.total_parsed
+            counts.total_parsed,
+            counts.total_imdb
         );
         log!(
             state.logs,
