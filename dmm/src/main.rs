@@ -7,7 +7,7 @@ mod pipeline;
 mod title_parser;
 
 use axum::{extract::Query, extract::State, response::Html, routing::get, Router};
-use ingestor::{AppState, HashlistStatus, MagnetRecord};
+use ingestor::AppState;
 use logs::LogBuffer;
 use serde::Deserialize;
 
@@ -15,26 +15,57 @@ async fn dashboard(State(_state): State<AppState>) -> Html<String> {
     Html(DASHBOARD_HTML.to_string())
 }
 
-async fn api_records(State(state): State<AppState>) -> axum::Json<Vec<MagnetRecord>> {
-    axum::Json(state.db.get_all_records().unwrap_or_default())
+#[derive(Deserialize)]
+struct PageQuery {
+    page: Option<i64>,
+    per_page: Option<i64>,
 }
 
-async fn api_hashlists(State(state): State<AppState>) -> axum::Json<Vec<HashlistStatus>> {
-    axum::Json(state.db.get_all_hashlists().unwrap_or_default())
+async fn api_torrents(
+    State(state): State<AppState>,
+    Query(params): Query<PageQuery>,
+) -> axum::Json<serde_json::Value> {
+    let page = params.page.unwrap_or(1).max(1);
+    let per_page = params.per_page.unwrap_or(50).clamp(1, 200);
+    match state.db.get_torrents_page(page, per_page).await {
+        Ok(p) => axum::Json(serde_json::json!({
+            "items": p.items,
+            "total": p.total,
+            "page": p.page,
+            "per_page": p.per_page,
+        })),
+        Err(e) => axum::Json(serde_json::json!({ "error": e.to_string() })),
+    }
+}
+
+async fn api_parsed(
+    State(state): State<AppState>,
+    Query(params): Query<PageQuery>,
+) -> axum::Json<serde_json::Value> {
+    let page = params.page.unwrap_or(1).max(1);
+    let per_page = params.per_page.unwrap_or(50).clamp(1, 200);
+    match state.db.get_parsed_metadata_page(page, per_page).await {
+        Ok(p) => axum::Json(serde_json::json!({
+            "items": p.items,
+            "total": p.total,
+            "page": p.page,
+            "per_page": p.per_page,
+        })),
+        Err(e) => axum::Json(serde_json::json!({ "error": e.to_string() })),
+    }
 }
 
 async fn api_stats(State(state): State<AppState>) -> axum::Json<serde_json::Value> {
-    let counts = state.db.count_records().unwrap_or(db::RecordCounts {
-        total: 0, movies: 0, episodes: 0, seasons: 0,
+    let counts = state.db.counts().await.unwrap_or(db::RecordCounts {
+        total_torrents: 0,
+        total_parsed: 0,
     });
-    let total_hl = state.db.count_hashlists().unwrap_or(0);
-    let done_hl = state.db.count_hashlists_done().unwrap_or(0);
+    let total_hl = state.db.count_hashlists().await.unwrap_or(0);
+    let done_hl = state.db.count_hashlists_done().await.unwrap_or(0);
 
     axum::Json(serde_json::json!({
-        "total_records": counts.total,
-        "movies": counts.movies,
-        "episodes": counts.episodes,
-        "seasons": counts.seasons,
+        "total_torrents": counts.total_torrents,
+        "total_parsed": counts.total_parsed,
         "total_hashlists": total_hl,
         "done_hashlists": done_hl,
     }))
@@ -64,46 +95,31 @@ async fn main() {
     println!("=== DMM Hashlist Ingestor ===");
     println!();
 
-    let db_path = std::env::var("DB_PATH").unwrap_or_else(|_| "/data/dmm.db".into());
+    let database_url =
+        std::env::var("DATABASE_URL").unwrap_or_else(|_| "postgres://dmm:dmm@localhost:5432/dmm".into());
     let poll_secs: u64 = std::env::var("POLL_INTERVAL_SECS")
         .ok()
         .and_then(|v| v.parse().ok())
         .unwrap_or(3600);
 
-    if let Some(parent) = std::path::Path::new(&db_path).parent() {
-        std::fs::create_dir_all(parent).ok();
-    }
-
-    let database = db::Db::open(&db_path).expect("Failed to open database");
-    log!(log_buf, "Database: {db_path}");
+    let database = db::Db::connect(&database_url)
+        .await
+        .expect("Failed to connect to PostgreSQL");
+    log!(log_buf, "Connected to PostgreSQL");
 
     let state = AppState::new(database, log_buf);
 
-    if let Ok(counts) = state.db.count_records() {
-        if counts.total > 0 {
-            log!(
-                state.logs,
-                "Resuming with {} records ({} movies, {} episodes, {} seasons)",
-                counts.total, counts.movies, counts.episodes, counts.seasons
-            );
-        }
-    }
-
     let ingest_state = state.clone();
     tokio::spawn(async move {
-        ingestor::run_ingest_loop(
-            ingest_state,
-            std::time::Duration::from_secs(poll_secs),
-        )
-        .await;
+        ingestor::run_ingest_loop(ingest_state, std::time::Duration::from_secs(poll_secs)).await;
     });
 
     log!(state.logs, "Starting web dashboard on http://0.0.0.0:3000");
 
     let app = Router::new()
         .route("/", get(dashboard))
-        .route("/api/records", get(api_records))
-        .route("/api/hashlists", get(api_hashlists))
+        .route("/api/torrents", get(api_torrents))
+        .route("/api/parsed", get(api_parsed))
         .route("/api/stats", get(api_stats))
         .route("/api/logs", get(api_logs))
         .with_state(state);
@@ -127,7 +143,6 @@ const DASHBOARD_HTML: &str = r##"<!DOCTYPE html>
   .stat .num { font-size: 1.8em; font-weight: bold; color: #58a6ff; }
   .stat .label { color: #8b949e; font-size: 0.82em; }
 
-  /* Tabs */
   .tabs { display: flex; gap: 0; margin-bottom: 0; border-bottom: 2px solid #21262d; }
   .tab { padding: 10px 24px; cursor: pointer; color: #8b949e; font-size: 0.9em; font-weight: 500;
          border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s; user-select: none; }
@@ -137,7 +152,6 @@ const DASHBOARD_HTML: &str = r##"<!DOCTYPE html>
   .tab-content.active { display: block; }
   .tab-panel { padding-top: 16px; }
 
-  /* Refresh button */
   .refresh-btn { background: #21262d; color: #58a6ff; border: 1px solid #30363d; border-radius: 6px;
                  padding: 6px 16px; cursor: pointer; font-size: 0.85em; margin-left: 12px; transition: all 0.15s; }
   .refresh-btn:hover { background: #30363d; }
@@ -146,24 +160,24 @@ const DASHBOARD_HTML: &str = r##"<!DOCTYPE html>
   .topbar { display: flex; align-items: center; margin-bottom: 20px; }
   .topbar h1 { flex: 1; }
 
-  /* Tables */
   table { width: 100%; border-collapse: collapse; background: #161b22; border-radius: 8px; overflow: hidden; }
   th { background: #21262d; color: #8b949e; text-align: left; padding: 10px 14px; font-size: 0.78em;
        text-transform: uppercase; letter-spacing: 0.05em; position: sticky; top: 0; z-index: 1; }
   td { padding: 10px 14px; border-bottom: 1px solid #21262d; font-size: 0.88em; }
   tr:hover { background: #1c2128; }
   code { background: #1c2128; padding: 2px 6px; border-radius: 4px; font-size: 0.82em; color: #79c0ff; }
-  .fn { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .src { color: #d2a8ff; }
+  .fn { max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .ts { color: #8b949e; font-size: 0.82em; white-space: nowrap; }
-  .done { color: #3fb950; font-weight: 600; }
-  .err { color: #f85149; font-weight: 600; }
-  .type-movie { color: #79c0ff; font-weight: 600; }
-  .type-ep { color: #3fb950; font-weight: 600; }
-  .type-season { color: #d2a8ff; font-weight: 600; }
-  .type-unk { color: #8b949e; }
   .tbl-wrap { max-height: 600px; overflow-y: auto; border-radius: 8px; }
   .empty { color: #484f58; padding: 40px; text-align: center; font-size: 0.95em; }
+
+  /* Pagination */
+  .pagination { display: flex; align-items: center; gap: 8px; margin-top: 12px; justify-content: center; }
+  .pagination button { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; border-radius: 6px;
+                        padding: 6px 14px; cursor: pointer; font-size: 0.82em; transition: all 0.15s; }
+  .pagination button:hover:not(:disabled) { background: #30363d; }
+  .pagination button:disabled { opacity: 0.4; cursor: default; }
+  .pagination .page-info { color: #8b949e; font-size: 0.85em; }
 
   /* Logs */
   #log-box { background: #0d1117; border: 1px solid #21262d; border-radius: 8px; padding: 12px;
@@ -193,20 +207,22 @@ const DASHBOARD_HTML: &str = r##"<!DOCTYPE html>
 <div class="stats" id="stats"></div>
 
 <div class="tabs">
-  <div class="tab active" data-tab="records">Records</div>
-  <div class="tab" data-tab="hashlists">Hashlists</div>
+  <div class="tab active" data-tab="torrents">Torrents</div>
+  <div class="tab" data-tab="parsed">Parsed Metadata</div>
   <div class="tab" data-tab="logs">Logs</div>
 </div>
 
-<div id="tab-records" class="tab-content active">
+<div id="tab-torrents" class="tab-content active">
   <div class="tab-panel">
-    <div class="tbl-wrap" id="records-table"></div>
+    <div class="tbl-wrap" id="torrents-table"></div>
+    <div class="pagination" id="torrents-pag"></div>
   </div>
 </div>
 
-<div id="tab-hashlists" class="tab-content">
+<div id="tab-parsed" class="tab-content">
   <div class="tab-panel">
-    <div class="tbl-wrap" id="hashlists-table"></div>
+    <div class="tbl-wrap" id="parsed-table"></div>
+    <div class="pagination" id="parsed-pag"></div>
   </div>
 </div>
 
@@ -222,6 +238,10 @@ const DASHBOARD_HTML: &str = r##"<!DOCTYPE html>
 </div>
 
 <script>
+// State
+let torrentsPage = 1, parsedPage = 1;
+const PER_PAGE = 50;
+
 // Tab switching
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
@@ -243,11 +263,20 @@ function fmtSize(bytes) {
   return bytes >= gb ? (bytes / gb).toFixed(2) + ' GB' : (bytes / mb).toFixed(2) + ' MB';
 }
 
-function typeClass(t) {
-  if (t === 'movie') return 'type-movie';
-  if (t === 'episode') return 'type-ep';
-  if (t === 'season') return 'type-season';
-  return 'type-unk';
+function fmtTime(iso) {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString();
+  } catch(e) { return iso; }
+}
+
+function renderPagination(containerId, page, total, perPage, onPageChange) {
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  const el = document.getElementById(containerId);
+  el.innerHTML = `
+    <button ${page <= 1 ? 'disabled' : ''} onclick="(${onPageChange})(${page - 1})">Prev</button>
+    <span class="page-info">Page ${page} of ${totalPages} (${total} total)</span>
+    <button ${page >= totalPages ? 'disabled' : ''} onclick="(${onPageChange})(${page + 1})">Next</button>`;
 }
 
 // Stats
@@ -256,73 +285,72 @@ async function loadStats() {
     const r = await fetch('/api/stats');
     const s = await r.json();
     document.getElementById('stats').innerHTML = `
-      <div class="stat"><div class="num">${s.total_records}</div><div class="label">Total Records</div></div>
-      <div class="stat"><div class="num">${s.movies}</div><div class="label">Movies</div></div>
-      <div class="stat"><div class="num">${s.episodes}</div><div class="label">Episodes</div></div>
-      <div class="stat"><div class="num">${s.seasons}</div><div class="label">Season Packs</div></div>
+      <div class="stat"><div class="num">${s.total_torrents}</div><div class="label">Torrents</div></div>
+      <div class="stat"><div class="num">${s.total_parsed}</div><div class="label">Parsed</div></div>
       <div class="stat"><div class="num">${s.total_hashlists}</div><div class="label">Hashlists</div></div>
       <div class="stat"><div class="num">${s.done_hashlists}</div><div class="label">Done</div></div>`;
     document.getElementById('subtitle').textContent =
-      `${s.total_records} records across ${s.total_hashlists} hashlists`;
+      `${s.total_torrents} torrents, ${s.total_parsed} parsed entries, ${s.total_hashlists} hashlists`;
   } catch(e) {
     document.getElementById('subtitle').textContent = 'Failed to load stats';
   }
 }
 
-// Records table
-async function loadRecords() {
+// Torrents table
+async function loadTorrents(page) {
+  if (page !== undefined) torrentsPage = page;
   try {
-    const r = await fetch('/api/records');
-    const records = await r.json();
-    if (records.length === 0) {
-      document.getElementById('records-table').innerHTML = '<div class="empty">No records yet</div>';
+    const r = await fetch(`/api/torrents?page=${torrentsPage}&per_page=${PER_PAGE}`);
+    const data = await r.json();
+    if (!data.items || data.items.length === 0) {
+      document.getElementById('torrents-table').innerHTML = '<div class="empty">No torrents yet</div>';
+      document.getElementById('torrents-pag').innerHTML = '';
       return;
     }
-    let html = `<table><tr><th>Filename</th><th>Hash</th><th>Size</th><th>Type</th><th>Title</th><th>S</th><th>E</th><th>Idx</th><th>IMDb</th></tr>`;
-    for (const r of records) {
-      const tc = typeClass(r.content_type);
+    let html = `<table><tr><th>Hash</th><th>Filename</th><th>Size</th><th>Last Updated</th></tr>`;
+    for (const t of data.items) {
       html += `<tr>
-        <td class="fn">${esc(r.filename)}</td>
-        <td><code>${esc(r.hash.slice(0,8))}</code></td>
-        <td>${fmtSize(r.size_bytes)}</td>
-        <td class="${tc}">${esc(r.content_type || '\u2014')}</td>
-        <td>${esc(r.title || '\u2014')}</td>
-        <td>${r.season != null ? r.season : '\u2014'}</td>
-        <td>${r.episode != null ? r.episode : '\u2014'}</td>
-        <td>${r.file_index != null ? r.file_index : '\u2014'}</td>
-        <td class="src">${esc(r.imdb_tag || '\u2014')}</td>
+        <td><code>${esc(t.hash.slice(0,12))}</code></td>
+        <td class="fn">${esc(t.filename)}</td>
+        <td>${fmtSize(t.size_bytes)}</td>
+        <td class="ts">${fmtTime(t.last_updated)}</td>
       </tr>`;
     }
     html += '</table>';
-    document.getElementById('records-table').innerHTML = html;
+    document.getElementById('torrents-table').innerHTML = html;
+    renderPagination('torrents-pag', data.page, data.total, data.per_page, loadTorrents);
   } catch(e) {
-    document.getElementById('records-table').innerHTML = '<div class="empty">Failed to load records</div>';
+    document.getElementById('torrents-table').innerHTML = '<div class="empty">Failed to load torrents</div>';
   }
 }
 
-// Hashlists table
-async function loadHashlists() {
+// Parsed metadata table
+async function loadParsed(page) {
+  if (page !== undefined) parsedPage = page;
   try {
-    const r = await fetch('/api/hashlists');
-    const hls = await r.json();
-    if (hls.length === 0) {
-      document.getElementById('hashlists-table').innerHTML = '<div class="empty">No hashlists processed yet</div>';
+    const r = await fetch(`/api/parsed?page=${parsedPage}&per_page=${PER_PAGE}`);
+    const data = await r.json();
+    if (!data.items || data.items.length === 0) {
+      document.getElementById('parsed-table').innerHTML = '<div class="empty">No parsed metadata yet</div>';
+      document.getElementById('parsed-pag').innerHTML = '';
       return;
     }
-    let html = `<table><tr><th>Name</th><th>Records</th><th>Status</th><th>Processed At</th></tr>`;
-    for (const h of hls) {
-      const sc = h.status === 'done' ? 'done' : 'err';
+    let html = `<table><tr><th>Hash</th><th>Title</th><th>Year</th><th>Season</th><th>Episode</th><th>Last Updated</th></tr>`;
+    for (const p of data.items) {
       html += `<tr>
-        <td>${esc(h.name)}</td>
-        <td>${h.record_count}</td>
-        <td class="${sc}">${esc(h.status)}</td>
-        <td class="ts">${esc(h.processed_at)}</td>
+        <td><code>${esc(p.hash.slice(0,12))}</code></td>
+        <td>${esc(p.title)}</td>
+        <td>${p.year != null ? p.year : '\u2014'}</td>
+        <td>${p.season != null ? p.season : '\u2014'}</td>
+        <td>${p.episode != null ? p.episode : '\u2014'}</td>
+        <td class="ts">${fmtTime(p.last_updated)}</td>
       </tr>`;
     }
     html += '</table>';
-    document.getElementById('hashlists-table').innerHTML = html;
+    document.getElementById('parsed-table').innerHTML = html;
+    renderPagination('parsed-pag', data.page, data.total, data.per_page, loadParsed);
   } catch(e) {
-    document.getElementById('hashlists-table').innerHTML = '<div class="empty">Failed to load hashlists</div>';
+    document.getElementById('parsed-table').innerHTML = '<div class="empty">Failed to load parsed metadata</div>';
   }
 }
 
@@ -354,12 +382,12 @@ async function pollLogs() {
   }
 }
 
-// Refresh all data
+// Refresh
 async function refreshAll() {
   const btn = document.getElementById('refresh-btn');
   btn.classList.add('loading');
   btn.textContent = 'Loading...';
-  await Promise.all([loadStats(), loadRecords(), loadHashlists(), pollLogs()]);
+  await Promise.all([loadStats(), loadTorrents(), loadParsed(), pollLogs()]);
   btn.classList.remove('loading');
   btn.textContent = 'Refresh';
 }
@@ -369,9 +397,7 @@ let logInterval = null;
 function startLogPolling() {
   if (logInterval) clearInterval(logInterval);
   logInterval = setInterval(() => {
-    if (document.getElementById('log-autopoll').checked) {
-      pollLogs();
-    }
+    if (document.getElementById('log-autopoll').checked) pollLogs();
   }, 3000);
 }
 document.getElementById('log-autopoll').addEventListener('change', (e) => {

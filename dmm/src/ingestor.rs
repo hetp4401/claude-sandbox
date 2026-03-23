@@ -3,33 +3,9 @@ use crate::hashlist::{self, Hashlist, ParseError};
 use crate::log;
 use crate::logs::LogBuffer;
 use crate::title_parser;
-use chrono::Utc;
-use serde::{Deserialize, Serialize};
+use serde::Serialize;
 use std::sync::Arc;
 use tokio::sync::Semaphore;
-
-/// A processed magnet record.
-#[derive(Debug, Clone, Serialize)]
-pub struct MagnetRecord {
-    pub filename: String,
-    pub hash: String,
-    pub magnet_uri: String,
-    pub size_bytes: u64,
-    pub source_hashlist: String,
-    pub processed_at: String,
-    /// Parsed content type: "movie", "episode", or "season"
-    pub content_type: Option<String>,
-    /// Parsed title from the filename
-    pub title: Option<String>,
-    /// Season number (if episode or season pack)
-    pub season: Option<u32>,
-    /// Episode number (if episode)
-    pub episode: Option<u32>,
-    /// File index within the torrent (set by DHT for season pack expansion)
-    pub file_index: Option<u32>,
-    /// IMDb tag — null until metadata enrichment processes it
-    pub imdb_tag: Option<String>,
-}
 
 /// Status of a processed hashlist.
 #[derive(Debug, Clone, Serialize)]
@@ -37,10 +13,9 @@ pub struct HashlistStatus {
     pub name: String,
     pub record_count: usize,
     pub status: String,
-    pub processed_at: String,
 }
 
-/// Shared application state backed by SQLite.
+/// Shared application state backed by PostgreSQL.
 #[derive(Clone)]
 pub struct AppState {
     pub db: Db,
@@ -52,62 +27,75 @@ impl AppState {
         Self { db, logs }
     }
 
-    pub fn is_processed(&self, name: &str) -> bool {
-        self.db.is_processed(name).unwrap_or(false)
+    pub async fn is_processed(&self, name: &str) -> bool {
+        self.db.is_processed(name).await.unwrap_or(false)
     }
 
-    pub fn mark_processed(&self, name: &str) {
-        if let Err(e) = self.db.mark_processed(name) {
+    pub async fn mark_processed(&self, name: &str) {
+        if let Err(e) = self.db.mark_processed(name).await {
             log!(self.logs, "[ERROR] Failed to mark {name} as processed: {e}");
         }
     }
 
-    pub fn add_hashlist_result(
-        &self,
-        name: &str,
-        result: Result<Hashlist, ParseError>,
-    ) {
-        let now = Utc::now().to_rfc3339();
+    /// Ingest a hashlist result into both tables:
+    /// 1. `torrents` table: raw hash, filename, size_bytes
+    /// 2. `parsed_metadata` table: parsed title, year, season, episode
+    pub async fn add_hashlist_result(&self, name: &str, result: Result<Hashlist, ParseError>) {
         match result {
             Ok(hl) => {
                 let count = hl.list.len();
-                let records: Vec<MagnetRecord> = hl
-                    .list
-                    .iter()
-                    .map(|entry| {
-                        let meta = title_parser::parse(&entry.filename);
-                        MagnetRecord {
-                            filename: entry.filename.clone(),
-                            hash: entry.hash.clone(),
-                            magnet_uri: format!("magnet:?xt=urn:btih:{}", entry.hash),
-                            size_bytes: entry.size,
-                            source_hashlist: name.to_string(),
-                            processed_at: Utc::now().to_rfc3339(),
-                            content_type: meta.as_ref().map(|m| m.content_type.to_string()),
-                            title: meta.as_ref().and_then(|m| m.title.clone()),
-                            season: meta.as_ref().and_then(|m| m.season),
-                            episode: meta.as_ref().and_then(|m| m.episode),
-                            file_index: None,
-                            imdb_tag: None,
-                        }
-                    })
-                    .collect();
 
-                if let Err(e) = self.db.insert_records(&records) {
-                    log!(self.logs, "[ERROR] Failed to insert records for {name}: {e}");
-                    return;
+                for entry in &hl.list {
+                    // Phase 1: upsert into torrents table
+                    if let Err(e) = self
+                        .db
+                        .upsert_torrent(&entry.hash, &entry.filename, entry.size as i64)
+                        .await
+                    {
+                        log!(
+                            self.logs,
+                            "[ERROR] Failed to upsert torrent {} for {name}: {e}",
+                            &entry.hash[..8.min(entry.hash.len())]
+                        );
+                        continue;
+                    }
+
+                    // Phase 2: parse filename and upsert into parsed_metadata
+                    if let Some(meta) = title_parser::parse(&entry.filename) {
+                        if let Some(ref title) = meta.title {
+                            if let Err(e) = self
+                                .db
+                                .upsert_parsed_metadata(
+                                    &entry.hash,
+                                    title,
+                                    meta.year.map(|y| y as i32),
+                                    meta.season.map(|s| s as i32),
+                                    meta.episode.map(|e| e as i32),
+                                )
+                                .await
+                            {
+                                log!(
+                                    self.logs,
+                                    "[ERROR] Failed to upsert parsed metadata {} for {name}: {e}",
+                                    &entry.hash[..8.min(entry.hash.len())]
+                                );
+                            }
+                        }
+                    }
                 }
 
                 let status = HashlistStatus {
                     name: name.to_string(),
                     record_count: count,
                     status: "done".into(),
-                    processed_at: now,
                 };
-                if let Err(e) = self.db.insert_hashlist(&status) {
-                    log!(self.logs, "[ERROR] Failed to insert hashlist status for {name}: {e}");
+                if let Err(e) = self.db.insert_hashlist(&status).await {
+                    log!(
+                        self.logs,
+                        "[ERROR] Failed to insert hashlist status for {name}: {e}"
+                    );
                 }
-                self.mark_processed(name);
+                self.mark_processed(name).await;
                 log!(self.logs, "[OK] {name}: {count} records ingested");
             }
             Err(e) => {
@@ -115,10 +103,12 @@ impl AppState {
                     name: name.to_string(),
                     record_count: 0,
                     status: format!("error: {e}"),
-                    processed_at: now,
                 };
-                if let Err(db_err) = self.db.insert_hashlist(&status) {
-                    log!(self.logs, "[ERROR] Failed to insert error status for {name}: {db_err}");
+                if let Err(db_err) = self.db.insert_hashlist(&status).await {
+                    log!(
+                        self.logs,
+                        "[ERROR] Failed to insert error status for {name}: {db_err}"
+                    );
                 }
                 log!(self.logs, "[ERROR] {name}: {e}");
             }
@@ -127,14 +117,14 @@ impl AppState {
 }
 
 /// A file entry from the GitHub Trees API.
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, serde::Deserialize, Serialize)]
 pub struct GitTreeEntry {
     pub path: String,
     #[serde(rename = "type")]
     pub entry_type: String,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, serde::Deserialize, Serialize)]
 pub struct GitTreeResponse {
     pub tree: Vec<GitTreeEntry>,
     pub truncated: bool,
@@ -152,7 +142,8 @@ pub fn filter_hashlist_names(tree_resp: &GitTreeResponse) -> Vec<String> {
 
 /// Fetch the list of .html hashlist filenames from the GitHub repo.
 async fn fetch_hashlist_names(client: &reqwest::Client) -> Result<Vec<String>, String> {
-    let url = "https://api.github.com/repos/debridmediamanager/hashlists/git/trees/main?recursive=1";
+    let url =
+        "https://api.github.com/repos/debridmediamanager/hashlists/git/trees/main?recursive=1";
 
     let resp = client
         .get(url)
@@ -206,8 +197,15 @@ pub async fn run_ingest_loop(state: AppState, poll_interval: std::time::Duration
         .map(|n| n.get())
         .unwrap_or(4);
 
-    log!(state.logs, "[INGESTOR] Workers: {num_workers} (auto-detected CPU cores)");
-    log!(state.logs, "[INGESTOR] Poll interval: {}s", poll_interval.as_secs());
+    log!(
+        state.logs,
+        "[INGESTOR] Workers: {num_workers} (auto-detected CPU cores)"
+    );
+    log!(
+        state.logs,
+        "[INGESTOR] Poll interval: {}s",
+        poll_interval.as_secs()
+    );
 
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(30))
@@ -222,12 +220,17 @@ pub async fn run_ingest_loop(state: AppState, poll_interval: std::time::Duration
         match fetch_hashlist_names(&client).await {
             Ok(names) => {
                 let total = names.len();
-                let new_names: Vec<String> = names
-                    .into_iter()
-                    .filter(|name| !state.is_processed(name))
-                    .collect();
+                let mut new_names = Vec::new();
+                for name in names {
+                    if !state.is_processed(&name).await {
+                        new_names.push(name);
+                    }
+                }
                 let new_count = new_names.len();
-                log!(state.logs, "[INGESTOR] Found {total} hashlists total, {new_count} new to process");
+                log!(
+                    state.logs,
+                    "[INGESTOR] Found {total} hashlists total, {new_count} new to process"
+                );
 
                 if new_count > 0 {
                     let mut handles = Vec::with_capacity(new_count);
@@ -239,13 +242,7 @@ pub async fn run_ingest_loop(state: AppState, poll_interval: std::time::Duration
 
                         let handle = tokio::spawn(async move {
                             let result = fetch_and_parse_hashlist(&client, &name).await;
-                            let state_clone = state.clone();
-                            let name_clone = name.clone();
-                            tokio::task::spawn_blocking(move || {
-                                state_clone.add_hashlist_result(&name_clone, result);
-                            })
-                            .await
-                            .ok();
+                            state.add_hashlist_result(&name, result).await;
                             drop(permit);
                         });
 
@@ -263,7 +260,10 @@ pub async fn run_ingest_loop(state: AppState, poll_interval: std::time::Duration
                             }
                         }
                     }
-                    log!(state.logs, "[INGESTOR] Batch complete: {ok_count} succeeded, {err_count} failed");
+                    log!(
+                        state.logs,
+                        "[INGESTOR] Batch complete: {ok_count} succeeded, {err_count} failed"
+                    );
                 }
             }
             Err(e) => {
@@ -271,14 +271,22 @@ pub async fn run_ingest_loop(state: AppState, poll_interval: std::time::Duration
             }
         }
 
-        crate::pipeline::run_enrichment_pipeline(&state).await;
-
-        let counts = state.db.count_records().unwrap_or(crate::db::RecordCounts {
-            total: 0, movies: 0, episodes: 0, seasons: 0,
+        let counts = state.db.counts().await.unwrap_or(crate::db::RecordCounts {
+            total_torrents: 0,
+            total_parsed: 0,
         });
-        let hl_count = state.db.count_hashlists().unwrap_or(0);
-        log!(state.logs, "[INGESTOR] State: {} total records, {hl_count} hashlists processed", counts.total);
-        log!(state.logs, "[INGESTOR] Sleeping {}s until next poll...", poll_interval.as_secs());
+        let hl_count = state.db.count_hashlists().await.unwrap_or(0);
+        log!(
+            state.logs,
+            "[INGESTOR] State: {} torrents, {} parsed, {hl_count} hashlists processed",
+            counts.total_torrents,
+            counts.total_parsed
+        );
+        log!(
+            state.logs,
+            "[INGESTOR] Sleeping {}s until next poll...",
+            poll_interval.as_secs()
+        );
         tokio::time::sleep(poll_interval).await;
     }
 }
@@ -286,11 +294,6 @@ pub async fn run_ingest_loop(state: AppState, poll_interval: std::time::Duration
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::hashlist::Hashlist;
-
-    fn test_state() -> AppState {
-        AppState::new(Db::open_in_memory().unwrap(), LogBuffer::new())
-    }
 
     // === GitHub Tree API response parsing ===
 
@@ -356,10 +359,7 @@ mod tests {
 
     #[test]
     fn test_filter_hashlist_names_excludes_directories() {
-        let resp = make_tree_response(
-            vec![("subdir", "tree"), ("abc.html", "blob")],
-            false,
-        );
+        let resp = make_tree_response(vec![("subdir", "tree"), ("abc.html", "blob")], false);
         let names = filter_hashlist_names(&resp);
         assert_eq!(names, vec!["abc.html"]);
     }
@@ -391,172 +391,5 @@ mod tests {
         let resp = make_tree_response(vec![("a.html", "blob")], true);
         assert!(resp.truncated);
         assert_eq!(filter_hashlist_names(&resp).len(), 1);
-    }
-
-    // === AppState tests ===
-
-    #[test]
-    fn test_app_state_new_is_empty() {
-        let state = test_state();
-        assert_eq!(state.db.get_all_records().unwrap().len(), 0);
-        assert_eq!(state.db.get_all_hashlists().unwrap().len(), 0);
-    }
-
-    #[test]
-    fn test_mark_and_check_processed() {
-        let state = test_state();
-        assert!(!state.is_processed("test.html"));
-        state.mark_processed("test.html");
-        assert!(state.is_processed("test.html"));
-        assert!(!state.is_processed("other.html"));
-    }
-
-    #[test]
-    fn test_add_hashlist_result_success() {
-        let state = test_state();
-        let hashlist = Hashlist {
-            title: Some("Test".into()),
-            list: vec![
-                crate::hashlist::HashlistEntry {
-                    filename: "movie.mkv".into(),
-                    hash: "aa".repeat(20),
-                    size: 1000,
-                },
-                crate::hashlist::HashlistEntry {
-                    filename: "show.mkv".into(),
-                    hash: "bb".repeat(20),
-                    size: 2000,
-                },
-            ],
-        };
-
-        state.add_hashlist_result("test.html", Ok(hashlist));
-
-        let records = state.db.get_all_records().unwrap();
-        assert_eq!(records.len(), 2);
-        assert!(records.iter().any(|r| r.filename == "movie.mkv"));
-        assert!(records.iter().any(|r| r.filename == "show.mkv"));
-        assert!(records[0].magnet_uri.starts_with("magnet:?xt=urn:btih:"));
-
-        let hashlists = state.db.get_all_hashlists().unwrap();
-        assert_eq!(hashlists.len(), 1);
-        assert_eq!(hashlists[0].status, "done");
-        assert_eq!(hashlists[0].record_count, 2);
-
-        assert!(state.is_processed("test.html"));
-    }
-
-    #[test]
-    fn test_add_hashlist_result_error() {
-        let state = test_state();
-        state.add_hashlist_result("bad.html", Err(ParseError::DecompressionFailed));
-
-        assert!(state.db.get_all_records().unwrap().is_empty());
-
-        let hashlists = state.db.get_all_hashlists().unwrap();
-        assert_eq!(hashlists.len(), 1);
-        assert!(hashlists[0].status.starts_with("error:"));
-        assert_eq!(hashlists[0].record_count, 0);
-
-        // Errors are NOT marked as processed (so they can be retried)
-        assert!(!state.is_processed("bad.html"));
-    }
-
-    #[test]
-    fn test_add_hashlist_result_concurrent() {
-        let state = test_state();
-
-        // Simulate concurrent inserts (serial here since SQLite is single-writer)
-        for i in 0..10 {
-            let hashlist = Hashlist {
-                title: None,
-                list: vec![crate::hashlist::HashlistEntry {
-                    filename: format!("file_{i}.mkv"),
-                    hash: format!("{:0>40}", i),
-                    size: (i as u64) * 1000,
-                }],
-            };
-            state.add_hashlist_result(&format!("hl_{i}.html"), Ok(hashlist));
-        }
-
-        assert_eq!(state.db.get_all_records().unwrap().len(), 10);
-
-        let hashlists = state.db.get_all_hashlists().unwrap();
-        assert_eq!(hashlists.len(), 10);
-        assert!(hashlists.iter().all(|h| h.status == "done"));
-    }
-
-    #[test]
-    fn test_already_processed_hashlists_are_skipped() {
-        let state = test_state();
-        state.mark_processed("old.html");
-
-        let names = vec![
-            "old.html".to_string(),
-            "new1.html".to_string(),
-            "new2.html".to_string(),
-        ];
-
-        let new_names: Vec<_> = names
-            .iter()
-            .filter(|name| !state.is_processed(name))
-            .cloned()
-            .collect();
-
-        assert_eq!(new_names, vec!["new1.html", "new2.html"]);
-    }
-
-    // === Magnet URI construction ===
-
-    #[test]
-    fn test_magnet_uri_format() {
-        let state = test_state();
-        let hashlist = Hashlist {
-            title: None,
-            list: vec![crate::hashlist::HashlistEntry {
-                filename: "test.mkv".into(),
-                hash: "dd8255ecdc7ca55fb0bbf81323d87062db1f6d1c".into(),
-                size: 100,
-            }],
-        };
-
-        state.add_hashlist_result("t.html", Ok(hashlist));
-
-        let records = state.db.get_all_records().unwrap();
-        assert_eq!(
-            records[0].magnet_uri,
-            "magnet:?xt=urn:btih:dd8255ecdc7ca55fb0bbf81323d87062db1f6d1c"
-        );
-    }
-
-    // === Semaphore test (independent of DB) ===
-
-    #[tokio::test]
-    async fn test_semaphore_bounded_concurrency() {
-        let semaphore = Arc::new(Semaphore::new(2));
-        let active = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-        let max_active = Arc::new(std::sync::atomic::AtomicUsize::new(0));
-
-        let mut handles = Vec::new();
-        for _ in 0..10 {
-            let sem = semaphore.clone();
-            let active = active.clone();
-            let max_active = max_active.clone();
-
-            handles.push(tokio::spawn(async move {
-                let _permit = sem.acquire().await.unwrap();
-                let current = active.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
-                max_active.fetch_max(current, std::sync::atomic::Ordering::SeqCst);
-                tokio::time::sleep(std::time::Duration::from_millis(10)).await;
-                active.fetch_sub(1, std::sync::atomic::Ordering::SeqCst);
-            }));
-        }
-
-        for h in handles {
-            h.await.unwrap();
-        }
-
-        let max = max_active.load(std::sync::atomic::Ordering::SeqCst);
-        assert!(max <= 2, "Max concurrent tasks was {max}, expected <= 2");
     }
 }

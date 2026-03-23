@@ -4,6 +4,7 @@ use std::fmt;
 #[derive(Debug, Clone, PartialEq)]
 pub struct TorrentMeta {
     pub title: Option<String>,
+    pub year: Option<u32>,
     pub season: Option<u32>,
     pub episode: Option<u32>,
     pub content_type: ContentType,
@@ -12,17 +13,17 @@ pub struct TorrentMeta {
 /// Classification of a torrent based on parsed metadata.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ContentType {
-    Movie,
     Episode,
     Season,
+    Unknown,
 }
 
 impl fmt::Display for ContentType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ContentType::Movie => write!(f, "movie"),
             ContentType::Episode => write!(f, "episode"),
             ContentType::Season => write!(f, "season"),
+            ContentType::Unknown => write!(f, "unknown"),
         }
     }
 }
@@ -197,6 +198,8 @@ pub fn parse(filename: &str) -> Option<TorrentMeta> {
         find_first_noise_position(&normalized).unwrap_or(normalized.len())
     };
 
+    let year = extract_year(&normalized);
+
     let raw_title = &normalized[..title_end];
     let title = clean_title_normalized(raw_title)?;
 
@@ -205,15 +208,24 @@ pub fn parse(filename: &str) -> Option<TorrentMeta> {
             Some(ep) => (ContentType::Episode, Some(se.season), Some(ep)),
             None => (ContentType::Season, Some(se.season), None),
         },
-        None => (ContentType::Movie, None, None),
+        None => (ContentType::Unknown, None, None),
     };
 
     Some(TorrentMeta {
         title: Some(title),
+        year,
         season,
         episode,
         content_type,
     })
+}
+
+/// Try to extract a 4-digit year (1900–2099) from the normalized filename.
+/// Looks for year preceded by whitespace (not at position 0, to avoid titles like "2001").
+fn extract_year(input: &str) -> Option<u32> {
+    let re = regex::Regex::new(r"\s((?:19|20)\d{2})\b").unwrap();
+    re.captures(input)
+        .and_then(|caps| caps[1].parse().ok())
 }
 
 /// Find the position of the first noise token in the string.
@@ -246,7 +258,7 @@ mod tests {
     fn test_movie_simple_dots() {
         let m = parse("The.Matrix.1999.1080p.BluRay.x264-GROUP").unwrap();
         assert_eq!(m.title.as_deref(), Some("The Matrix"));
-        assert_eq!(m.content_type, ContentType::Movie);
+        assert_eq!(m.content_type, ContentType::Unknown);
         assert_eq!(m.season, None);
         assert_eq!(m.episode, None);
     }
@@ -255,28 +267,28 @@ mod tests {
     fn test_movie_with_spaces() {
         let m = parse("Inception 2010 720p BRRip").unwrap();
         assert_eq!(m.title.as_deref(), Some("Inception"));
-        assert_eq!(m.content_type, ContentType::Movie);
+        assert_eq!(m.content_type, ContentType::Unknown);
     }
 
     #[test]
     fn test_movie_underscores() {
         let m = parse("The_Dark_Knight_2008_1080p_BluRay").unwrap();
         assert_eq!(m.title.as_deref(), Some("The Dark Knight"));
-        assert_eq!(m.content_type, ContentType::Movie);
+        assert_eq!(m.content_type, ContentType::Unknown);
     }
 
     #[test]
     fn test_movie_with_extension() {
         let m = parse("Interstellar.2014.2160p.WEB-DL.x265.mkv").unwrap();
         assert_eq!(m.title.as_deref(), Some("Interstellar"));
-        assert_eq!(m.content_type, ContentType::Movie);
+        assert_eq!(m.content_type, ContentType::Unknown);
     }
 
     #[test]
     fn test_movie_no_year() {
         let m = parse("Big.Buck.Bunny.1080p.BluRay").unwrap();
         assert_eq!(m.title.as_deref(), Some("Big Buck Bunny"));
-        assert_eq!(m.content_type, ContentType::Movie);
+        assert_eq!(m.content_type, ContentType::Unknown);
     }
 
     // =====================================================================
@@ -438,7 +450,7 @@ mod tests {
         // The year 2001 would be consumed as a year pattern, but the title
         // should still be parseable
         assert!(m.title.is_some());
-        assert_eq!(m.content_type, ContentType::Movie);
+        assert_eq!(m.content_type, ContentType::Unknown);
     }
 
     #[test]
@@ -473,21 +485,21 @@ mod tests {
     fn test_dual_audio() {
         let m = parse("Spirited.Away.2001.1080p.BluRay.x264.DTS-FGT").unwrap();
         assert_eq!(m.title.as_deref(), Some("Spirited Away"));
-        assert_eq!(m.content_type, ContentType::Movie);
+        assert_eq!(m.content_type, ContentType::Unknown);
     }
 
     #[test]
     fn test_4k_content() {
         let m = parse("Dune.Part.Two.2024.2160p.WEB-DL.DDP5.1.Atmos.DV.x265-FLUX").unwrap();
         assert_eq!(m.title.as_deref(), Some("Dune Part Two"));
-        assert_eq!(m.content_type, ContentType::Movie);
+        assert_eq!(m.content_type, ContentType::Unknown);
     }
 
     #[test]
     fn test_remux() {
         let m = parse("Oppenheimer.2023.2160p.UHD.BluRay.REMUX.DV.HDR.HEVC.TrueHD.7.1.Atmos").unwrap();
         assert_eq!(m.title.as_deref(), Some("Oppenheimer"));
-        assert_eq!(m.content_type, ContentType::Movie);
+        assert_eq!(m.content_type, ContentType::Unknown);
     }
 
     // =====================================================================
@@ -497,7 +509,7 @@ mod tests {
     #[test]
     fn test_classify_movie() {
         let m = parse("The.Shawshank.Redemption.1994.1080p.BluRay").unwrap();
-        assert_eq!(m.content_type, ContentType::Movie);
+        assert_eq!(m.content_type, ContentType::Unknown);
     }
 
     #[test]
@@ -518,7 +530,7 @@ mod tests {
 
     #[test]
     fn test_content_type_display() {
-        assert_eq!(ContentType::Movie.to_string(), "movie");
+        assert_eq!(ContentType::Unknown.to_string(), "unknown");
         assert_eq!(ContentType::Episode.to_string(), "episode");
         assert_eq!(ContentType::Season.to_string(), "season");
     }
@@ -540,7 +552,7 @@ mod tests {
         let m = parse("Spider-Man.Across.the.Spider-Verse.2023.1080p.WEB-DL").unwrap();
         // Hyphens within the title area should be preserved
         assert!(m.title.as_deref().unwrap().contains("Spider"));
-        assert_eq!(m.content_type, ContentType::Movie);
+        assert_eq!(m.content_type, ContentType::Unknown);
     }
 
     // =====================================================================
@@ -551,7 +563,7 @@ mod tests {
     fn test_real_world_movie() {
         let m = parse("Furiosa.A.Mad.Max.Saga.2024.2160p.MA.WEB-DL.DDP5.1.Atmos.H.265-FLUX").unwrap();
         assert_eq!(m.title.as_deref(), Some("Furiosa A Mad Max Saga"));
-        assert_eq!(m.content_type, ContentType::Movie);
+        assert_eq!(m.content_type, ContentType::Unknown);
     }
 
     #[test]
