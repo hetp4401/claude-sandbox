@@ -1,4 +1,5 @@
 use crate::hashlist::{self, Hashlist, ParseError};
+use crate::title_parser;
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -14,6 +15,18 @@ pub struct MagnetRecord {
     pub size_bytes: u64,
     pub source_hashlist: String,
     pub processed_at: String,
+    /// Parsed content type: "movie", "episode", or "season"
+    pub content_type: Option<String>,
+    /// Parsed title from the filename
+    pub title: Option<String>,
+    /// Season number (if episode or season pack)
+    pub season: Option<u32>,
+    /// Episode number (if episode)
+    pub episode: Option<u32>,
+    /// File index within the torrent (set by DHT for season pack expansion)
+    pub file_index: Option<u32>,
+    /// IMDb tag — null until metadata enrichment processes it
+    pub imdb_tag: Option<String>,
 }
 
 /// Status of a processed hashlist.
@@ -62,6 +75,7 @@ impl AppState {
                 {
                     let mut records = self.records.write().await;
                     for entry in &hl.list {
+                        let meta = title_parser::parse(&entry.filename);
                         records.push(MagnetRecord {
                             filename: entry.filename.clone(),
                             hash: entry.hash.clone(),
@@ -69,6 +83,12 @@ impl AppState {
                             size_bytes: entry.size,
                             source_hashlist: name.to_string(),
                             processed_at: Utc::now().to_rfc3339(),
+                            content_type: meta.as_ref().map(|m| m.content_type.to_string()),
+                            title: meta.as_ref().and_then(|m| m.title.clone()),
+                            season: meta.as_ref().and_then(|m| m.season),
+                            episode: meta.as_ref().and_then(|m| m.episode),
+                            file_index: None,
+                            imdb_tag: None,
                         });
                     }
                 }
@@ -242,6 +262,9 @@ pub async fn run_ingest_loop(state: AppState, poll_interval: std::time::Duration
                 println!("[INGESTOR] Failed to poll GitHub: {e}");
             }
         }
+
+        // Run the metadata enrichment pipeline (expand season packs via DHT)
+        crate::pipeline::run_enrichment_pipeline(&state).await;
 
         let records_count = state.records.read().await.len();
         let hl_count = state.hashlists.read().await.len();

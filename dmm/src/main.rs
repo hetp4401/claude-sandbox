@@ -1,5 +1,8 @@
+mod dht;
 mod hashlist;
 mod ingestor;
+mod pipeline;
+mod title_parser;
 
 use axum::{extract::State, response::Html, routing::get, Router};
 use ingestor::{AppState, MagnetRecord, HashlistStatus};
@@ -22,6 +25,14 @@ fn html_escape(s: &str) -> String {
         .replace('"', "&quot;")
 }
 
+fn opt_str(val: &Option<String>) -> &str {
+    val.as_deref().unwrap_or("—")
+}
+
+fn opt_num(val: Option<u32>) -> String {
+    val.map(|n| n.to_string()).unwrap_or_else(|| "—".into())
+}
+
 async fn dashboard(State(state): State<AppState>) -> Html<String> {
     let records = state.records.read().await;
     let hashlists = state.hashlists.read().await;
@@ -31,19 +42,33 @@ async fn dashboard(State(state): State<AppState>) -> Html<String> {
 
     let mut record_rows = String::new();
     for r in &sorted_records {
+        let type_class = match r.content_type.as_deref() {
+            Some("movie") => "type-movie",
+            Some("episode") => "type-ep",
+            Some("season") => "type-season",
+            _ => "type-unk",
+        };
         record_rows.push_str(&format!(
             r#"<tr>
   <td class="fn">{}</td>
   <td><code>{}</code></td>
   <td>{}</td>
+  <td class="{type_class}">{}</td>
+  <td>{}</td>
+  <td>{}</td>
+  <td>{}</td>
+  <td>{}</td>
   <td class="src">{}</td>
-  <td class="ts">{}</td>
 </tr>"#,
             html_escape(&r.filename),
-            &r.hash,
+            &r.hash[..8],
             format_size(r.size_bytes),
-            html_escape(&r.source_hashlist),
-            &r.processed_at,
+            html_escape(opt_str(&r.content_type)),
+            html_escape(opt_str(&r.title)),
+            opt_num(r.season),
+            opt_num(r.episode),
+            opt_num(r.file_index),
+            html_escape(opt_str(&r.imdb_tag)),
         ));
     }
 
@@ -67,6 +92,9 @@ async fn dashboard(State(state): State<AppState>) -> Html<String> {
     }
 
     let done_count = hashlists.iter().filter(|h| h.status == "done").count();
+    let movie_count = records.iter().filter(|r| r.content_type.as_deref() == Some("movie")).count();
+    let ep_count = records.iter().filter(|r| r.content_type.as_deref() == Some("episode")).count();
+    let season_count = records.iter().filter(|r| r.content_type.as_deref() == Some("season")).count();
 
     let html = format!(
         r##"<!DOCTYPE html>
@@ -83,7 +111,7 @@ async fn dashboard(State(state): State<AppState>) -> Html<String> {
   .section {{ margin-bottom: 32px; }}
   h2 {{ color: #c9d1d9; margin-bottom: 12px; font-size: 1.2em; border-bottom: 1px solid #21262d; padding-bottom: 8px; }}
   .stats {{ display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }}
-  .stat {{ background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 16px 24px; min-width: 140px; }}
+  .stat {{ background: #161b22; border: 1px solid #21262d; border-radius: 8px; padding: 16px 24px; min-width: 120px; }}
   .stat .num {{ font-size: 2em; font-weight: bold; color: #58a6ff; }}
   .stat .label {{ color: #8b949e; font-size: 0.85em; }}
   table {{ width: 100%; border-collapse: collapse; background: #161b22; border-radius: 8px; overflow: hidden; }}
@@ -91,11 +119,15 @@ async fn dashboard(State(state): State<AppState>) -> Html<String> {
   td {{ padding: 10px 14px; border-bottom: 1px solid #21262d; font-size: 0.9em; }}
   tr:hover {{ background: #1c2128; }}
   code {{ background: #1c2128; padding: 2px 6px; border-radius: 4px; font-size: 0.82em; color: #79c0ff; }}
-  .fn {{ max-width: 350px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
+  .fn {{ max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }}
   .src {{ color: #d2a8ff; }}
   .ts {{ color: #8b949e; font-size: 0.82em; white-space: nowrap; }}
   .done {{ color: #3fb950; font-weight: 600; }}
   .err {{ color: #f85149; font-weight: 600; }}
+  .type-movie {{ color: #79c0ff; font-weight: 600; }}
+  .type-ep {{ color: #3fb950; font-weight: 600; }}
+  .type-season {{ color: #d2a8ff; font-weight: 600; }}
+  .type-unk {{ color: #8b949e; }}
   .live {{ display: inline-block; width: 8px; height: 8px; background: #3fb950; border-radius: 50%; animation: pulse 2s infinite; margin-right: 6px; }}
   @keyframes pulse {{ 0%, 100% {{ opacity: 1; }} 50% {{ opacity: 0.4; }} }}
   .tbl-wrap {{ max-height: 600px; overflow-y: auto; border-radius: 8px; }}
@@ -110,7 +142,10 @@ setTimeout(() => location.reload(), 3000);
 
 <div class="stats">
   <div class="stat"><div class="num">{total_records}</div><div class="label">Total Records</div></div>
-  <div class="stat"><div class="num">{total_hl}</div><div class="label">Hashlists Processed</div></div>
+  <div class="stat"><div class="num">{movie_count}</div><div class="label">Movies</div></div>
+  <div class="stat"><div class="num">{ep_count}</div><div class="label">Episodes</div></div>
+  <div class="stat"><div class="num">{season_count}</div><div class="label">Season Packs</div></div>
+  <div class="stat"><div class="num">{total_hl}</div><div class="label">Hashlists</div></div>
   <div class="stat"><div class="num">{done_hl}</div><div class="label">Done</div></div>
 </div>
 
@@ -128,7 +163,7 @@ setTimeout(() => location.reload(), 3000);
 <h2>Magnet Records (latest first)</h2>
 <div class="tbl-wrap">
 <table>
-<tr><th>Filename</th><th>Info Hash</th><th>Size</th><th>Source</th><th>Processed At</th></tr>
+<tr><th>Filename</th><th>Hash</th><th>Size</th><th>Type</th><th>Title</th><th>S</th><th>E</th><th>Idx</th><th>IMDb</th></tr>
 {record_rows}
 </table>
 </div>
