@@ -78,10 +78,16 @@ pub fn filter_hashlist_names(tree_resp: &GitTreeResponse) -> Vec<String> {
 
 async fn fetch_hashlist_names(client: &reqwest::Client) -> Result<Vec<String>, String> {
     let url = "https://api.github.com/repos/debridmediamanager/hashlists/git/trees/main?recursive=1";
-    let resp = client
+    let mut req = client
         .get(url)
         .header("User-Agent", "dmm-ingestor/0.1")
-        .header("Accept", "application/vnd.github.v3+json")
+        .header("Accept", "application/vnd.github.v3+json");
+    if let Ok(token) = std::env::var("GITHUB_TOKEN") {
+        if !token.is_empty() {
+            req = req.header("Authorization", format!("Bearer {token}"));
+        }
+    }
+    let resp = req
         .send()
         .await
         .map_err(|e| format!("GitHub API request failed: {e}"))?;
