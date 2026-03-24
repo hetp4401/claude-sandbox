@@ -26,8 +26,8 @@ services:
         condition: service_healthy
     environment:
       - DATABASE_URL=postgres://dmm:dmm@postgres:5432/dmm
-      - GITHUB_TOKEN=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
-      - RD_API_KEY=VG4AOFSADDR4SAOHBJBGRA4LZYOSHZ3D52CZQZGMULAHUDV67VUA
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - RD_API_KEY=${RD_API_KEY}
       # Pipeline 2: Extract hashlists → torrents
       - EXTRACT_BATCH_SIZE=50
       - EXTRACT_CONCURRENCY=8
