@@ -25,3 +25,28 @@ services:
     environment:
       - DATABASE_URL=postgres://dmm:dmm@postgres:5432/dmm
       - RD_API_KEY=VG4AOFSADDR4SAOHBJBGRA4LZYOSHZ3D52CZQZGMULAHUDV67VUA
+      # Pipeline 2: Extract hashlists → torrents
+      - EXTRACT_BATCH_SIZE=50
+      - EXTRACT_CONCURRENCY=8
+      - EXTRACT_MAX_ATTEMPTS=10000
+      - EXTRACT_RETRY_COOLDOWN_MINS=20
+      # Pipeline 3: Parse torrents → parsed_torrents
+      - PARSE_BATCH_SIZE=5000
+      - PARSE_CONCURRENCY=1
+      - PARSE_MAX_ATTEMPTS=10000
+      - PARSE_RETRY_COOLDOWN_MINS=20
+      # Pipeline 4: IMDb resolve → imdb_mappings
+      - IMDB_BATCH_SIZE=2000
+      - IMDB_CONCURRENCY=30
+      - IMDB_MAX_ATTEMPTS=10000
+      - IMDB_RETRY_COOLDOWN_MINS=20
+      # Pipeline 5: Singles → streams
+      - SINGLES_BATCH_SIZE=5000
+      - SINGLES_CONCURRENCY=1
+      - SINGLES_MAX_ATTEMPTS=10000
+      - SINGLES_RETRY_COOLDOWN_MINS=20
+      # Pipeline 6: Packs → streams
+      - PACKS_BATCH_SIZE=200
+      - PACKS_CONCURRENCY=20
+      - PACKS_MAX_ATTEMPTS=10000
+      - PACKS_RETRY_COOLDOWN_MINS=20

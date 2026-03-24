@@ -117,10 +117,9 @@ impl ImdbResolver {
         }
     }
 
-    /// GET with automatic retry on 429/5xx with exponential backoff.
+    /// GET with 3 retries on 429/5xx, backoff = 1000ms * attempt.
     async fn get_with_backoff(&self, url: &str) -> Option<reqwest::Response> {
-        let mut delay = std::time::Duration::from_secs(2);
-        for _ in 0..3 {
+        for attempt in 1..=3 {
             let resp = self
                 .client
                 .get(url)
@@ -134,8 +133,7 @@ impl ImdbResolver {
                 return Some(resp);
             }
             if status == reqwest::StatusCode::TOO_MANY_REQUESTS || status.is_server_error() {
-                tokio::time::sleep(delay).await;
-                delay *= 2;
+                tokio::time::sleep(std::time::Duration::from_millis(1000 * attempt)).await;
                 continue;
             }
             return None; // 4xx other than 429

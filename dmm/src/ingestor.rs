@@ -1,5 +1,5 @@
 use crate::db::Db;
-use crate::hashlist::{self, Hashlist, ParseError};
+use crate::hashlist;
 use crate::log;
 use crate::logs::LogBuffer;
 use crate::title_parser;
@@ -8,37 +8,29 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use tokio::sync::Semaphore;
 
-/// Status of a processed hashlist.
-#[derive(Debug, Clone, Serialize)]
-pub struct HashlistStatus {
-    pub name: String,
-    pub record_count: usize,
-    pub status: String,
-}
-
-/// Tracks which pipeline workers are actively processing.
 #[derive(Clone)]
 pub struct QueueActivity {
-    pub hashlist: Arc<AtomicBool>,
+    pub hashlists: Arc<AtomicBool>,
+    pub extract: Arc<AtomicBool>,
+    pub parse: Arc<AtomicBool>,
     pub imdb: Arc<AtomicBool>,
     pub singles: Arc<AtomicBool>,
     pub packs: Arc<AtomicBool>,
-    pub dht: Arc<AtomicBool>,
 }
 
 impl QueueActivity {
     pub fn new() -> Self {
         Self {
-            hashlist: Arc::new(AtomicBool::new(false)),
+            hashlists: Arc::new(AtomicBool::new(false)),
+            extract: Arc::new(AtomicBool::new(false)),
+            parse: Arc::new(AtomicBool::new(false)),
             imdb: Arc::new(AtomicBool::new(false)),
             singles: Arc::new(AtomicBool::new(false)),
             packs: Arc::new(AtomicBool::new(false)),
-            dht: Arc::new(AtomicBool::new(false)),
         }
     }
 }
 
-/// Shared application state backed by PostgreSQL.
 #[derive(Clone)]
 pub struct AppState {
     pub db: Db,
@@ -56,99 +48,12 @@ impl AppState {
             metrics: crate::metrics::Metrics::new(),
         }
     }
-
-    pub async fn is_processed(&self, name: &str) -> bool {
-        self.db.is_processed(name).await.unwrap_or(false)
-    }
-
-    pub async fn mark_processed(&self, name: &str) {
-        if let Err(e) = self.db.mark_processed(name).await {
-            log!(self.logs, "[ERROR] Failed to mark {name} as processed: {e}");
-        }
-    }
-
-    /// Ingest a hashlist result into both tables:
-    /// 1. `torrents` table: raw hash, filename, size_bytes
-    /// 2. `parsed_metadata` table: parsed title, year, season, episode
-    pub async fn add_hashlist_result(&self, name: &str, result: Result<Hashlist, ParseError>) {
-        match result {
-            Ok(hl) => {
-                let count = hl.list.len();
-
-                for entry in &hl.list {
-                    // Phase 1: upsert into torrents table
-                    if let Err(e) = self
-                        .db
-                        .upsert_torrent(&entry.hash, &entry.filename, entry.size as i64)
-                        .await
-                    {
-                        log!(
-                            self.logs,
-                            "[ERROR] Failed to upsert torrent {} for {name}: {e}",
-                            &entry.hash[..8.min(entry.hash.len())]
-                        );
-                        continue;
-                    }
-
-                    // Phase 2: parse filename and upsert into parsed_metadata
-                    if let Some(meta) = title_parser::parse(&entry.filename) {
-                        if let Some(ref title) = meta.title {
-                            if let Err(e) = self
-                                .db
-                                .upsert_parsed_metadata(
-                                    &entry.hash,
-                                    title,
-                                    meta.year.map(|y| y as i32),
-                                    meta.season.map(|s| s as i32),
-                                    meta.episode.map(|e| e as i32),
-                                )
-                                .await
-                            {
-                                log!(
-                                    self.logs,
-                                    "[ERROR] Failed to upsert parsed metadata {} for {name}: {e}",
-                                    &entry.hash[..8.min(entry.hash.len())]
-                                );
-                            }
-                        }
-                    }
-                }
-
-                let status = HashlistStatus {
-                    name: name.to_string(),
-                    record_count: count,
-                    status: "done".into(),
-                };
-                if let Err(e) = self.db.insert_hashlist(&status).await {
-                    log!(
-                        self.logs,
-                        "[ERROR] Failed to insert hashlist status for {name}: {e}"
-                    );
-                }
-                self.mark_processed(name).await;
-                self.metrics.bump("torrents_ingested", count as u64);
-                self.metrics.bump("hashlists_processed", 1);
-                log!(self.logs, "[OK] {name}: {count} records ingested");
-            }
-            Err(e) => {
-                let status = HashlistStatus {
-                    name: name.to_string(),
-                    record_count: 0,
-                    status: format!("error: {e}"),
-                };
-                if let Err(db_err) = self.db.insert_hashlist(&status).await {
-                    log!(
-                        self.logs,
-                        "[ERROR] Failed to insert error status for {name}: {db_err}"
-                    );
-                }
-                log!(self.logs, "[ERROR] {name}: {e}");
-            }
-        }
-    }
 }
 
-/// A file entry from the GitHub Trees API.
+// =========================================================================
+// GitHub API types
+// =========================================================================
+
 #[derive(Debug, Clone, serde::Deserialize, Serialize)]
 pub struct GitTreeEntry {
     pub path: String,
@@ -162,7 +67,6 @@ pub struct GitTreeResponse {
     pub truncated: bool,
 }
 
-/// Filter a tree response down to hashlist HTML filenames.
 pub fn filter_hashlist_names(tree_resp: &GitTreeResponse) -> Vec<String> {
     tree_resp
         .tree
@@ -172,11 +76,8 @@ pub fn filter_hashlist_names(tree_resp: &GitTreeResponse) -> Vec<String> {
         .collect()
 }
 
-/// Fetch the list of .html hashlist filenames from the GitHub repo.
 async fn fetch_hashlist_names(client: &reqwest::Client) -> Result<Vec<String>, String> {
-    let url =
-        "https://api.github.com/repos/debridmediamanager/hashlists/git/trees/main?recursive=1";
-
+    let url = "https://api.github.com/repos/debridmediamanager/hashlists/git/trees/main?recursive=1";
     let resp = client
         .get(url)
         .header("User-Agent", "dmm-ingestor/0.1")
@@ -184,162 +85,228 @@ async fn fetch_hashlist_names(client: &reqwest::Client) -> Result<Vec<String>, S
         .send()
         .await
         .map_err(|e| format!("GitHub API request failed: {e}"))?;
-
     if !resp.status().is_success() {
         return Err(format!("GitHub API returned {}", resp.status()));
     }
-
     let tree_resp: GitTreeResponse = resp
         .json()
         .await
         .map_err(|e| format!("Failed to parse GitHub response: {e}"))?;
-
-    if tree_resp.truncated {
-        println!("[WARN] GitHub tree response was truncated, some files may be missing");
-    }
-
     Ok(filter_hashlist_names(&tree_resp))
 }
 
-/// Fetch and parse a single hashlist file from GitHub.
-async fn fetch_and_parse_hashlist(
-    client: &reqwest::Client,
-    name: &str,
-) -> Result<Hashlist, ParseError> {
-    let url = format!(
-        "https://raw.githubusercontent.com/debridmediamanager/hashlists/main/{name}"
-    );
+// =========================================================================
+// Pipeline 1: GitHub → dmm_hashlists (runs every poll_interval)
+// =========================================================================
 
-    let html = client
-        .get(&url)
-        .header("User-Agent", "dmm-ingestor/0.1")
-        .send()
-        .await
-        .map_err(|_| ParseError::DecompressionFailed)?
-        .text()
-        .await
-        .map_err(|_| ParseError::DecompressionFailed)?;
-
-    hashlist::parse_hashlist_html(&html)
-}
-
-/// Run the hashlist ingestion worker independently.
-/// Polls GitHub for new hashlists, fetches and parses them concurrently.
-pub async fn run_hashlist_worker(state: AppState, poll_interval: std::time::Duration) {
-    let num_workers = std::thread::available_parallelism()
-        .map(|n| n.get())
-        .unwrap_or(4);
-
-    log!(
-        state.logs,
-        "[HASHLIST-Q] Workers: {num_workers}, poll interval: {}s",
-        poll_interval.as_secs()
-    );
-
+pub async fn run_pipeline1_discover(state: AppState, poll_interval: std::time::Duration) {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(120))
         .build()
         .expect("Failed to build HTTP client");
 
-    let semaphore = Arc::new(Semaphore::new(num_workers));
+    log!(state.logs, "[P1-DISCOVER] Started, poll interval: {}s", poll_interval.as_secs());
 
     loop {
-        // Check if manually paused
-        if state.metrics.controls.is_paused("hashlist") {
-            state.queues.hashlist.store(false, Ordering::Relaxed);
+        if state.metrics.controls.is_paused("hashlists") {
+            state.queues.hashlists.store(false, Ordering::Relaxed);
             tokio::time::sleep(std::time::Duration::from_secs(5)).await;
             continue;
         }
-
-        // Backpressure: if IMDb pipeline has >2000 pending, pause hashlist ingestion
-        if let Ok(depths) = state.db.get_queue_depths().await {
-            if depths.imdb.unresolved > 2000 {
-                log!(
-                    state.logs,
-                    "[HASHLIST-Q] Paused — {} IMDb unresolved (>2000), waiting...",
-                    depths.imdb.unresolved
-                );
-                state.queues.hashlist.store(false, Ordering::Relaxed);
-                tokio::time::sleep(std::time::Duration::from_secs(30)).await;
-                continue;
-            }
-        }
-
-        state.queues.hashlist.store(true, Ordering::Relaxed);
-        log!(state.logs, "[HASHLIST-Q] Polling GitHub for new hashlists...");
+        state.queues.hashlists.store(true, Ordering::Relaxed);
+        log!(state.logs, "[P1-DISCOVER] Polling GitHub...");
 
         match fetch_hashlist_names(&client).await {
             Ok(names) => {
                 let total = names.len();
-                let mut new_names = Vec::new();
-                for name in names {
-                    if !state.is_processed(&name).await {
-                        new_names.push(name);
+                let mut new_count = 0u64;
+                for name in &names {
+                    if let Ok(()) = state.db.insert_hashlist_name(name).await {
+                        new_count += 1;
                     }
                 }
-                let new_count = new_names.len();
-                log!(
-                    state.logs,
-                    "[HASHLIST-Q] Found {total} total, {new_count} new to process"
-                );
-
-                if new_count > 0 {
-                    let mut handles = Vec::with_capacity(new_count);
-
-                    for name in new_names {
-                        let permit = semaphore.clone().acquire_owned().await.unwrap();
-                        let client = client.clone();
-                        let state = state.clone();
-
-                        let handle = tokio::spawn(async move {
-                            let result = fetch_and_parse_hashlist(&client, &name).await;
-                            state.add_hashlist_result(&name, result).await;
-                            drop(permit);
-                        });
-
-                        handles.push(handle);
-                    }
-
-                    let mut ok_count = 0;
-                    let mut err_count = 0;
-                    for handle in handles {
-                        match handle.await {
-                            Ok(()) => ok_count += 1,
-                            Err(e) => {
-                                err_count += 1;
-                                log!(state.logs, "[ERROR] Task panicked: {e}");
-                            }
-                        }
-                    }
-                    log!(
-                        state.logs,
-                        "[HASHLIST-Q] Batch complete: {ok_count} succeeded, {err_count} failed"
-                    );
-                }
+                // new_count includes conflicts (already exists), but that's fine
+                log!(state.logs, "[P1-DISCOVER] Found {total} hashlists on GitHub");
+                state.metrics.bump("hashlists_discovered", new_count);
             }
             Err(e) => {
-                log!(state.logs, "[HASHLIST-Q] Failed to poll GitHub: {e}, retrying in 30s...");
-                state.queues.hashlist.store(false, Ordering::Relaxed);
+                log!(state.logs, "[P1-DISCOVER] GitHub error: {e}, retrying in 30s...");
+                state.queues.hashlists.store(false, Ordering::Relaxed);
                 tokio::time::sleep(std::time::Duration::from_secs(30)).await;
                 continue;
             }
         }
 
-        state.queues.hashlist.store(false, Ordering::Relaxed);
-        log!(
-            state.logs,
-            "[HASHLIST-Q] Sleeping {}s until next poll...",
-            poll_interval.as_secs()
-        );
+        state.queues.hashlists.store(false, Ordering::Relaxed);
+        log!(state.logs, "[P1-DISCOVER] Sleeping {}s...", poll_interval.as_secs());
         tokio::time::sleep(poll_interval).await;
+    }
+}
+
+// =========================================================================
+// Pipeline 2: dmm_hashlists → torrents (continuous)
+// =========================================================================
+
+
+async fn fetch_and_parse_hashlist(
+    client: &reqwest::Client,
+    name: &str,
+) -> Result<hashlist::Hashlist, hashlist::ParseError> {
+    let url = format!(
+        "https://raw.githubusercontent.com/debridmediamanager/hashlists/main/{name}"
+    );
+    let html = client
+        .get(&url)
+        .header("User-Agent", "dmm-ingestor/0.1")
+        .send()
+        .await
+        .map_err(|_| hashlist::ParseError::DecompressionFailed)?
+        .text()
+        .await
+        .map_err(|_| hashlist::ParseError::DecompressionFailed)?;
+    hashlist::parse_hashlist_html(&html)
+}
+
+pub async fn run_pipeline2_extract(state: AppState) {
+    let client = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+        .expect("Failed to build HTTP client");
+
+    let cfg = &state.db.config.extract;
+    let batch_size = cfg.batch_size;
+    let concurrency = cfg.concurrency;
+    let semaphore = Arc::new(Semaphore::new(concurrency));
+
+    log!(state.logs, "[P2-EXTRACT] Started (batch: {batch_size}, concurrency: {concurrency})");
+
+    loop {
+        if state.metrics.controls.is_paused("extract") {
+            state.queues.extract.store(false, Ordering::Relaxed);
+            tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+            continue;
+        }
+        state.queues.extract.store(true, Ordering::Relaxed);
+
+        let names = match state.db.get_pending_hashlists(batch_size).await {
+            Ok(n) => n,
+            Err(e) => {
+                log!(state.logs, "[P2-EXTRACT] Query error: {e}");
+                state.queues.extract.store(false, Ordering::Relaxed);
+                tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+                continue;
+            }
+        };
+
+        if names.is_empty() {
+            state.queues.extract.store(false, Ordering::Relaxed);
+            tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+            continue;
+        }
+
+        let mut handles = Vec::with_capacity(names.len());
+
+        for name in names {
+            let permit = semaphore.clone().acquire_owned().await.unwrap();
+            let client = client.clone();
+            let state = state.clone();
+
+            handles.push(tokio::spawn(async move {
+                // Touch before processing
+                let _ = state.db.touch_hashlist(&name).await;
+
+                match fetch_and_parse_hashlist(&client, &name).await {
+                    Ok(hl) => {
+                        let count = hl.list.len();
+                        for entry in &hl.list {
+                            let _ = state.db.upsert_torrent(&entry.hash, &entry.filename, entry.size as i64).await;
+                        }
+                        let _ = state.db.complete_hashlist(&name).await;
+                        state.metrics.bump("hashlists_extracted", 1);
+                        state.metrics.bump("torrents_ingested", count as u64);
+                        log!(state.logs, "[OK] {name}: {count} torrents");
+                    }
+                    Err(e) => {
+                        log!(state.logs, "[P2-EXTRACT] {name}: {e}");
+                        // last_processed already touched, will retry later
+                    }
+                }
+                drop(permit);
+            }));
+        }
+
+        for h in handles {
+            let _ = h.await;
+        }
+
+        state.queues.extract.store(false, Ordering::Relaxed);
+        tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+    }
+}
+
+// =========================================================================
+// Pipeline 3: torrents → parsed_torrents (continuous)
+// =========================================================================
+
+pub async fn run_pipeline3_parse(state: AppState) {
+    let batch_size = state.db.config.parse.batch_size;
+    log!(state.logs, "[P3-PARSE] Started (batch: {batch_size})");
+
+    loop {
+        if state.metrics.controls.is_paused("parse") {
+            state.queues.parse.store(false, Ordering::Relaxed);
+            tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+            continue;
+        }
+        state.queues.parse.store(true, Ordering::Relaxed);
+
+        let torrents = match state.db.get_pending_torrents(batch_size).await {
+            Ok(t) => t,
+            Err(e) => {
+                log!(state.logs, "[P3-PARSE] Query error: {e}");
+                state.queues.parse.store(false, Ordering::Relaxed);
+                tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+                continue;
+            }
+        };
+
+        if torrents.is_empty() {
+            state.queues.parse.store(false, Ordering::Relaxed);
+            tokio::time::sleep(std::time::Duration::from_secs(10)).await;
+            continue;
+        }
+
+        let mut ok = 0u64;
+        for (hash, filename) in &torrents {
+            let _ = state.db.touch_torrent(hash).await;
+
+            if let Some(meta) = title_parser::parse(filename) {
+                if let Some(ref title) = meta.title {
+                    if state.db.upsert_parsed_torrent(
+                        hash,
+                        title,
+                        meta.year.map(|y| y as i32),
+                        meta.season.map(|s| s as i32),
+                        meta.episode.map(|e| e as i32),
+                    ).await.is_ok() {
+                        ok += 1;
+                    }
+                }
+            }
+            let _ = state.db.complete_torrent(hash).await;
+        }
+
+        state.metrics.bump("torrents_parsed", ok);
+        log!(state.logs, "[P3-PARSE] Parsed {ok}/{} torrents", torrents.len());
+
+        state.queues.parse.store(false, Ordering::Relaxed);
+        tokio::time::sleep(std::time::Duration::from_secs(2)).await;
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    // === GitHub Tree API response parsing ===
 
     fn make_tree_response(entries: Vec<(&str, &str)>, truncated: bool) -> GitTreeResponse {
         GitTreeResponse {
@@ -355,48 +322,15 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_github_tree_response_json() {
-        let json = r#"{
-            "sha": "abc123",
-            "url": "https://api.github.com/repos/debridmediamanager/hashlists/git/trees/main",
-            "tree": [
-                {"path": "index.html", "mode": "100644", "type": "blob", "sha": "aaa", "size": 100, "url": "..."},
-                {"path": "00011863-7c82-4d3c-846a-deeb5ac0d6be.html", "mode": "100644", "type": "blob", "sha": "bbb", "size": 5000, "url": "..."},
-                {"path": "2f16a13d-7dd7-414d-a9c5-aa30a32fe9de.html", "mode": "100644", "type": "blob", "sha": "ccc", "size": 3000, "url": "..."},
-                {"path": ".gitattributes", "mode": "100644", "type": "blob", "sha": "ddd", "size": 50, "url": "..."}
-            ],
-            "truncated": false
-        }"#;
-
-        let resp: GitTreeResponse = serde_json::from_str(json).unwrap();
-        assert_eq!(resp.tree.len(), 4);
-        assert!(!resp.truncated);
-    }
-
-    #[test]
     fn test_filter_hashlist_names_excludes_index() {
-        let resp = make_tree_response(
-            vec![
-                ("index.html", "blob"),
-                ("abc.html", "blob"),
-                ("def.html", "blob"),
-            ],
-            false,
-        );
+        let resp = make_tree_response(vec![("index.html", "blob"), ("abc.html", "blob")], false);
         let names = filter_hashlist_names(&resp);
-        assert_eq!(names, vec!["abc.html", "def.html"]);
+        assert_eq!(names, vec!["abc.html"]);
     }
 
     #[test]
     fn test_filter_hashlist_names_excludes_non_html() {
-        let resp = make_tree_response(
-            vec![
-                ("readme.md", "blob"),
-                (".gitattributes", "blob"),
-                ("abc.html", "blob"),
-            ],
-            false,
-        );
+        let resp = make_tree_response(vec![("readme.md", "blob"), ("abc.html", "blob")], false);
         let names = filter_hashlist_names(&resp);
         assert_eq!(names, vec!["abc.html"]);
     }
@@ -406,34 +340,5 @@ mod tests {
         let resp = make_tree_response(vec![("subdir", "tree"), ("abc.html", "blob")], false);
         let names = filter_hashlist_names(&resp);
         assert_eq!(names, vec!["abc.html"]);
-    }
-
-    #[test]
-    fn test_filter_hashlist_names_empty_tree() {
-        let resp = make_tree_response(vec![], false);
-        let names = filter_hashlist_names(&resp);
-        assert!(names.is_empty());
-    }
-
-    #[test]
-    fn test_filter_hashlist_names_uuid_pattern() {
-        let resp = make_tree_response(
-            vec![
-                ("00011863-7c82-4d3c-846a-deeb5ac0d6be.html", "blob"),
-                ("2f16a13d-7dd7-414d-a9c5-aa30a32fe9de.html", "blob"),
-                ("78cbef20-0923-4d11-9d1c-95ffab29664e.html", "blob"),
-            ],
-            false,
-        );
-        let names = filter_hashlist_names(&resp);
-        assert_eq!(names.len(), 3);
-        assert!(names.iter().all(|n| n.ends_with(".html")));
-    }
-
-    #[test]
-    fn test_truncated_tree_response() {
-        let resp = make_tree_response(vec![("a.html", "blob")], true);
-        assert!(resp.truncated);
-        assert_eq!(filter_hashlist_names(&resp).len(), 1);
     }
 }

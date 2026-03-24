@@ -67,6 +67,7 @@ async fn fetch_from_itorrents(
 }
 
 /// Fetch .torrent from hash2torrent.com (real-time DHT fetch) and parse file list.
+#[allow(dead_code)]
 async fn fetch_from_hash2torrent(
     client: &reqwest::Client,
     hash_lower: &str,
@@ -507,9 +508,14 @@ mod tests {
             let mut mismatches = 0;
             for (it, rd) in it_files.iter().zip(rd_files.iter()) {
                 let idx_match = it.index == rd.index;
-                let name_match = it.path.contains(&rd.path) || rd.path.contains(&it.path)
+                let name_match = it.path.contains(&rd.path)
+                    || rd.path.contains(&it.path)
                     || it.path.rsplit('/').next() == rd.path.rsplit('/').next();
-                let status = if idx_match && name_match { "OK" } else { "MISMATCH" };
+                let status = if idx_match && name_match {
+                    "OK"
+                } else {
+                    "MISMATCH"
+                };
                 if !idx_match || !name_match {
                     mismatches += 1;
                 }

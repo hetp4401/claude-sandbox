@@ -1,6 +1,5 @@
 mod db;
 mod dht;
-mod dht_worker;
 mod hashlist;
 mod imdb_pipeline;
 mod imdb_resolver;
@@ -9,8 +8,6 @@ mod logs;
 mod metrics;
 mod packs_worker;
 mod pipeline;
-mod qbit;
-mod rqbit_client;
 mod singles_worker;
 mod title_parser;
 mod torrent_cache;
@@ -29,6 +26,18 @@ async fn dashboard(State(_state): State<AppState>) -> Html<String> {
 struct PageQuery {
     page: Option<i64>,
     per_page: Option<i64>,
+}
+
+async fn api_hashlists(
+    State(state): State<AppState>,
+    Query(params): Query<PageQuery>,
+) -> axum::Json<serde_json::Value> {
+    let page = params.page.unwrap_or(1).max(1);
+    let per_page = params.per_page.unwrap_or(50).clamp(1, 200);
+    match state.db.get_hashlists_page(page, per_page).await {
+        Ok(p) => axum::Json(serde_json::json!({ "items": p.items, "total": p.total, "page": p.page, "per_page": p.per_page })),
+        Err(e) => axum::Json(serde_json::json!({ "error": e.to_string() })),
+    }
 }
 
 async fn api_torrents(
@@ -54,7 +63,7 @@ async fn api_parsed(
 ) -> axum::Json<serde_json::Value> {
     let page = params.page.unwrap_or(1).max(1);
     let per_page = params.per_page.unwrap_or(50).clamp(1, 200);
-    match state.db.get_parsed_metadata_page(page, per_page).await {
+    match state.db.get_parsed_page(page, per_page).await {
         Ok(p) => axum::Json(serde_json::json!({
             "items": p.items,
             "total": p.total,
@@ -71,7 +80,7 @@ async fn api_imdb(
 ) -> axum::Json<serde_json::Value> {
     let page = params.page.unwrap_or(1).max(1);
     let per_page = params.per_page.unwrap_or(50).clamp(1, 200);
-    match state.db.get_imdb_mappings_page(page, per_page).await {
+    match state.db.get_imdb_page(page, per_page).await {
         Ok(p) => axum::Json(serde_json::json!({
             "items": p.items,
             "total": p.total,
@@ -84,63 +93,33 @@ async fn api_imdb(
 
 async fn api_stats(State(state): State<AppState>) -> axum::Json<serde_json::Value> {
     let counts = state.db.counts().await.unwrap_or(db::RecordCounts {
-        total_torrents: 0,
-        total_parsed: 0,
-        total_imdb: 0,
-        total_streams: 0,
+        hashlists: 0, torrents: 0, parsed: 0, imdb: 0, streams: 0,
     });
-    let total_hl = state.db.count_hashlists().await.unwrap_or(0);
-    let done_hl = state.db.count_hashlists_done().await.unwrap_or(0);
-
     axum::Json(serde_json::json!({
-        "total_torrents": counts.total_torrents,
-        "total_parsed": counts.total_parsed,
-        "total_imdb": counts.total_imdb,
-        "total_streams": counts.total_streams,
-        "total_hashlists": total_hl,
-        "done_hashlists": done_hl,
+        "hashlists": counts.hashlists,
+        "torrents": counts.torrents,
+        "parsed": counts.parsed,
+        "imdb": counts.imdb,
+        "streams": counts.streams,
     }))
 }
 
 async fn api_queues(State(state): State<AppState>) -> axum::Json<serde_json::Value> {
     use std::sync::atomic::Ordering;
 
-    let zero = db::PipelineStats { unresolved: 0, completed: 0, failed: 0 };
-    let depths = state.db.get_queue_depths().await.unwrap_or(db::QueueDepths {
-        hashlist: zero.clone(), imdb: zero.clone(), singles: zero.clone(), packs: zero.clone(), dht: zero,
+    let z = db::PipelineStats { unresolved: 0, completed: 0, exhausted: 0 };
+    let d = state.db.get_queue_depths().await.unwrap_or(db::QueueDepths {
+        hashlists: z.clone(), extract: z.clone(), parse: z.clone(),
+        imdb: z.clone(), singles: z.clone(), packs: z,
     });
 
     axum::Json(serde_json::json!({
-        "hashlist": {
-            "active": state.queues.hashlist.load(Ordering::Relaxed),
-            "unresolved": depths.hashlist.unresolved,
-            "completed": depths.hashlist.completed,
-            "failed": depths.hashlist.failed,
-        },
-        "imdb": {
-            "active": state.queues.imdb.load(Ordering::Relaxed),
-            "unresolved": depths.imdb.unresolved,
-            "completed": depths.imdb.completed,
-            "failed": depths.imdb.failed,
-        },
-        "singles": {
-            "active": state.queues.singles.load(Ordering::Relaxed),
-            "unresolved": depths.singles.unresolved,
-            "completed": depths.singles.completed,
-            "failed": depths.singles.failed,
-        },
-        "packs": {
-            "active": state.queues.packs.load(Ordering::Relaxed),
-            "unresolved": depths.packs.unresolved,
-            "completed": depths.packs.completed,
-            "failed": depths.packs.failed,
-        },
-        "dht": {
-            "active": state.queues.dht.load(Ordering::Relaxed),
-            "unresolved": depths.dht.unresolved,
-            "completed": depths.dht.completed,
-            "failed": depths.dht.failed,
-        },
+        "hashlists":  { "active": state.queues.hashlists.load(Ordering::Relaxed), "unresolved": d.hashlists.unresolved, "completed": d.hashlists.completed, "exhausted": d.hashlists.exhausted },
+        "extract":    { "active": state.queues.extract.load(Ordering::Relaxed), "unresolved": d.extract.unresolved, "completed": d.extract.completed, "exhausted": d.extract.exhausted },
+        "parse":      { "active": state.queues.parse.load(Ordering::Relaxed), "unresolved": d.parse.unresolved, "completed": d.parse.completed, "exhausted": d.parse.exhausted },
+        "imdb":       { "active": state.queues.imdb.load(Ordering::Relaxed), "unresolved": d.imdb.unresolved, "completed": d.imdb.completed, "exhausted": d.imdb.exhausted },
+        "singles":    { "active": state.queues.singles.load(Ordering::Relaxed), "unresolved": d.singles.unresolved, "completed": d.singles.completed, "exhausted": d.singles.exhausted },
+        "packs":      { "active": state.queues.packs.load(Ordering::Relaxed), "unresolved": d.packs.unresolved, "completed": d.packs.completed, "exhausted": d.packs.exhausted },
     }))
 }
 
@@ -178,22 +157,6 @@ async fn api_logs(
     }))
 }
 
-async fn api_dht_queue(
-    State(state): State<AppState>,
-    Query(params): Query<PageQuery>,
-) -> axum::Json<serde_json::Value> {
-    let page = params.page.unwrap_or(1).max(1);
-    let per_page = params.per_page.unwrap_or(50).clamp(1, 200);
-    match state.db.get_dht_queue_page(page, per_page).await {
-        Ok(p) => axum::Json(serde_json::json!({
-            "items": p.items,
-            "total": p.total,
-            "page": p.page,
-            "per_page": p.per_page,
-        })),
-        Err(e) => axum::Json(serde_json::json!({ "error": e.to_string() })),
-    }
-}
 
 async fn api_metrics(State(state): State<AppState>) -> axum::Json<serde_json::Value> {
     let histories = state.metrics.get_all().await;
@@ -226,6 +189,24 @@ async fn api_pipeline_control(
         .map(|(name, enabled)| serde_json::json!({ "name": name, "enabled": enabled }))
         .collect();
     axum::Json(serde_json::json!({ "pipelines": status }))
+}
+
+#[derive(Deserialize)]
+struct ResetAttemptsRequest {
+    table: String,
+}
+
+async fn api_reset_attempts(
+    State(state): State<AppState>,
+    axum::Json(body): axum::Json<ResetAttemptsRequest>,
+) -> axum::Json<serde_json::Value> {
+    match state.db.reset_attempts(&body.table).await {
+        Ok(count) => {
+            log!(state.logs, "[CONTROL] Reset attempts for {}: {} rows", body.table, count);
+            axum::Json(serde_json::json!({ "reset": count }))
+        }
+        Err(e) => axum::Json(serde_json::json!({ "error": e.to_string() })),
+    }
 }
 
 async fn api_pipeline_status(State(state): State<AppState>) -> axum::Json<serde_json::Value> {
@@ -270,37 +251,43 @@ async fn main() {
         .expect("Failed to build HTTP client");
     let resolver = ImdbResolver::new(http_client);
 
-    // Spawn 3 independent pipeline workers
-    let hl_state = state.clone();
+    // Spawn 6 pipeline workers
+    let s1 = state.clone();
     tokio::spawn(async move {
-        ingestor::run_hashlist_worker(hl_state, std::time::Duration::from_secs(poll_secs)).await;
+        ingestor::run_pipeline1_discover(s1, std::time::Duration::from_secs(poll_secs)).await;
     });
 
-    let imdb_state = state.clone();
+    let s2 = state.clone();
+    tokio::spawn(async move {
+        ingestor::run_pipeline2_extract(s2).await;
+    });
+
+    let s3 = state.clone();
+    tokio::spawn(async move {
+        ingestor::run_pipeline3_parse(s3).await;
+    });
+
+    let s4 = state.clone();
     let imdb_resolver = resolver.clone();
     tokio::spawn(async move {
-        imdb_pipeline::run_imdb_worker(imdb_state, imdb_resolver).await;
+        imdb_pipeline::run_pipeline4_imdb(s4, imdb_resolver).await;
     });
 
-    let singles_state = state.clone();
+    let s5 = state.clone();
     tokio::spawn(async move {
-        singles_worker::run_singles_worker(singles_state).await;
+        singles_worker::run_pipeline5_singles(s5).await;
     });
 
-    let packs_state = state.clone();
+    let s6 = state.clone();
     tokio::spawn(async move {
-        packs_worker::run_packs_worker(packs_state).await;
-    });
-
-    let dht_state = state.clone();
-    tokio::spawn(async move {
-        dht_worker::run_dht_worker(dht_state).await;
+        packs_worker::run_pipeline6_packs(s6).await;
     });
 
     log!(state.logs, "Starting web dashboard on http://0.0.0.0:3000");
 
     let app = Router::new()
         .route("/", get(dashboard))
+        .route("/api/hashlists", get(api_hashlists))
         .route("/api/torrents", get(api_torrents))
         .route("/api/parsed", get(api_parsed))
         .route("/api/imdb", get(api_imdb))
@@ -308,10 +295,10 @@ async fn main() {
         .route("/api/stats", get(api_stats))
         .route("/api/queues", get(api_queues))
         .route("/api/logs", get(api_logs))
-        .route("/api/dht-queue", get(api_dht_queue))
         .route("/api/metrics", get(api_metrics))
         .route("/api/pipelines", get(api_pipeline_status))
         .route("/api/pipelines/control", axum::routing::post(api_pipeline_control))
+        .route("/api/pipelines/reset-attempts", axum::routing::post(api_reset_attempts))
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
@@ -427,82 +414,33 @@ const DASHBOARD_HTML: &str = r##"<!DOCTYPE html>
 
 <div class="section-label">Pipeline Queues</div>
 <div class="queues" id="queues">
-  <div class="queue-card" id="q-hashlist">
-    <div class="q-header">
-      <span class="q-dot idle" id="q-hashlist-dot"></span>
-      <span class="q-name">Hashlist Ingestion</span>
-      <span class="q-status" id="q-hashlist-status">idle</span>
-    </div>
-    <div class="q-rows">
-      <div class="q-row"><span class="q-label">Unresolved</span><span class="q-val pending" id="q-hashlist-unresolved">-</span></div>
-      <div class="q-row"><span class="q-label">Completed</span><span class="q-val done" id="q-hashlist-completed">-</span></div>
-      <div class="q-row"><span class="q-label">Failed</span><span class="q-val failed" id="q-hashlist-failed">-</span></div>
-    </div>
-    <div class="q-bar"><div class="q-bar-fill green" id="q-hashlist-bar" style="width:0%"></div></div>
-  </div>
-  <div class="queue-card" id="q-imdb">
-    <div class="q-header">
-      <span class="q-dot idle" id="q-imdb-dot"></span>
-      <span class="q-name">IMDb Resolution</span>
-      <span class="q-status" id="q-imdb-status">idle</span>
-    </div>
-    <div class="q-rows">
-      <div class="q-row"><span class="q-label">Unresolved</span><span class="q-val pending" id="q-imdb-unresolved">-</span></div>
-      <div class="q-row"><span class="q-label">Completed</span><span class="q-val done" id="q-imdb-completed">-</span></div>
-      <div class="q-row"><span class="q-label">Failed</span><span class="q-val failed" id="q-imdb-failed">-</span></div>
-    </div>
-    <div class="q-bar"><div class="q-bar-fill green" id="q-imdb-bar" style="width:0%"></div></div>
-  </div>
-  <div class="queue-card" id="q-singles">
-    <div class="q-header">
-      <span class="q-dot idle" id="q-singles-dot"></span>
-      <span class="q-name">Singles (Movies+Episodes)</span>
-      <span class="q-status" id="q-singles-status">idle</span>
-    </div>
-    <div class="q-rows">
-      <div class="q-row"><span class="q-label">Unresolved</span><span class="q-val pending" id="q-singles-unresolved">-</span></div>
-      <div class="q-row"><span class="q-label">Completed</span><span class="q-val done" id="q-singles-completed">-</span></div>
-    </div>
-    <div class="q-bar"><div class="q-bar-fill green" id="q-singles-bar" style="width:0%"></div></div>
-  </div>
-  <div class="queue-card" id="q-packs">
-    <div class="q-header">
-      <span class="q-dot idle" id="q-packs-dot"></span>
-      <span class="q-name">Season Packs (Cache)</span>
-      <span class="q-status" id="q-packs-status">idle</span>
-    </div>
-    <div class="q-rows">
-      <div class="q-row"><span class="q-label">Unresolved</span><span class="q-val pending" id="q-packs-unresolved">-</span></div>
-      <div class="q-row"><span class="q-label">Completed</span><span class="q-val done" id="q-packs-completed">-</span></div>
-    </div>
-    <div class="q-bar"><div class="q-bar-fill green" id="q-packs-bar" style="width:0%"></div></div>
-  </div>
-  <div class="queue-card" id="q-dht">
-    <div class="q-header">
-      <span class="q-dot idle" id="q-dht-dot"></span>
-      <span class="q-name">Unpack Queue (Swarm)</span>
-      <span class="q-status" id="q-dht-status">idle</span>
-    </div>
-    <div class="q-rows">
-      <div class="q-row"><span class="q-label">Unresolved</span><span class="q-val pending" id="q-dht-unresolved">-</span></div>
-      <div class="q-row"><span class="q-label">Completed</span><span class="q-val done" id="q-dht-completed">-</span></div>
-      <div class="q-row"><span class="q-label">Failed</span><span class="q-val failed" id="q-dht-failed">-</span></div>
-    </div>
-    <div class="q-bar"><div class="q-bar-fill green" id="q-dht-bar" style="width:0%"></div></div>
-  </div>
+  <div class="queue-card" id="q-hashlists"><div class="q-header"><span class="q-dot idle" id="q-hashlists-dot"></span><span class="q-name">P1: Discover</span><span class="q-status" id="q-hashlists-status">idle</span></div><div class="q-rows"><div class="q-row"><span class="q-label">Unresolved</span><span class="q-val pending" id="q-hashlists-unresolved">-</span></div><div class="q-row"><span class="q-label">Completed</span><span class="q-val done" id="q-hashlists-completed">-</span></div><div class="q-row"><span class="q-label">Exhausted</span><span class="q-val failed" id="q-hashlists-exhausted">-</span></div></div><div class="q-bar"><div class="q-bar-fill green" id="q-hashlists-bar" style="width:0%"></div></div></div>
+  <div class="queue-card" id="q-extract"><div class="q-header"><span class="q-dot idle" id="q-extract-dot"></span><span class="q-name">P2: Extract</span><span class="q-status" id="q-extract-status">idle</span></div><div class="q-rows"><div class="q-row"><span class="q-label">Unresolved</span><span class="q-val pending" id="q-extract-unresolved">-</span></div><div class="q-row"><span class="q-label">Completed</span><span class="q-val done" id="q-extract-completed">-</span></div><div class="q-row"><span class="q-label">Exhausted</span><span class="q-val failed" id="q-extract-exhausted">-</span></div></div><div class="q-bar"><div class="q-bar-fill green" id="q-extract-bar" style="width:0%"></div></div></div>
+  <div class="queue-card" id="q-parse"><div class="q-header"><span class="q-dot idle" id="q-parse-dot"></span><span class="q-name">P3: Parse</span><span class="q-status" id="q-parse-status">idle</span></div><div class="q-rows"><div class="q-row"><span class="q-label">Unresolved</span><span class="q-val pending" id="q-parse-unresolved">-</span></div><div class="q-row"><span class="q-label">Completed</span><span class="q-val done" id="q-parse-completed">-</span></div><div class="q-row"><span class="q-label">Exhausted</span><span class="q-val failed" id="q-parse-exhausted">-</span></div></div><div class="q-bar"><div class="q-bar-fill green" id="q-parse-bar" style="width:0%"></div></div></div>
+  <div class="queue-card" id="q-imdb"><div class="q-header"><span class="q-dot idle" id="q-imdb-dot"></span><span class="q-name">P4: IMDb</span><span class="q-status" id="q-imdb-status">idle</span></div><div class="q-rows"><div class="q-row"><span class="q-label">Unresolved</span><span class="q-val pending" id="q-imdb-unresolved">-</span></div><div class="q-row"><span class="q-label">Completed</span><span class="q-val done" id="q-imdb-completed">-</span></div><div class="q-row"><span class="q-label">Exhausted</span><span class="q-val failed" id="q-imdb-exhausted">-</span></div></div><div class="q-bar"><div class="q-bar-fill green" id="q-imdb-bar" style="width:0%"></div></div></div>
+  <div class="queue-card" id="q-singles"><div class="q-header"><span class="q-dot idle" id="q-singles-dot"></span><span class="q-name">P5: Singles</span><span class="q-status" id="q-singles-status">idle</span></div><div class="q-rows"><div class="q-row"><span class="q-label">Unresolved</span><span class="q-val pending" id="q-singles-unresolved">-</span></div><div class="q-row"><span class="q-label">Completed</span><span class="q-val done" id="q-singles-completed">-</span></div><div class="q-row"><span class="q-label">Exhausted</span><span class="q-val failed" id="q-singles-exhausted">-</span></div></div><div class="q-bar"><div class="q-bar-fill green" id="q-singles-bar" style="width:0%"></div></div></div>
+  <div class="queue-card" id="q-packs"><div class="q-header"><span class="q-dot idle" id="q-packs-dot"></span><span class="q-name">P6: Packs</span><span class="q-status" id="q-packs-status">idle</span></div><div class="q-rows"><div class="q-row"><span class="q-label">Unresolved</span><span class="q-val pending" id="q-packs-unresolved">-</span></div><div class="q-row"><span class="q-label">Completed</span><span class="q-val done" id="q-packs-completed">-</span></div><div class="q-row"><span class="q-label">Exhausted</span><span class="q-val failed" id="q-packs-exhausted">-</span></div></div><div class="q-bar"><div class="q-bar-fill green" id="q-packs-bar" style="width:0%"></div></div></div>
 </div>
 
 <div class="tabs">
-  <div class="tab active" data-tab="torrents">Torrents</div>
-  <div class="tab" data-tab="parsed">Parsed Metadata</div>
-  <div class="tab" data-tab="imdb">IMDb Mappings</div>
+  <div class="tab active" data-tab="hashlists">Hashlists</div>
+  <div class="tab" data-tab="torrents">Torrents</div>
+  <div class="tab" data-tab="parsed">Parsed</div>
+  <div class="tab" data-tab="imdb">IMDb</div>
   <div class="tab" data-tab="streams">Streams</div>
-  <div class="tab" data-tab="dht-queue">Unpack Queue</div>
+  <div class="tab" data-tab="controls">Controls</div>
   <div class="tab" data-tab="metrics">Metrics</div>
   <div class="tab" data-tab="logs">Logs</div>
 </div>
 
-<div id="tab-torrents" class="tab-content active">
+<div id="tab-hashlists" class="tab-content active">
+  <div class="tab-panel">
+    <div class="tbl-wrap" id="hashlists-table"><div class="loading-msg">Loading...</div></div>
+    <div class="pagination" id="hashlists-pag"></div>
+  </div>
+</div>
+
+<div id="tab-torrents" class="tab-content">
   <div class="tab-panel">
     <div class="tbl-wrap" id="torrents-table"><div class="loading-msg">Loading...</div></div>
     <div class="pagination" id="torrents-pag"></div>
@@ -530,17 +468,22 @@ const DASHBOARD_HTML: &str = r##"<!DOCTYPE html>
   </div>
 </div>
 
-<div id="tab-dht-queue" class="tab-content">
+<div id="tab-controls" class="tab-content">
   <div class="tab-panel">
-    <div class="tbl-wrap" id="dht-table"><div class="loading-msg">Click to load</div></div>
-    <div class="pagination" id="dht-pag"></div>
+    <div class="section-label">Pipeline Controls</div>
+    <div id="pipeline-controls" style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap"></div>
+    <div class="section-label">Reset Attempts</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap" id="reset-buttons">
+      <button onclick="resetAttempts('dmm_hashlists')" style="background:#21262d;color:#58a6ff;border:1px solid #30363d;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:0.82em">Reset Hashlists</button>
+      <button onclick="resetAttempts('torrents')" style="background:#21262d;color:#58a6ff;border:1px solid #30363d;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:0.82em">Reset Torrents</button>
+      <button onclick="resetAttempts('parsed_torrents')" style="background:#21262d;color:#58a6ff;border:1px solid #30363d;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:0.82em">Reset Parsed</button>
+      <button onclick="resetAttempts('imdb_mappings')" style="background:#21262d;color:#58a6ff;border:1px solid #30363d;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:0.82em">Reset IMDb</button>
+    </div>
   </div>
 </div>
 
 <div id="tab-metrics" class="tab-content">
   <div class="tab-panel">
-    <div class="section-label">Pipeline Controls</div>
-    <div id="pipeline-controls" style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap"></div>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
       <span class="section-label" style="margin-bottom:0">Throughput (per minute)</span>
       <select id="metrics-window" onchange="loadMetrics()" style="background:#21262d;color:#c9d1d9;border:1px solid #30363d;border-radius:6px;padding:4px 10px;font-size:0.82em">
@@ -567,10 +510,10 @@ const DASHBOARD_HTML: &str = r##"<!DOCTYPE html>
 </div>
 
 <script>
-let torrentsPage = 1, parsedPage = 1, imdbPage = 1;
+let torrentsPage = 1, parsedPage = 1, imdbPage = 1, hashlistsPage = 1;
 let perPage = 25;
-let activeTab = 'torrents';
-const tabLoaded = { torrents: false, parsed: false, imdb: false, streams: false, 'dht-queue': false, metrics: false, logs: false };
+const tabLoaded = { hashlists: false, torrents: false, parsed: false, imdb: false, streams: false, controls: false, metrics: false, logs: false };
+let activeTab = 'hashlists';
 
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
@@ -634,14 +577,14 @@ function setQueueCard(prefix, data) {
 
   const unEl = document.getElementById(prefix + '-unresolved');
   const compEl = document.getElementById(prefix + '-completed');
-  const failEl = document.getElementById(prefix + '-failed');
+  const exEl = document.getElementById(prefix + '-exhausted');
   if (unEl) unEl.textContent = fmtNum(data.unresolved);
   if (compEl) compEl.textContent = fmtNum(data.completed);
-  if (failEl) failEl.textContent = fmtNum(data.failed);
+  if (exEl) exEl.textContent = fmtNum(data.exhausted);
 
   const bar = document.getElementById(prefix + '-bar');
   if (bar) {
-    const total = (data.completed || 0) + (data.unresolved || 0) + (data.failed || 0);
+    const total = (data.completed || 0) + (data.unresolved || 0) + (data.exhausted || 0);
     const pct = total > 0 ? Math.round(((data.completed || 0) / total) * 100) : 0;
     bar.style.width = pct + '%';
     bar.className = 'q-bar-fill ' + (pct >= 80 ? 'green' : 'yellow');
@@ -652,11 +595,12 @@ async function loadQueues() {
   try {
     const r = await fetch('/api/queues');
     const q = await r.json();
-    setQueueCard('q-hashlist', q.hashlist);
+    setQueueCard('q-hashlists', q.hashlists);
+    setQueueCard('q-extract', q.extract);
+    setQueueCard('q-parse', q.parse);
     setQueueCard('q-imdb', q.imdb);
     setQueueCard('q-singles', q.singles);
     setQueueCard('q-packs', q.packs);
-    setQueueCard('q-dht', q.dht);
   } catch(e) {}
 }
 
@@ -665,15 +609,45 @@ async function loadStats() {
     const r = await fetch('/api/stats');
     const s = await r.json();
     document.getElementById('stats').innerHTML = `
-      <div class="stat"><div class="num">${fmtNum(s.total_torrents)}</div><div class="label">Torrents</div></div>
-      <div class="stat"><div class="num">${fmtNum(s.total_parsed)}</div><div class="label">Parsed</div></div>
-      <div class="stat"><div class="num">${fmtNum(s.total_imdb)}</div><div class="label">IMDb Mapped</div></div>
-      <div class="stat"><div class="num">${fmtNum(s.total_streams)}</div><div class="label">Streams</div></div>
-      <div class="stat"><div class="num">${fmtNum(s.total_hashlists)}</div><div class="label">Hashlists</div></div>`;
+      <div class="stat"><div class="num">${fmtNum(s.hashlists)}</div><div class="label">Hashlists</div></div>
+      <div class="stat"><div class="num">${fmtNum(s.torrents)}</div><div class="label">Torrents</div></div>
+      <div class="stat"><div class="num">${fmtNum(s.parsed)}</div><div class="label">Parsed</div></div>
+      <div class="stat"><div class="num">${fmtNum(s.imdb)}</div><div class="label">IMDb</div></div>
+      <div class="stat"><div class="num">${fmtNum(s.streams)}</div><div class="label">Streams</div></div>`;
     document.getElementById('subtitle').textContent =
-      `${fmtNum(s.total_torrents)} torrents | ${fmtNum(s.total_parsed)} parsed | ${fmtNum(s.total_imdb)} IMDb | ${fmtNum(s.total_streams)} streams`;
+      `${fmtNum(s.hashlists)} hashlists | ${fmtNum(s.torrents)} torrents | ${fmtNum(s.parsed)} parsed | ${fmtNum(s.imdb)} IMDb | ${fmtNum(s.streams)} streams`;
   } catch(e) {
     document.getElementById('subtitle').textContent = 'Failed to load stats';
+  }
+}
+
+async function loadHashlists(page) {
+  if (page !== undefined) hashlistsPage = page;
+  document.getElementById('hashlists-table').innerHTML = '<div class="loading-msg">Loading...</div>';
+  try {
+    const r = await fetch(`/api/hashlists?page=${hashlistsPage}&per_page=${perPage}`);
+    const data = await r.json();
+    if (!data.items || data.items.length === 0) {
+      document.getElementById('hashlists-table').innerHTML = '<div class="empty">No hashlists yet</div>';
+      document.getElementById('hashlists-pag').innerHTML = '';
+      return;
+    }
+    let html = `<table><tr><th>Name</th><th>Completed</th><th>Attempts</th><th>Last Processed</th></tr>`;
+    for (const h of data.items) {
+      const badge = h.completed ? '<span style="color:#3fb950">yes</span>' : '<span style="color:#d29922">no</span>';
+      html += `<tr>
+        <td><code>${esc(h.name)}</code></td>
+        <td>${badge}</td>
+        <td>${h.attempts}</td>
+        <td class="ts">${fmtTime(h.last_processed)}</td>
+      </tr>`;
+    }
+    html += '</table>';
+    document.getElementById('hashlists-table').innerHTML = html;
+    renderPagination('hashlists-pag', data.page, data.total, data.per_page, 'loadHashlists');
+    tabLoaded.hashlists = true;
+  } catch(e) {
+    document.getElementById('hashlists-table').innerHTML = '<div class="empty">Failed to load hashlists</div>';
   }
 }
 
@@ -688,13 +662,15 @@ async function loadTorrents(page) {
       document.getElementById('torrents-pag').innerHTML = '';
       return;
     }
-    let html = `<table><tr><th>Hash</th><th>Filename</th><th>Size</th><th>Last Updated</th></tr>`;
+    let html = `<table><tr><th>Hash</th><th>Filename</th><th>Size</th><th>Done</th><th>Attempts</th><th>Last Processed</th></tr>`;
     for (const t of data.items) {
       html += `<tr>
         <td><code>${esc(t.hash.slice(0,16))}</code></td>
         <td class="fn" title="${esc(t.filename)}">${esc(t.filename)}</td>
         <td>${fmtSize(t.size_bytes)}</td>
-        <td class="ts">${fmtTime(t.last_updated)}</td>
+        <td>${t.completed ? '<span style="color:#3fb950">yes</span>' : '<span style="color:#d29922">no</span>'}</td>
+        <td>${t.attempts || 0}</td>
+        <td class="ts">${fmtTime(t.last_processed)}</td>
       </tr>`;
     }
     html += '</table>';
@@ -717,7 +693,7 @@ async function loadParsed(page) {
       document.getElementById('parsed-pag').innerHTML = '';
       return;
     }
-    let html = `<table><tr><th>Hash</th><th>Title</th><th>Year</th><th>S</th><th>E</th><th>Last Updated</th></tr>`;
+    let html = `<table><tr><th>Hash</th><th>Title</th><th>Year</th><th>S</th><th>E</th><th>Done</th><th>Attempts</th><th>Last Processed</th></tr>`;
     for (const p of data.items) {
       html += `<tr>
         <td><code>${esc(p.hash.slice(0,16))}</code></td>
@@ -725,7 +701,9 @@ async function loadParsed(page) {
         <td>${p.year != null ? p.year : '-'}</td>
         <td>${p.season != null ? p.season : '-'}</td>
         <td>${p.episode != null ? p.episode : '-'}</td>
-        <td class="ts">${fmtTime(p.last_updated)}</td>
+        <td>${p.completed ? '<span style="color:#3fb950">yes</span>' : '<span style="color:#d29922">no</span>'}</td>
+        <td>${p.attempts || 0}</td>
+        <td class="ts">${fmtTime(p.last_processed)}</td>
       </tr>`;
     }
     html += '</table>';
@@ -748,7 +726,7 @@ async function loadImdb(page) {
       document.getElementById('imdb-pag').innerHTML = '';
       return;
     }
-    let html = `<table><tr><th>Hash</th><th>IMDb ID</th><th>Type</th><th>Last Updated</th></tr>`;
+    let html = `<table><tr><th>Hash</th><th>IMDb ID</th><th>Type</th><th>Done</th><th>Attempts</th><th>Last Processed</th></tr>`;
     for (const m of data.items) {
       const badge = m.content_type === 'series'
         ? '<span style="color:#58a6ff;font-weight:600">series</span>'
@@ -757,7 +735,9 @@ async function loadImdb(page) {
         <td><code>${esc(m.hash.slice(0,16))}</code></td>
         <td><a class="imdb-link" href="https://www.imdb.com/title/${esc(m.imdb_id)}/" target="_blank" rel="noopener">${esc(m.imdb_id)}</a></td>
         <td>${badge}</td>
-        <td class="ts">${fmtTime(m.last_updated)}</td>
+        <td>${m.completed ? '<span style="color:#3fb950">yes</span>' : '<span style="color:#d29922">no</span>'}</td>
+        <td>${m.attempts || 0}</td>
+        <td class="ts">${fmtTime(m.last_processed)}</td>
       </tr>`;
     }
     html += '</table>';
@@ -796,7 +776,7 @@ async function loadStreams(page) {
         <td>${s.file_index != null ? s.file_index : '-'}</td>
         <td>${s.season != null ? s.season : '-'}</td>
         <td>${s.episode != null ? s.episode : '-'}</td>
-        <td class="ts">${fmtTime(s.last_updated)}</td>
+        <td class="ts">${fmtTime(s.created_at)}</td>
       </tr>`;
     }
     html += '</table>';
@@ -808,64 +788,8 @@ async function loadStreams(page) {
   }
 }
 
-let dhtPage = 1;
-
-async function loadDhtQueue(page) {
-  if (page !== undefined) dhtPage = page;
-  document.getElementById('dht-table').innerHTML = '<div class="loading-msg">Loading...</div>';
-  try {
-    const r = await fetch(`/api/dht-queue?page=${dhtPage}&per_page=${perPage}`);
-    const data = await r.json();
-    if (!data.items || data.items.length === 0) {
-      document.getElementById('dht-table').innerHTML = '<div class="empty">No unpack queue entries</div>';
-      document.getElementById('dht-pag').innerHTML = '';
-      return;
-    }
-    let html = `<table><tr><th>Hash</th><th>Filename</th><th>IMDb</th><th>Season</th><th>Attempts</th><th>Status</th><th>Last Attempt</th><th>Created</th></tr>`;
-    for (const d of data.items) {
-      const statusColor = d.status === 'resolved' ? '#3fb950' : d.status === 'lost' ? '#f85149' : '#d29922';
-      html += `<tr>
-        <td><code>${esc(d.hash.slice(0,12))}</code></td>
-        <td class="fn" title="${esc(d.filename)}">${esc(d.filename)}</td>
-        <td><a class="imdb-link" href="https://www.imdb.com/title/${esc(d.imdb_id)}/" target="_blank" rel="noopener">${esc(d.imdb_id)}</a></td>
-        <td>${d.season}</td>
-        <td>${d.attempts}</td>
-        <td><span style="color:${statusColor};font-weight:600">${d.status}</span></td>
-        <td class="ts">${d.last_attempt ? fmtTime(d.last_attempt) : '-'}</td>
-        <td class="ts">${fmtTime(d.created_at)}</td>
-      </tr>`;
-    }
-    html += '</table>';
-    document.getElementById('dht-table').innerHTML = html;
-    renderPagination('dht-pag', data.page, data.total, data.per_page, 'loadDhtQueue');
-  } catch(e) {
-    document.getElementById('dht-table').innerHTML = '<div class="empty">Failed to load unpack queue</div>';
-  }
-}
-
 async function loadMetrics() {
   try {
-    // Load pipeline controls
-    const pr = await fetch('/api/pipelines');
-    const ps = await pr.json();
-    const ctrlEl = document.getElementById('pipeline-controls');
-    ctrlEl.innerHTML = ps.pipelines.map(p => {
-      const color = p.enabled ? '#3fb950' : '#f85149';
-      const label = p.enabled ? 'Running' : 'Paused';
-      const action = p.enabled ? 'pause' : 'resume';
-      return `<div style="background:#161b22;border:1px solid #21262d;border-radius:8px;padding:12px 18px;min-width:140px">
-        <div style="font-weight:600;font-size:0.9em;color:#c9d1d9;margin-bottom:8px">${esc(p.name)}</div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="color:${color};font-size:0.82em;font-weight:600">${label}</span>
-          <button onclick="togglePipeline('${p.name}','${action}')"
-            style="background:${p.enabled ? '#f8514922' : '#3fb95022'};color:${p.enabled ? '#f85149' : '#3fb950'};
-            border:1px solid ${p.enabled ? '#f8514944' : '#3fb95044'};border-radius:6px;padding:4px 12px;
-            cursor:pointer;font-size:0.78em;font-weight:600">${p.enabled ? 'Pause' : 'Resume'}</button>
-        </div>
-      </div>`;
-    }).join('');
-
-    // Load metrics charts
     const mr = await fetch('/api/metrics');
     const md = await mr.json();
     const chartsEl = document.getElementById('metrics-charts');
@@ -901,6 +825,17 @@ async function loadMetrics() {
   }
 }
 
+async function resetAttempts(table) {
+  if (!confirm(`Reset all attempts to 0 for ${table}?`)) return;
+  const r = await fetch('/api/pipelines/reset-attempts', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({table})
+  });
+  const data = await r.json();
+  alert(`Reset ${data.reset || 0} rows in ${table}`);
+}
+
 async function togglePipeline(name, action) {
   await fetch('/api/pipelines/control', {
     method: 'POST',
@@ -910,13 +845,36 @@ async function togglePipeline(name, action) {
   loadMetrics();
 }
 
+async function loadControls() {
+  try {
+    const pr = await fetch('/api/pipelines');
+    const ps = await pr.json();
+    document.getElementById('pipeline-controls').innerHTML = ps.pipelines.map(p => {
+      const color = p.enabled ? '#3fb950' : '#f85149';
+      const label = p.enabled ? 'Running' : 'Paused';
+      const action = p.enabled ? 'pause' : 'resume';
+      return `<div style="background:#161b22;border:1px solid #21262d;border-radius:8px;padding:14px 20px;min-width:160px">
+        <div style="font-weight:600;font-size:0.95em;color:#c9d1d9;margin-bottom:10px">${esc(p.name)}</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="color:${color};font-size:0.85em;font-weight:600">${label}</span>
+          <button onclick="togglePipeline('${p.name}','${action}')"
+            style="background:${p.enabled ? '#f8514922' : '#3fb95022'};color:${p.enabled ? '#f85149' : '#3fb950'};
+            border:1px solid ${p.enabled ? '#f8514944' : '#3fb95044'};border-radius:6px;padding:5px 14px;
+            cursor:pointer;font-size:0.82em;font-weight:600">${p.enabled ? 'Pause' : 'Resume'}</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {}
+}
+
 function loadActiveTab() {
   switch(activeTab) {
+    case 'hashlists': loadHashlists(); break;
     case 'torrents': loadTorrents(); break;
     case 'parsed': loadParsed(); break;
     case 'imdb': loadImdb(); break;
     case 'streams': loadStreams(); break;
-    case 'dht-queue': loadDhtQueue(); break;
+    case 'controls': loadControls(); break;
     case 'metrics': loadMetrics(); break;
     case 'logs': if (!tabLoaded.logs) { tabLoaded.logs = true; pollLogs(); } break;
   }
@@ -934,7 +892,7 @@ async function pollLogs() {
         if (line.includes('[OK]')) span.className = 'log-ok';
         else if (line.includes('[ERROR]')) span.className = 'log-err';
         else if (line.includes('[WARN]')) span.className = 'log-warn';
-        else if (line.match(/\[(HASHLIST-Q|IMDB-Q|SINGLES-Q|PACKS-Q|UNPACK-Q|INGESTOR|PIPELINE|IMDB)\]/)) span.className = 'log-info';
+        else if (line.match(/\[(HASHLIST-Q|IMDB-Q|SINGLES-Q|PACKS-Q|INGESTOR|PIPELINE|IMDB)\]/)) span.className = 'log-info';
         span.textContent = line;
         box.appendChild(span);
       }

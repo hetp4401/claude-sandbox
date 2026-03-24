@@ -38,53 +38,36 @@ pub struct CounterHistory {
 /// Pause state for each pipeline.
 #[derive(Clone)]
 pub struct PipelineControls {
-    pub hashlist_paused: Arc<std::sync::atomic::AtomicBool>,
-    pub imdb_paused: Arc<std::sync::atomic::AtomicBool>,
-    pub singles_paused: Arc<std::sync::atomic::AtomicBool>,
-    pub packs_paused: Arc<std::sync::atomic::AtomicBool>,
-    pub dht_paused: Arc<std::sync::atomic::AtomicBool>,
+    paused: Arc<std::sync::RwLock<std::collections::HashMap<String, std::sync::atomic::AtomicBool>>>,
 }
 
 impl PipelineControls {
     pub fn new() -> Self {
-        Self {
-            hashlist_paused: Arc::new(std::sync::atomic::AtomicBool::new(false)),
-            imdb_paused: Arc::new(std::sync::atomic::AtomicBool::new(false)),
-            singles_paused: Arc::new(std::sync::atomic::AtomicBool::new(false)),
-            packs_paused: Arc::new(std::sync::atomic::AtomicBool::new(false)),
-            dht_paused: Arc::new(std::sync::atomic::AtomicBool::new(false)),
+        let mut map = std::collections::HashMap::new();
+        for name in &["hashlists", "extract", "parse", "imdb", "singles", "packs"] {
+            map.insert(name.to_string(), std::sync::atomic::AtomicBool::new(false));
         }
+        Self { paused: Arc::new(std::sync::RwLock::new(map)) }
     }
 
     pub fn is_paused(&self, name: &str) -> bool {
-        match name {
-            "hashlist" => self.hashlist_paused.load(Ordering::Relaxed),
-            "imdb" => self.imdb_paused.load(Ordering::Relaxed),
-            "singles" => self.singles_paused.load(Ordering::Relaxed),
-            "packs" => self.packs_paused.load(Ordering::Relaxed),
-            "dht" => self.dht_paused.load(Ordering::Relaxed),
-            _ => false,
-        }
+        self.paused.read().unwrap().get(name).map(|v| v.load(Ordering::Relaxed)).unwrap_or(false)
     }
 
     pub fn set_paused(&self, name: &str, paused: bool) {
-        match name {
-            "hashlist" => self.hashlist_paused.store(paused, Ordering::Relaxed),
-            "imdb" => self.imdb_paused.store(paused, Ordering::Relaxed),
-            "singles" => self.singles_paused.store(paused, Ordering::Relaxed),
-            "packs" => self.packs_paused.store(paused, Ordering::Relaxed),
-            "dht" => self.dht_paused.store(paused, Ordering::Relaxed),
-            _ => {}
+        if let Some(v) = self.paused.read().unwrap().get(name) {
+            v.store(paused, Ordering::Relaxed);
         }
     }
 
     pub fn status(&self) -> Vec<(&'static str, bool)> {
         vec![
-            ("hashlist", !self.is_paused("hashlist")),
+            ("hashlists", !self.is_paused("hashlists")),
+            ("extract", !self.is_paused("extract")),
+            ("parse", !self.is_paused("parse")),
             ("imdb", !self.is_paused("imdb")),
             ("singles", !self.is_paused("singles")),
             ("packs", !self.is_paused("packs")),
-            ("dht", !self.is_paused("dht")),
         ]
     }
 }
@@ -100,16 +83,20 @@ pub struct Metrics {
 impl Metrics {
     pub fn new() -> Self {
         let names = vec![
+            "hashlists_discovered",
+            "hashlists_extracted",
             "torrents_ingested",
-            "hashlists_processed",
+            "torrents_parsed",
             "imdb_resolved",
             "imdb_failed",
+            "imdb_cache_hits",
             "singles_inserted",
             "packs_resolved",
-            "packs_failed",
+            "packs_missed",
             "cache_hits",
             "rd_hits",
-            "swarm_hits",
+            "api_calls",
+            "db_queries",
         ];
 
         let counters: Vec<(String, Arc<Counter>)> = names
