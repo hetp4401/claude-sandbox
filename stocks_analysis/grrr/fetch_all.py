@@ -33,15 +33,20 @@ def main():
     from fetch_daily import fetch_daily
     from fetch_intraday import fetch_intraday
     from fetch_news import fetch_news
+    from fetch_reddit import fetch_reddit
 
     daily_ok = fetch_daily()
     intraday_ok = fetch_intraday()
     news_ok = fetch_news()
+    reddit_ok = fetch_reddit()
 
-    if daily_ok and intraday_ok and news_ok:
+    if daily_ok and intraday_ok and news_ok and reddit_ok:
         logging.info("All fetches completed successfully.")
     else:
-        logging.warning(f"Some fetches failed. daily={daily_ok}, intraday={intraday_ok}, news={news_ok}")
+        logging.warning(
+            f"Some fetches failed. daily={daily_ok}, intraday={intraday_ok}, "
+            f"news={news_ok}, reddit={reddit_ok}"
+        )
 
     logging.info("Done.\n")
 

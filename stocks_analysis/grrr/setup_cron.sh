@@ -13,6 +13,7 @@ FETCH_ALL="$SCRIPT_DIR/fetch_all.py"
 FETCH_INTRADAY="$SCRIPT_DIR/fetch_intraday.py"
 FETCH_DAILY="$SCRIPT_DIR/fetch_daily.py"
 FETCH_NEWS="$SCRIPT_DIR/fetch_news.py"
+FETCH_REDDIT="$SCRIPT_DIR/fetch_reddit.py"
 
 echo "Setting up GRRR stock data cron jobs..."
 echo "  Script dir:  $SCRIPT_DIR"
@@ -33,6 +34,9 @@ cat >> /tmp/cron_clean.txt << EOF
 
 # News & sentiment scrape: twice daily at 2 PM and 10 PM UTC, Mon-Fri
 0 14,22 * * 1-5 $PYTHON $FETCH_NEWS >> $SCRIPT_DIR/data/cron_news.log 2>&1
+
+# Reddit sentiment scrape: every 4 hours (Reddit moves fast), every day
+0 */4 * * * $PYTHON $FETCH_REDDIT >> $SCRIPT_DIR/data/cron_reddit.log 2>&1
 
 # Full refresh (daily + intraday + news): once at market close 9:05 PM UTC, Mon-Fri
 5 21 * * 1-5 $PYTHON $FETCH_ALL >> $SCRIPT_DIR/data/cron_all.log 2>&1

@@ -1,0 +1,95 @@
+=================================================================
+  GRRR REDDIT SENTIMENT REPORT
+  Generated: 2026-03-25 19:37
+  Lookback:  30 days
+  Method:    Google News RSS (site:reddit.com)
+=================================================================
+
+OVERALL REDDIT SENTIMENT:
+  Total discussions: 181
+  Positive:          32 (17.7%)
+  Negative:          26 (14.4%)
+  Neutral:           123 (68.0%)
+  Avg polarity:      0.0091
+  Weighted avg:      0.0091
+
+  >>> REDDIT SENTIMENT GAUGE: NEUTRAL <<<
+
+SUBREDDIT BREAKDOWN:
+-----------------------------------------------------------------
+Subreddit                  Posts  Avg Polarity
+-----------------------------------------------------------------
+r/unknown                    176        0.0070
+r/MetalsOnReddit               1        0.0000
+r/CoveredCalls                 1        0.0000
+r/BETATechnologi               1       -0.2547
+r/stocks                       1        0.6667
+r/RedditLaqueristas            1        0.0000
+
+DAILY BREAKDOWN:
+-----------------------------------------------------------------
+Date          Items   Avg Pol  Pos  Neg  Neu
+-----------------------------------------------------------------
+2026-03-25        6    0.1749    3    0    3
+2026-03-24       12    0.0475    2    1    9
+2026-03-23       12    0.0028    0    0   12
+2026-03-22        9   -0.0361    0    1    8
+2026-03-21       14    0.0674    4    1    9
+2026-03-20       12   -0.0245    2    1    9
+2026-03-19       17    0.0967    6    2    9
+2026-03-18       22   -0.0900    5   10    7
+2026-03-17       17    0.0497    3    2   12
+2026-03-16        9    0.0063    1    1    7
+2026-03-15        5    0.0267    1    0    4
+2026-03-14        4    0.0649    0    0    4
+2026-03-13        6    0.0000    0    0    6
+2026-03-12        4    0.0126    0    0    4
+2026-03-11        3    0.0997    1    0    2
+2026-03-10        3    0.0111    0    0    3
+2026-03-09        2   -0.2334    0    1    1
+2026-03-07        2    0.0000    0    0    2
+2026-03-06        2    0.0000    0    0    2
+2026-03-05        3   -0.0444    0    1    2
+2026-03-04        1    0.1333    1    0    0
+2026-03-02        4   -0.1120    1    2    1
+2026-02-28        1    0.1131    1    0    0
+2026-02-27        1   -0.4667    0    1    0
+2026-02-26        3    0.0556    1    0    2
+2026-02-25        5   -0.1001    0    2    3
+2026-02-24        2   -0.0334    0    0    2
+
+MOST BULLISH DISCUSSIONS:
+-----------------------------------------------------------------
+  [+0.667] r/unknown | what do you think is the best Crime film ever? - Reddit
+           2026-03-19 10:29
+  [+0.667] r/stocks | r/stocks on Reddit: What’s a stock you have that you found t
+           2026-03-17 15:44
+  [+0.600] r/unknown | "Say thank you and get out": Why one top strategist says to 
+           2026-03-19 16:03
+  [+0.533] r/unknown | I am proud for not selling at $190 per ADR. Change my mind -
+           2026-03-25 00:49
+  [+0.467] r/unknown | Mommy why is no one buying our beloved stock (a possibility 
+           2026-03-18 18:28
+
+MOST BEARISH DISCUSSIONS:
+-----------------------------------------------------------------
+  [-0.500] r/unknown | This is Insane - Reddit
+           2026-03-20 18:27
+  [-0.500] r/unknown | Reading all the news about prediction markets makes me miss 
+           2026-03-17 07:00
+  [-0.467] r/unknown | Gorilla Technology Group Inc. (GRRR) CEO details RSU and sha
+           2026-03-18 22:03
+  [-0.467] r/unknown | Gorilla Technology (GRRR) CTO reports share and RSU holdings
+           2026-03-18 22:02
+  [-0.467] r/unknown | Gorilla Technology (GRRR) director Kelly Ruth reports RSUs a
+           2026-03-18 22:02
+
+BUZZ TREND (last 7 days vs prior):
+  Recent avg/day: 11.7
+  Prior avg/day:  5.0
+  Change:         +136.7%
+  >>> BUZZ SURGING <<<
+
+=================================================================
+Sentiment: TextBlob (polarity -1 to +1)
+=================================================================

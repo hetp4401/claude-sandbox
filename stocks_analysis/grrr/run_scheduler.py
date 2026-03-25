@@ -87,6 +87,9 @@ def main():
                 logging.info("Fetching news & sentiment...")
                 from fetch_news import fetch_news
                 fetch_news()
+                logging.info("Fetching Reddit sentiment...")
+                from fetch_reddit import fetch_reddit
+                fetch_reddit()
                 last_daily = today_str
 
         except Exception as e:
