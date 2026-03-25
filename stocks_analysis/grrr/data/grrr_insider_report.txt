@@ -1,0 +1,92 @@
+=================================================================
+  GRRR INSIDER TRANSACTIONS REPORT
+  Generated: 2026-03-25 21:27
+  Lookback:  60 days
+=================================================================
+
+TRANSACTION OVERVIEW:
+  Total transactions:  29
+  Open market BUYS:    4
+  SELLS:               1
+  Option exercises:    0
+  RSU grants/vesting:  0
+
+  >>> INSIDER SIGNAL: BULLISH (more buying than selling) <<<
+
+ACTIVE INSIDERS:
+-----------------------------------------------------------------
+  AGGREGATE
+    2026-03-25 | BUY
+    2026-03-25 | BUY
+    2026-03-25 | SELL
+    2026-03-25 | BUY
+    2026-03-25 | BUY
+    2026-03-25 | OTHER | 566,192 shares
+
+  SUMMARY
+    2026-03-25 | OTHER | $0
+    2026-03-25 | OTHER | $0
+    2026-03-25 | OTHER | $73
+    2026-03-25 | OTHER | $0
+
+  Osaic Holdings Inc.
+    2025-12-31 | OTHER | 157,673 shares | $1,712,328
+
+  Capital Fund Management S.A.
+    2025-12-31 | OTHER | 162,436 shares | $1,764,054
+
+  Royal Bank of Canada
+    2025-12-31 | OTHER | 174,693 shares | $1,897,165
+
+  SBI Securities Co., Ltd.
+    2025-12-31 | OTHER | 188,817 shares | $2,050,552
+
+  Blackrock Inc.
+    2025-12-31 | OTHER | 245,367 shares | $2,664,685
+
+  State Street Corporation
+    2025-12-31 | OTHER | 300,802 shares | $3,266,709
+
+  Citadel Advisors Llc
+    2025-12-31 | OTHER | 315,336 shares | $3,424,548
+
+  National Bank of Canada/FI/
+    2025-12-31 | OTHER | 393,300 shares | $4,271,237
+
+  UBS Group AG
+    2025-12-31 | OTHER | 600,310 shares | $6,519,366
+
+  Susquehanna International Group, LLP
+    2025-12-31 | OTHER | 159,459 shares | $1,731,724
+
+SEC FORM 4 FILINGS (last 60 days):
+-----------------------------------------------------------------
+  2026-03-18 | 
+    https://www.sec.gov/Archives/edgar/data/1903145/000121390026031040/0001213900-26-031040-index.htm
+  2026-03-18 | 
+    https://www.sec.gov/Archives/edgar/data/1903145/000121390026031038/0001213900-26-031038-index.htm
+  2026-03-18 | 
+    https://www.sec.gov/Archives/edgar/data/1903145/000121390026031037/0001213900-26-031037-index.htm
+  2026-03-18 | 
+    https://www.sec.gov/Archives/edgar/data/1903145/000121390026031035/0001213900-26-031035-index.htm
+  2026-03-18 | 
+    https://www.sec.gov/Archives/edgar/data/1903145/000121390026031034/0001213900-26-031034-index.htm
+  2026-03-18 | 
+    https://www.sec.gov/Archives/edgar/data/1903145/000121390026031033/0001213900-26-031033-index.htm
+  2026-03-18 | 
+    https://www.sec.gov/Archives/edgar/data/1903145/000121390026031032/0001213900-26-031032-index.htm
+  2026-03-16 | 
+    https://www.sec.gov/Archives/edgar/data/1903145/000195779926000037/0001957799-26-000037-index.htm
+  2026-03-16 | 
+    https://www.sec.gov/Archives/edgar/data/1903145/000195779926000035/0001957799-26-000035-index.htm
+
+MONTHLY SUMMARY:
+-----------------------------------------------------------------
+Month       Total  Buys  Sells  Options  RSUs
+-----------------------------------------------------------------
+2026-03        19     4      1        0     0
+2025-12        10     0      0        0     0
+
+=================================================================
+Sources: yfinance, SEC EDGAR
+=================================================================

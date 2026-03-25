@@ -1,0 +1,30 @@
+date,insider,relationship,transaction_type,shares,value,source,classification,url
+2026-03-25,AGGREGATE,Summary (6 months),Purchases,0,0.0,yfinance_purchases,BUY,
+2026-03-25,SUMMARY,institutionsFloatPercentHeld,major_holders,0,0.20861,yfinance_major,OTHER,
+2026-03-25,SUMMARY,insidersPercentHeld,major_holders,0,0.02163,yfinance_major,OTHER,
+2026-03-25,SUMMARY,institutionsCount,major_holders,0,73.0,yfinance_major,OTHER,
+2026-03-25,AGGREGATE,Summary (6 months),Net Shares Purchased (Sold),0,0.0,yfinance_purchases,BUY,
+2026-03-25,SUMMARY,institutionsPercentHeld,major_holders,0,0.20409,yfinance_major,OTHER,
+2026-03-25,AGGREGATE,Summary (6 months),% Sell Shares,0,0.0,yfinance_purchases,SELL,
+2026-03-25,AGGREGATE,Summary (6 months),% Buy Shares,0,0.0,yfinance_purchases,BUY,
+2026-03-25,AGGREGATE,Summary (6 months),% Net Shares Purchased (Sold),0,0.0,yfinance_purchases,BUY,
+2026-03-25,AGGREGATE,Summary (6 months),Total Insider Shares Held,566192,0.0,yfinance_purchases,OTHER,
+2026-03-18,,,3,0,0.0,SEC_EDGAR,OTHER,https://www.sec.gov/Archives/edgar/data/1903145/000121390026031032/0001213900-26-031032-index.htm
+2026-03-18,,,3,0,0.0,SEC_EDGAR,OTHER,https://www.sec.gov/Archives/edgar/data/1903145/000121390026031033/0001213900-26-031033-index.htm
+2026-03-18,,,3,0,0.0,SEC_EDGAR,OTHER,https://www.sec.gov/Archives/edgar/data/1903145/000121390026031035/0001213900-26-031035-index.htm
+2026-03-18,,,3,0,0.0,SEC_EDGAR,OTHER,https://www.sec.gov/Archives/edgar/data/1903145/000121390026031037/0001213900-26-031037-index.htm
+2026-03-18,,,3,0,0.0,SEC_EDGAR,OTHER,https://www.sec.gov/Archives/edgar/data/1903145/000121390026031038/0001213900-26-031038-index.htm
+2026-03-18,,,3,0,0.0,SEC_EDGAR,OTHER,https://www.sec.gov/Archives/edgar/data/1903145/000121390026031040/0001213900-26-031040-index.htm
+2026-03-18,,,3,0,0.0,SEC_EDGAR,OTHER,https://www.sec.gov/Archives/edgar/data/1903145/000121390026031034/0001213900-26-031034-index.htm
+2026-03-16,,,144,0,0.0,SEC_EDGAR,OTHER,https://www.sec.gov/Archives/edgar/data/1903145/000195779926000037/0001957799-26-000037-index.htm
+2026-03-16,,,144,0,0.0,SEC_EDGAR,OTHER,https://www.sec.gov/Archives/edgar/data/1903145/000195779926000035/0001957799-26-000035-index.htm
+2025-12-31,Osaic Holdings Inc.,Institutional Holder,Increased position (+54.9%),157673,1712328.0,yfinance_institutional,OTHER,
+2025-12-31,Capital Fund Management S.A.,Institutional Holder,Increased position (+99.8%),162436,1764054.0,yfinance_institutional,OTHER,
+2025-12-31,Royal Bank of Canada,Institutional Holder,Increased position (+74.6%),174693,1897165.0,yfinance_institutional,OTHER,
+2025-12-31,"SBI Securities Co., Ltd.",Institutional Holder,Decreased position (-1.9%),188817,2050552.0,yfinance_institutional,OTHER,
+2025-12-31,Blackrock Inc.,Institutional Holder,Increased position (+100.0%),245367,2664685.0,yfinance_institutional,OTHER,
+2025-12-31,State Street Corporation,Institutional Holder,Increased position (+13.2%),300802,3266709.0,yfinance_institutional,OTHER,
+2025-12-31,Citadel Advisors Llc,Institutional Holder,Increased position (+92.8%),315336,3424548.0,yfinance_institutional,OTHER,
+2025-12-31,National Bank of Canada/FI/,Institutional Holder,Increased position (+19565.0%),393300,4271237.0,yfinance_institutional,OTHER,
+2025-12-31,UBS Group AG,Institutional Holder,Increased position (+191.6%),600310,6519366.0,yfinance_institutional,OTHER,
+2025-12-31,"Susquehanna International Group, LLP",Institutional Holder,Decreased position (-80.7%),159459,1731724.0,yfinance_institutional,OTHER,

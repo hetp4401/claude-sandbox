@@ -1,0 +1,40 @@
+=================================================================
+  GRRR SHORT INTEREST REPORT
+  Generated: 2026-03-25 21:26
+=================================================================
+
+SHORT INTEREST SNAPSHOT:
+  Shares Short:            2,921,368
+  Prior Month Short:       2,846,758
+  Short Interest Change:   +2.6% (STABLE)
+  Short Interest Date:     2026-03-13
+  Short Ratio (DTC):       4.73
+  Short % of Float:        13.07%
+  Short % of Shares Out:   12.89%
+
+SHARE STRUCTURE:
+  Shares Outstanding:      22,669,015
+  Float Shares:            25,853,229
+  Insider Ownership:       2.16%
+  Institutional Ownership: 20.41%
+
+VOLUME ANALYSIS:
+  20-Day Avg Volume:       585,770
+  10-Day Avg Volume:       454,580
+  Days to Cover (20d vol): 4.99
+  Days to Cover (10d vol): 6.43
+  Volume Trend (5d vs 15d):-32.88%
+
+PRICE CONTEXT:
+  Price 20 days ago:       $11.68
+  Price now:               $10.86
+  20-day price change:     -7.02%
+
+SQUEEZE CHATTER:
+  News mentions (60d):     0
+
+SQUEEZE POTENTIAL ASSESSMENT:
+  >>> SQUEEZE POTENTIAL: MODERATE <<<
+  [!] High days to cover: 4.99
+
+=================================================================

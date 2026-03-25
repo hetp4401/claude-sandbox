@@ -1,0 +1,4 @@
+timeframe,date,bias,signal_type,signal,detail
+DAILY,2026-03-25,BEARISH,SMA_ALIGN,Moving averages BEARISH aligned (5<10<20),Strong downtrend structure
+CONTEXT,2026-03-25,INFO,52W,52-week range: $10.30 - $29.71,"Current $10.86 (-63.4% from high, +5.4% from low)"
+CONTEXT,2026-03-25,WARNING,52W_LOW,Near 52-week LOW (+5.4%),Capitulation or value zone

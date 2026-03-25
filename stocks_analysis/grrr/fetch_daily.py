@@ -27,6 +27,7 @@ TICKER = "GRRR"
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(SCRIPT_DIR, "data")
 DAILY_FILE = os.path.join(DATA_DIR, "grrr_daily_30d.csv")
+LOOKBACK_DAYS = 60
 
 
 def compute_rsi(series, period=14):
@@ -53,7 +54,7 @@ def fetch_daily():
     print(f"[{datetime.now()}] Fetching 30-day daily data for {TICKER}...")
     ticker = yf.Ticker(TICKER)
     # Fetch extra history so moving averages have enough lookback
-    df = ticker.history(period="3mo", interval="1d")
+    df = ticker.history(period="6mo", interval="1d")
 
     if df.empty:
         print(f"WARNING: No daily data returned for {TICKER}.")
@@ -126,7 +127,7 @@ def fetch_daily():
     df["AD_Line"] = (mfm * df["Volume"]).cumsum()
 
     # === Trim to last ~30 trading days and clean up ===
-    df = df.tail(30).copy()
+    df = df.tail(LOOKBACK_DAYS).copy()
     df.index = df.index.strftime("%Y-%m-%d")
 
     # Drop helper columns

@@ -1,0 +1,37 @@
+======================================================================
+  GRRR SEC FILINGS REPORT
+  Generated: 2026-03-25 21:27
+  CIK: 0001903145
+  Lookback: 60 days
+======================================================================
+
+FILING SUMMARY: 11 total filings
+----------------------------------------------------------------------
+  3              7 filings  [LOW   ] Initial insider holdings
+  144            2 filings  [LOW   ] 
+  S-8            1 filings  [LOW   ] 
+  6-K            1 filings  [LOW   ] Foreign private issuer current report
+
+ALL FILINGS (chronological):
+----------------------------------------------------------------------
+Date         Form       Sig     Description
+----------------------------------------------------------------------
+2026-03-18   3          [LOW  ] 
+2026-03-18   3          [LOW  ] 
+2026-03-18   3          [LOW  ] 
+2026-03-18   3          [LOW  ] 
+2026-03-18   3          [LOW  ] 
+2026-03-18   3          [LOW  ] 
+2026-03-18   3          [LOW  ] 
+2026-03-18   S-8        [LOW  ] REGISTRATION STATEMENT
+2026-03-16   144        [LOW  ] 
+2026-03-16   144        [LOW  ] 
+2026-03-02   6-K        [LOW  ] FORM 6-K
+
+FILING FREQUENCY:
+  Filings per week: 4.8
+  >>> HIGH FILING ACTIVITY - watch for catalysts <<<
+
+======================================================================
+Source: SEC EDGAR
+======================================================================

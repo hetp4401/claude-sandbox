@@ -34,19 +34,29 @@ def main():
     from fetch_intraday import fetch_intraday
     from fetch_news import fetch_news
     from fetch_reddit import fetch_reddit
+    from fetch_short_interest import fetch_short_interest
+    from fetch_insider import fetch_insider
+    from fetch_options import fetch_options
+    from fetch_sec_filings import fetch_sec_filings
+    from technical_alerts import generate_alerts
 
-    daily_ok = fetch_daily()
-    intraday_ok = fetch_intraday()
-    news_ok = fetch_news()
-    reddit_ok = fetch_reddit()
+    results = {}
+    results["daily"] = fetch_daily()
+    results["intraday"] = fetch_intraday()
+    results["news"] = fetch_news()
+    results["reddit"] = fetch_reddit()
+    results["short_interest"] = fetch_short_interest()
+    results["insider"] = fetch_insider()
+    results["options"] = fetch_options()
+    results["sec_filings"] = fetch_sec_filings()
+    # Run technical alerts last (depends on daily + intraday data)
+    results["alerts"] = generate_alerts()
 
-    if daily_ok and intraday_ok and news_ok and reddit_ok:
+    failed = [k for k, v in results.items() if not v]
+    if not failed:
         logging.info("All fetches completed successfully.")
     else:
-        logging.warning(
-            f"Some fetches failed. daily={daily_ok}, intraday={intraday_ok}, "
-            f"news={news_ok}, reddit={reddit_ok}"
-        )
+        logging.warning(f"Some fetches failed: {failed}")
 
     logging.info("Done.\n")
 

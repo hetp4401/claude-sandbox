@@ -1,0 +1,32 @@
+======================================================================
+  GRRR TECHNICAL ALERTS DASHBOARD
+  Generated: 2026-03-25 21:27
+======================================================================
+
+CURRENT STATUS:
+  Price:  $10.86
+  RSI:    44.4
+  VWAP:   $14.77
+  ATR:    $0.691
+
+  >>> OVERALL TECHNICAL BIAS: BEARISH <<<
+  Bullish signals: 0  |  Bearish signals: 1  |  Warnings: 1
+
+BEARISH SIGNALS:
+----------------------------------------------------------------------
+  [DAILY ] Moving averages BEARISH aligned (5<10<20)
+           Strong downtrend structure
+
+WARNINGS:
+----------------------------------------------------------------------
+  [CONTEXT] Near 52-week LOW (+5.4%)
+           Capitulation or value zone
+
+CONTEXT:
+----------------------------------------------------------------------
+  [CONTEXT] 52-week range: $10.30 - $29.71
+           Current $10.86 (-63.4% from high, +5.4% from low)
+
+======================================================================
+Source: Computed from OHLCV + indicators
+======================================================================
