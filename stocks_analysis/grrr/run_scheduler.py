@@ -78,12 +78,15 @@ def main():
                 fetch_intraday()
                 last_intraday = now_ts
 
-            # Daily fetch: once after market close
+            # Daily fetch + news: once after market close
             today_str = now_et.strftime("%Y-%m-%d")
             if is_post_close(now_et) and last_daily != today_str:
                 logging.info("Market closed - fetching daily 30-day data...")
                 from fetch_daily import fetch_daily
                 fetch_daily()
+                logging.info("Fetching news & sentiment...")
+                from fetch_news import fetch_news
+                fetch_news()
                 last_daily = today_str
 
         except Exception as e:

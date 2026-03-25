@@ -32,14 +32,16 @@ def main():
     sys.path.insert(0, SCRIPT_DIR)
     from fetch_daily import fetch_daily
     from fetch_intraday import fetch_intraday
+    from fetch_news import fetch_news
 
     daily_ok = fetch_daily()
     intraday_ok = fetch_intraday()
+    news_ok = fetch_news()
 
-    if daily_ok and intraday_ok:
+    if daily_ok and intraday_ok and news_ok:
         logging.info("All fetches completed successfully.")
     else:
-        logging.warning(f"Some fetches failed. daily={daily_ok}, intraday={intraday_ok}")
+        logging.warning(f"Some fetches failed. daily={daily_ok}, intraday={intraday_ok}, news={news_ok}")
 
     logging.info("Done.\n")
 
