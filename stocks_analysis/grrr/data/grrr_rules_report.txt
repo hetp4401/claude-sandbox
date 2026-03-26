@@ -1,0 +1,540 @@
+===========================================================================
+  GRRR ASSOCIATION RULE MINING REPORT
+  Generated: 2026-03-26 01:04
+  Sample size: 60 trading days
+===========================================================================
+
+METHODOLOGY:
+  Antecedent features: 17
+  Outcome features:    8
+  Min support count:   3
+  Min confidence:      55%
+  Min lift:            1.05
+  Max antecedent size: 4
+  Total rules found:   26585
+
+TOP 30 RULES BY CONFIDENCE x LIFT:
+---------------------------------------------------------------------------
+  #   Conf  Lift  Cnt   Sup  Rule
+---------------------------------------------------------------------------
+  1 100.0%  8.57    3  5.0%  IF Range=very_wide & Streak=2_up → NEXT_CC=next_cc_gain
+  2 100.0%  8.57    3  5.0%  IF Day_Dir=big_up & Range=very_wide & Streak=2_up → NEXT_CC=next_cc_gain
+  3 100.0%  8.57    3  5.0%  IF Day_Dir=big_up & Volume=normal & Streak=2_up → NEXT_CC=next_cc_gain
+  4 100.0%  8.57    3  5.0%  IF Range=very_wide & Volume=normal & Streak=2_up → NEXT_CC=next_cc_gain
+  5 100.0%  8.57    3  5.0%  IF Range=very_wide & VWAP_Pos=far_below & Streak=2_up → NEXT_CC=next_cc_gain
+  6 100.0%  8.57    3  5.0%  IF Day_Dir=big_up & Range=very_wide & Volume=normal & Streak=2_up → NEXT_CC=next_cc_gain
+  7 100.0%  8.57    3  5.0%  IF Day_Dir=big_up & Range=very_wide & VWAP_Pos=far_below & Streak=2_up → NEXT_CC=next_cc_gain
+  8 100.0%  8.57    3  5.0%  IF Day_Dir=big_up & Volume=normal & VWAP_Pos=far_below & Streak=2_up → NEXT_CC=next_cc_gain
+  9 100.0%  8.57    3  5.0%  IF Range=very_wide & Volume=normal & VWAP_Pos=far_below & Streak=2_up → NEXT_CC=next_cc_gain
+ 10 100.0%  7.50    3  5.0%  IF Day_Dir=mod_down & BB_Squeeze=wide → NEXT_HOD_Timing=next_hod_second_hour
+ 11 100.0%  7.50    3  5.0%  IF RSI=neutral_low & ATR_Regime=normal_vol → NEXT_HOD_Timing=next_hod_second_hour
+ 12 100.0%  7.50    3  5.0%  IF BB_Squeeze=wide & Prev_Change=big_drop → NEXT_HOD_Timing=next_hod_second_hour
+ 13 100.0%  7.50    3  5.0%  IF ATR_Regime=normal_vol & Prev_Change=big_drop → NEXT_HOD_Timing=next_hod_second_hour
+ 14 100.0%  7.50    3  5.0%  IF DOW=Wed & BB_Squeeze=wide & OBV_Trend=distributing → NEXT_HOD_Timing=next_hod_second_hour
+ 15 100.0%  7.50    3  5.0%  IF Day_Dir=mod_down & MACD_Hist=strong_bull & BB_Squeeze=wide → NEXT_HOD_Timing=next_hod_second_hour
+ 16 100.0%  7.50    3  5.0%  IF Day_Dir=mod_down & MACD_Cross=above & BB_Squeeze=wide → NEXT_HOD_Timing=next_hod_second_hour
+ 17 100.0%  7.50    3  5.0%  IF Day_Dir=mod_down & BB_Squeeze=wide & SMA_Align=bullish → NEXT_HOD_Timing=next_hod_second_hour
+ 18 100.0%  7.50    3  5.0%  IF Day_Dir=mod_down & BB_Squeeze=wide & VWAP_Pos=far_below → NEXT_HOD_Timing=next_hod_second_hour
+ 19 100.0%  7.50    3  5.0%  IF Day_Dir=mod_down & BB_Squeeze=wide & OBV_Trend=distributing → NEXT_HOD_Timing=next_hod_second_hour
+ 20 100.0%  7.50    3  5.0%  IF Gap=gap_down & BB_Squeeze=wide & EMA_Trend=slight_bear → NEXT_HOD_Timing=next_hod_second_hour
+ 21 100.0%  7.50    3  5.0%  IF Gap=gap_down & BB_Squeeze=wide & OBV_Trend=distributing → NEXT_HOD_Timing=next_hod_second_hour
+ 22 100.0%  7.50    3  5.0%  IF Gap=gap_down & EMA_Trend=slight_bear & OBV_Trend=distributing → NEXT_HOD_Timing=next_hod_second_hour
+ 23 100.0%  7.50    3  5.0%  IF RSI=neutral_low & MACD_Hist=strong_bull & BB_Squeeze=wide → NEXT_HOD_Timing=next_hod_second_hour
+ 24 100.0%  7.50    3  5.0%  IF RSI=neutral_low & MACD_Hist=strong_bull & ATR_Regime=normal_vol → NEXT_HOD_Timing=next_hod_second_hour
+ 25 100.0%  7.50    3  5.0%  IF RSI=neutral_low & MACD_Cross=above & BB_Squeeze=wide → NEXT_HOD_Timing=next_hod_second_hour
+ 26 100.0%  7.50    3  5.0%  IF RSI=neutral_low & MACD_Cross=above & ATR_Regime=normal_vol → NEXT_HOD_Timing=next_hod_second_hour
+ 27 100.0%  7.50    3  5.0%  IF RSI=neutral_low & BB_Position=upper_mid & BB_Squeeze=wide → NEXT_HOD_Timing=next_hod_second_hour
+ 28 100.0%  7.50    3  5.0%  IF RSI=neutral_low & BB_Position=upper_mid & ATR_Regime=normal_vol → NEXT_HOD_Timing=next_hod_second_hour
+ 29 100.0%  7.50    3  5.0%  IF RSI=neutral_low & BB_Squeeze=wide & EMA_Trend=slight_bear → NEXT_HOD_Timing=next_hod_second_hour
+ 30 100.0%  7.50    3  5.0%  IF RSI=neutral_low & BB_Squeeze=wide & ATR_Regime=normal_vol → NEXT_HOD_Timing=next_hod_second_hour
+
+
+BEST RULES FOR NEXT_UpDown:
+---------------------------------------------------------------------------
+  [100% conf, 2.22x lift, n=4/4]
+    IF DOW=Tue & MACD_Hist=strong_bear
+    → NEXT_UpDown=NEXT_DOWN
+
+  [100% conf, 2.22x lift, n=5/5]
+    IF DOW=Mon & BB_Squeeze=normal
+    → NEXT_UpDown=NEXT_DOWN
+
+  [100% conf, 2.22x lift, n=3/3]
+    IF DOW=Mon & SMA_Align=mixed
+    → NEXT_UpDown=NEXT_DOWN
+
+  [100% conf, 2.22x lift, n=4/4]
+    IF DOW=Tue & ATR_Regime=extreme_vol
+    → NEXT_UpDown=NEXT_DOWN
+
+  [100% conf, 2.22x lift, n=3/3]
+    IF DOW=Mon & Streak=1_up
+    → NEXT_UpDown=NEXT_DOWN
+
+  [100% conf, 2.22x lift, n=3/3]
+    IF DOW=Tue & Streak=1_up
+    → NEXT_UpDown=NEXT_DOWN
+
+  [100% conf, 2.22x lift, n=3/3]
+    IF DOW=Tue & Prev_Change=surge
+    → NEXT_UpDown=NEXT_DOWN
+
+  [100% conf, 2.22x lift, n=3/3]
+    IF Day_Dir=big_down & Volume=high
+    → NEXT_UpDown=NEXT_DOWN
+
+  [100% conf, 2.22x lift, n=3/3]
+    IF Day_Dir=big_down & MACD_Hist=strong_bull
+    → NEXT_UpDown=NEXT_DOWN
+
+  [100% conf, 2.22x lift, n=3/3]
+    IF Day_Dir=mod_up & MACD_Hist=strong_bear
+    → NEXT_UpDown=NEXT_DOWN
+
+  [100% conf, 2.22x lift, n=4/4]
+    IF Day_Dir=big_down & BB_Squeeze=wide
+    → NEXT_UpDown=NEXT_DOWN
+
+  [100% conf, 2.22x lift, n=3/3]
+    IF Day_Dir=big_up & EMA_Trend=strong_bull
+    → NEXT_UpDown=NEXT_DOWN
+
+  [100% conf, 2.22x lift, n=4/4]
+    IF Day_Dir=big_up & SMA_Align=bullish
+    → NEXT_UpDown=NEXT_DOWN
+
+  [100% conf, 2.22x lift, n=5/5]
+    IF Gap=flat & Volume=low
+    → NEXT_UpDown=NEXT_DOWN
+
+  [100% conf, 2.22x lift, n=3/3]
+    IF Gap=flat & Streak=1_up
+    → NEXT_UpDown=NEXT_DOWN
+
+
+BEST RULES FOR NEXT_Dir:
+---------------------------------------------------------------------------
+  [100% conf, 6.67x lift, n=3/3]
+    IF Range=wide & OBV_Trend=distributing & Streak=3_down
+    → NEXT_Dir=next_slight_up
+
+  [100% conf, 6.67x lift, n=3/3]
+    IF Range=wide & RSI=neutral_low & OBV_Trend=distributing & Streak=3_down
+    → NEXT_Dir=next_slight_up
+
+  [100% conf, 6.67x lift, n=3/3]
+    IF Range=wide & VWAP_Pos=far_below & OBV_Trend=distributing & Streak=3_down
+    → NEXT_Dir=next_slight_up
+
+  [100% conf, 5.00x lift, n=3/3]
+    IF DOW=Tue & Streak=1_up
+    → NEXT_Dir=next_mod_down
+
+  [100% conf, 5.00x lift, n=3/3]
+    IF DOW=Tue & Prev_Change=surge
+    → NEXT_Dir=next_mod_down
+
+  [100% conf, 5.00x lift, n=3/3]
+    IF DOW=Tue & Range=very_wide & BB_Squeeze=very_wide
+    → NEXT_Dir=next_mod_down
+
+  [100% conf, 5.00x lift, n=3/3]
+    IF DOW=Tue & MACD_Cross=below & BB_Position=lower_mid
+    → NEXT_Dir=next_mod_down
+
+  [100% conf, 5.00x lift, n=3/3]
+    IF DOW=Tue & VWAP_Pos=far_below & Streak=1_up
+    → NEXT_Dir=next_mod_down
+
+  [100% conf, 5.00x lift, n=3/3]
+    IF DOW=Tue & VWAP_Pos=far_below & Prev_Change=surge
+    → NEXT_Dir=next_mod_down
+
+  [100% conf, 5.00x lift, n=3/3]
+    IF DOW=Tue & Streak=1_up & Prev_Change=surge
+    → NEXT_Dir=next_mod_down
+
+  [100% conf, 5.00x lift, n=3/3]
+    IF Day_Dir=big_down & Volume=low & MACD_Cross=above
+    → NEXT_Dir=next_mod_down
+
+  [100% conf, 5.00x lift, n=3/3]
+    IF Gap=gap_down & SMA_Align=bullish & OBV_Trend=accumulating
+    → NEXT_Dir=next_big_down
+
+  [100% conf, 5.00x lift, n=3/3]
+    IF Volume=low & MACD_Hist=strong_bear & EMA_Trend=bear
+    → NEXT_Dir=next_big_down
+
+  [100% conf, 5.00x lift, n=3/3]
+    IF Volume=low & EMA_Trend=bear & ATR_Regime=extreme_vol
+    → NEXT_Dir=next_big_down
+
+  [100% conf, 5.00x lift, n=3/3]
+    IF RSI=neutral_low & ATR_Regime=extreme_vol & Prev_Change=crash
+    → NEXT_Dir=next_big_down
+
+
+BEST RULES FOR NEXT_1st2h_Spike:
+---------------------------------------------------------------------------
+  [100% conf, 6.00x lift, n=3/3]
+    IF OBV_Trend=accumulating & Streak=2_up
+    → NEXT_1st2h_Spike=next_huge_spike
+
+  [100% conf, 6.00x lift, n=4/4]
+    IF Day_Dir=mod_down & OBV_Trend=distributing & Streak=2_down
+    → NEXT_1st2h_Spike=next_huge_spike
+
+  [100% conf, 6.00x lift, n=3/3]
+    IF VWAP_Pos=far_below & OBV_Trend=accumulating & Streak=2_up
+    → NEXT_1st2h_Spike=next_huge_spike
+
+  [100% conf, 6.00x lift, n=3/3]
+    IF ATR_Regime=high_vol & OBV_Trend=accumulating & Streak=2_up
+    → NEXT_1st2h_Spike=next_huge_spike
+
+  [100% conf, 6.00x lift, n=3/3]
+    IF Day_Dir=mod_down & Range=normal & OBV_Trend=distributing & Streak=2_down
+    → NEXT_1st2h_Spike=next_huge_spike
+
+  [100% conf, 6.00x lift, n=4/4]
+    IF Day_Dir=mod_down & VWAP_Pos=far_below & OBV_Trend=distributing & Streak=2_down
+    → NEXT_1st2h_Spike=next_huge_spike
+
+  [100% conf, 6.00x lift, n=3/3]
+    IF VWAP_Pos=far_below & ATR_Regime=high_vol & OBV_Trend=accumulating & Streak=2_up
+    → NEXT_1st2h_Spike=next_huge_spike
+
+  [100% conf, 5.45x lift, n=3/3]
+    IF DOW=Tue & Gap=flat & Range=very_wide
+    → NEXT_1st2h_Spike=next_med_spike
+
+  [100% conf, 5.45x lift, n=3/3]
+    IF DOW=Tue & Gap=flat & Range=very_wide & VWAP_Pos=far_below
+    → NEXT_1st2h_Spike=next_med_spike
+
+  [100% conf, 4.62x lift, n=3/3]
+    IF Day_Dir=big_down & Range=wide & Prev_Change=big_drop
+    → NEXT_1st2h_Spike=next_no_spike
+
+  [100% conf, 4.62x lift, n=3/3]
+    IF Gap=flat & Range=wide & BB_Squeeze=very_wide
+    → NEXT_1st2h_Spike=next_no_spike
+
+  [100% conf, 4.62x lift, n=3/3]
+    IF Gap=gap_down & EMA_Trend=slight_bear & SMA_Align=mixed
+    → NEXT_1st2h_Spike=next_no_spike
+
+  [100% conf, 4.62x lift, n=3/3]
+    IF Day_Dir=big_down & Range=wide & VWAP_Pos=far_below & Prev_Change=big_drop
+    → NEXT_1st2h_Spike=next_no_spike
+
+  [100% conf, 4.62x lift, n=3/3]
+    IF Gap=flat & Range=wide & BB_Squeeze=very_wide & VWAP_Pos=far_below
+    → NEXT_1st2h_Spike=next_no_spike
+
+  [100% conf, 4.62x lift, n=3/3]
+    IF Gap=gap_down & EMA_Trend=slight_bear & SMA_Align=mixed & VWAP_Pos=far_below
+    → NEXT_1st2h_Spike=next_no_spike
+
+
+BEST RULES FOR NEXT_Fade:
+---------------------------------------------------------------------------
+  [100% conf, 4.62x lift, n=3/3]
+    IF DOW=Tue & Volume=low & BB_Squeeze=very_wide
+    → NEXT_Fade=next_big_fade
+
+  [100% conf, 4.62x lift, n=3/3]
+    IF Day_Dir=big_down & Gap=gap_down & ATR_Regime=extreme_vol
+    → NEXT_Fade=next_big_fade
+
+  [100% conf, 4.62x lift, n=3/3]
+    IF Gap=gap_down & ATR_Regime=extreme_vol & Prev_Change=crash
+    → NEXT_Fade=next_big_fade
+
+  [100% conf, 4.62x lift, n=3/3]
+    IF Range=very_wide & MACD_Hist=strong_bear & OBV_Trend=distributing
+    → NEXT_Fade=next_big_fade
+
+  [100% conf, 4.62x lift, n=3/3]
+    IF Range=very_wide & MACD_Cross=below & OBV_Trend=distributing
+    → NEXT_Fade=next_big_fade
+
+  [100% conf, 4.62x lift, n=3/3]
+    IF BB_Position=lower_quarter & ATR_Regime=high_vol & Streak=1_up
+    → NEXT_Fade=next_big_fade
+
+  [100% conf, 4.62x lift, n=3/3]
+    IF DOW=Tue & Volume=low & BB_Squeeze=very_wide & VWAP_Pos=far_below
+    → NEXT_Fade=next_big_fade
+
+  [100% conf, 4.62x lift, n=3/3]
+    IF Day_Dir=big_down & Gap=gap_down & VWAP_Pos=far_below & ATR_Regime=extreme_vol
+    → NEXT_Fade=next_big_fade
+
+  [100% conf, 4.62x lift, n=3/3]
+    IF Day_Dir=big_down & Gap=gap_down & ATR_Regime=extreme_vol & Prev_Change=crash
+    → NEXT_Fade=next_big_fade
+
+  [100% conf, 4.62x lift, n=3/3]
+    IF Gap=gap_down & VWAP_Pos=far_below & ATR_Regime=extreme_vol & Prev_Change=crash
+    → NEXT_Fade=next_big_fade
+
+  [100% conf, 4.62x lift, n=3/3]
+    IF Range=very_wide & MACD_Hist=strong_bear & MACD_Cross=below & OBV_Trend=distributing
+    → NEXT_Fade=next_big_fade
+
+  [100% conf, 4.62x lift, n=3/3]
+    IF Range=very_wide & MACD_Hist=strong_bear & VWAP_Pos=far_below & OBV_Trend=distributing
+    → NEXT_Fade=next_big_fade
+
+  [100% conf, 4.62x lift, n=3/3]
+    IF Range=very_wide & MACD_Hist=strong_bear & ATR_Regime=extreme_vol & OBV_Trend=distributing
+    → NEXT_Fade=next_big_fade
+
+  [100% conf, 4.62x lift, n=3/3]
+    IF Range=very_wide & MACD_Cross=below & VWAP_Pos=far_below & OBV_Trend=distributing
+    → NEXT_Fade=next_big_fade
+
+  [100% conf, 4.62x lift, n=3/3]
+    IF Range=very_wide & MACD_Cross=below & ATR_Regime=extreme_vol & OBV_Trend=distributing
+    → NEXT_Fade=next_big_fade
+
+
+===========================================================================
+ACTIONABLE BUY SIGNALS (next day UP, conf >= 65%):
+===========================================================================
+
+  RULE #1: 100% confident (hit 3/3 times, lift 1.88x)
+    WHEN: Prev_Change=flat
+    THEN: Next day goes UP
+
+  RULE #2: 100% confident (hit 4/4 times, lift 1.88x)
+    WHEN: DOW=Fri & Day_Dir=big_up
+    THEN: Next day goes UP
+
+  RULE #3: 100% confident (hit 3/3 times, lift 1.88x)
+    WHEN: DOW=Mon & Day_Dir=mod_down
+    THEN: Next day goes UP
+
+  RULE #4: 100% confident (hit 3/3 times, lift 1.88x)
+    WHEN: DOW=Tue & Gap=gap_down_big
+    THEN: Next day goes UP
+
+  RULE #5: 100% confident (hit 4/4 times, lift 1.88x)
+    WHEN: DOW=Fri & Volume=normal
+    THEN: Next day goes UP
+
+  RULE #6: 100% confident (hit 3/3 times, lift 1.88x)
+    WHEN: DOW=Thu & Volume=normal
+    THEN: Next day goes UP
+
+  RULE #7: 100% confident (hit 3/3 times, lift 1.88x)
+    WHEN: DOW=Wed & Volume=normal
+    THEN: Next day goes UP
+
+  RULE #8: 100% confident (hit 3/3 times, lift 1.88x)
+    WHEN: DOW=Wed & RSI=neutral_high
+    THEN: Next day goes UP
+
+  RULE #9: 100% confident (hit 3/3 times, lift 1.88x)
+    WHEN: DOW=Fri & MACD_Hist=neutral
+    THEN: Next day goes UP
+
+  RULE #10: 100% confident (hit 3/3 times, lift 1.88x)
+    WHEN: DOW=Thu & MACD_Hist=strong_bear
+    THEN: Next day goes UP
+
+  RULE #11: 100% confident (hit 4/4 times, lift 1.88x)
+    WHEN: DOW=Wed & MACD_Hist=strong_bull
+    THEN: Next day goes UP
+
+  RULE #12: 100% confident (hit 3/3 times, lift 1.88x)
+    WHEN: DOW=Wed & BB_Position=lower_quarter
+    THEN: Next day goes UP
+
+  RULE #13: 100% confident (hit 3/3 times, lift 1.88x)
+    WHEN: DOW=Fri & BB_Squeeze=normal
+    THEN: Next day goes UP
+
+  RULE #14: 100% confident (hit 3/3 times, lift 1.88x)
+    WHEN: DOW=Thu & ATR_Regime=extreme_vol
+    THEN: Next day goes UP
+
+  RULE #15: 100% confident (hit 3/3 times, lift 1.88x)
+    WHEN: DOW=Wed & Streak=3_down
+    THEN: Next day goes UP
+
+  RULE #16: 100% confident (hit 3/3 times, lift 1.88x)
+    WHEN: DOW=Wed & Prev_Change=big_drop
+    THEN: Next day goes UP
+
+  RULE #17: 100% confident (hit 3/3 times, lift 1.88x)
+    WHEN: DOW=Wed & Prev_Change=flat
+    THEN: Next day goes UP
+
+  RULE #18: 100% confident (hit 3/3 times, lift 1.88x)
+    WHEN: Day_Dir=mod_down & Gap=gap_down_big
+    THEN: Next day goes UP
+
+  RULE #19: 100% confident (hit 4/4 times, lift 1.88x)
+    WHEN: Day_Dir=mod_down & Gap=gap_down
+    THEN: Next day goes UP
+
+  RULE #20: 100% confident (hit 4/4 times, lift 1.88x)
+    WHEN: Day_Dir=mod_down & Range=wide
+    THEN: Next day goes UP
+
+===========================================================================
+ACTIONABLE SELL SIGNALS (next day DOWN, conf >= 65%):
+===========================================================================
+
+  RULE #1: 100% confident (hit 4/4 times, lift 2.22x)
+    WHEN: DOW=Tue & MACD_Hist=strong_bear
+    THEN: Next day goes DOWN
+
+  RULE #2: 100% confident (hit 5/5 times, lift 2.22x)
+    WHEN: DOW=Mon & BB_Squeeze=normal
+    THEN: Next day goes DOWN
+
+  RULE #3: 100% confident (hit 3/3 times, lift 2.22x)
+    WHEN: DOW=Mon & SMA_Align=mixed
+    THEN: Next day goes DOWN
+
+  RULE #4: 100% confident (hit 4/4 times, lift 2.22x)
+    WHEN: DOW=Tue & ATR_Regime=extreme_vol
+    THEN: Next day goes DOWN
+
+  RULE #5: 100% confident (hit 3/3 times, lift 2.22x)
+    WHEN: DOW=Mon & Streak=1_up
+    THEN: Next day goes DOWN
+
+  RULE #6: 100% confident (hit 3/3 times, lift 2.22x)
+    WHEN: DOW=Tue & Streak=1_up
+    THEN: Next day goes DOWN
+
+  RULE #7: 100% confident (hit 3/3 times, lift 2.22x)
+    WHEN: DOW=Tue & Prev_Change=surge
+    THEN: Next day goes DOWN
+
+  RULE #8: 100% confident (hit 3/3 times, lift 2.22x)
+    WHEN: Day_Dir=big_down & Volume=high
+    THEN: Next day goes DOWN
+
+  RULE #9: 100% confident (hit 3/3 times, lift 2.22x)
+    WHEN: Day_Dir=big_down & MACD_Hist=strong_bull
+    THEN: Next day goes DOWN
+
+  RULE #10: 100% confident (hit 3/3 times, lift 2.22x)
+    WHEN: Day_Dir=mod_up & MACD_Hist=strong_bear
+    THEN: Next day goes DOWN
+
+  RULE #11: 100% confident (hit 4/4 times, lift 2.22x)
+    WHEN: Day_Dir=big_down & BB_Squeeze=wide
+    THEN: Next day goes DOWN
+
+  RULE #12: 100% confident (hit 3/3 times, lift 2.22x)
+    WHEN: Day_Dir=big_up & EMA_Trend=strong_bull
+    THEN: Next day goes DOWN
+
+  RULE #13: 100% confident (hit 4/4 times, lift 2.22x)
+    WHEN: Day_Dir=big_up & SMA_Align=bullish
+    THEN: Next day goes DOWN
+
+  RULE #14: 100% confident (hit 5/5 times, lift 2.22x)
+    WHEN: Gap=flat & Volume=low
+    THEN: Next day goes DOWN
+
+  RULE #15: 100% confident (hit 3/3 times, lift 2.22x)
+    WHEN: Gap=flat & Streak=1_up
+    THEN: Next day goes DOWN
+
+  RULE #16: 100% confident (hit 3/3 times, lift 2.22x)
+    WHEN: Range=very_wide & EMA_Trend=strong_bull
+    THEN: Next day goes DOWN
+
+  RULE #17: 100% confident (hit 3/3 times, lift 2.22x)
+    WHEN: Volume=high & RSI=weak
+    THEN: Next day goes DOWN
+
+  RULE #18: 100% confident (hit 3/3 times, lift 2.22x)
+    WHEN: Volume=high & MACD_Hist=strong_bear
+    THEN: Next day goes DOWN
+
+  RULE #19: 100% confident (hit 3/3 times, lift 2.22x)
+    WHEN: Volume=high & BB_Position=lower_quarter
+    THEN: Next day goes DOWN
+
+  RULE #20: 100% confident (hit 3/3 times, lift 2.22x)
+    WHEN: Volume=high & BB_Squeeze=wide
+    THEN: Next day goes DOWN
+
+===========================================================================
+FIRST-2-HOUR SPIKE RULES (conf >= 60%):
+===========================================================================
+
+  RULE #1: 100% confident (n=3, lift 6.00x)
+    WHEN: OBV_Trend=accumulating & Streak=2_up
+    THEN: NEXT_1st2h_Spike=next_huge_spike
+
+  RULE #2: 100% confident (n=4, lift 6.00x)
+    WHEN: Day_Dir=mod_down & OBV_Trend=distributing & Streak=2_down
+    THEN: NEXT_1st2h_Spike=next_huge_spike
+
+  RULE #3: 100% confident (n=3, lift 6.00x)
+    WHEN: VWAP_Pos=far_below & OBV_Trend=accumulating & Streak=2_up
+    THEN: NEXT_1st2h_Spike=next_huge_spike
+
+  RULE #4: 100% confident (n=3, lift 6.00x)
+    WHEN: ATR_Regime=high_vol & OBV_Trend=accumulating & Streak=2_up
+    THEN: NEXT_1st2h_Spike=next_huge_spike
+
+  RULE #5: 100% confident (n=3, lift 6.00x)
+    WHEN: Day_Dir=mod_down & Range=normal & OBV_Trend=distributing & Streak=2_down
+    THEN: NEXT_1st2h_Spike=next_huge_spike
+
+  RULE #6: 100% confident (n=4, lift 6.00x)
+    WHEN: Day_Dir=mod_down & VWAP_Pos=far_below & OBV_Trend=distributing & Streak=2_down
+    THEN: NEXT_1st2h_Spike=next_huge_spike
+
+  RULE #7: 100% confident (n=3, lift 6.00x)
+    WHEN: VWAP_Pos=far_below & ATR_Regime=high_vol & OBV_Trend=accumulating & Streak=2_up
+    THEN: NEXT_1st2h_Spike=next_huge_spike
+
+  RULE #8: 100% confident (n=3, lift 5.45x)
+    WHEN: DOW=Tue & Gap=flat & Range=very_wide
+    THEN: NEXT_1st2h_Spike=next_med_spike
+
+  RULE #9: 100% confident (n=3, lift 5.45x)
+    WHEN: DOW=Tue & Gap=flat & Range=very_wide & VWAP_Pos=far_below
+    THEN: NEXT_1st2h_Spike=next_med_spike
+
+  RULE #10: 100% confident (n=3, lift 4.62x)
+    WHEN: Day_Dir=big_down & Range=wide & Prev_Change=big_drop
+    THEN: NEXT_1st2h_Spike=next_no_spike
+
+  RULE #11: 100% confident (n=3, lift 4.62x)
+    WHEN: Gap=flat & Range=wide & BB_Squeeze=very_wide
+    THEN: NEXT_1st2h_Spike=next_no_spike
+
+  RULE #12: 100% confident (n=3, lift 4.62x)
+    WHEN: Gap=gap_down & EMA_Trend=slight_bear & SMA_Align=mixed
+    THEN: NEXT_1st2h_Spike=next_no_spike
+
+  RULE #13: 100% confident (n=3, lift 4.62x)
+    WHEN: Day_Dir=big_down & Range=wide & VWAP_Pos=far_below & Prev_Change=big_drop
+    THEN: NEXT_1st2h_Spike=next_no_spike
+
+  RULE #14: 100% confident (n=3, lift 4.62x)
+    WHEN: Gap=flat & Range=wide & BB_Squeeze=very_wide & VWAP_Pos=far_below
+    THEN: NEXT_1st2h_Spike=next_no_spike
+
+  RULE #15: 100% confident (n=3, lift 4.62x)
+    WHEN: Gap=gap_down & EMA_Trend=slight_bear & SMA_Align=mixed & VWAP_Pos=far_below
+    THEN: NEXT_1st2h_Spike=next_no_spike
+
+===========================================================================
+Methodology: Apriori-style association rule mining
+Discretization: Continuous features binned into trading-relevant categories
+This is NOT financial advice.
+===========================================================================
