@@ -65,11 +65,21 @@ def main():
 
     last_intraday = 0
     last_daily = ""
+    last_signal = ""
 
     while True:
         try:
             now_et = get_et_now()
             now_ts = time.time()
+
+            # Morning signal: generate at 9:00 AM ET (30 min before open)
+            t_min = now_et.hour * 60 + now_et.minute
+            today_str_sig = now_et.strftime("%Y-%m-%d")
+            if now_et.weekday() < 5 and 540 <= t_min <= 550 and last_signal != today_str_sig:
+                logging.info("Pre-market - generating morning signal...")
+                from morning_signal import generate_signal
+                generate_signal()
+                last_signal = today_str_sig
 
             # Intraday fetch: every 6 minutes during market hours
             if is_market_hours(now_et) and (now_ts - last_intraday) >= 360:

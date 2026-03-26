@@ -1,0 +1,57 @@
+=================================================================
+  GRRR MORNING TRADING SIGNAL
+  Date: 2026-03-26 (Thursday)
+  Generated: 00:32:18
+=================================================================
+
+  Last Close: $10.86 (UP +1.78%)
+
+  ╔═══════════════════════════════════════════╗
+  ║  SIGNAL:  NEUTRAL                          ║
+  ║  ACTION:  WAIT / NO TRADE                  ║
+  ║  CONFIDENCE:  13.0%                       ║
+  ║  COMPOSITE SCORE: -0.078                  ║
+  ╚═══════════════════════════════════════════╝
+
+INTRADAY GAME PLAN:
+-----------------------------------------------------------------
+  RIDE THE MOVE: Expect +4.4% in first 2h, momentum holds (+0.6% rest of day). Hold through close.
+  AFTER UP DAY: First-2h spike is smaller (+2.7%). Less edge today. Be more selective.
+
+EXPECTED RANGES:
+  Based on ATR ($0.691):
+    Conservative: $10.17 - $11.55
+    Extended:     $9.82 - $11.90
+  Based on first-2h pattern:
+    Spike target: $11.34 (+4.4%)
+
+SIGNAL BREAKDOWN:
+-----------------------------------------------------------------
+  Signal                   Dir   Wt   Score  Detail
+-----------------------------------------------------------------
+  Alternation Pattern     BEAR  2.0  -2.000  Previous day was UP -> DOWN probability 50% (avg r
+  Day-of-Week             BULL  2.0  +2.000  Thursday: historically UP 73%, avg return +2.26%, 
+  RSI                     NEUT  1.5  +0.000  RSI 44.4 - neutral zone
+  MACD                    BULL  1.0  +0.500  MACD histogram improving (-0.0444 vs -0.0660)
+  Bollinger Bands         BEAR  1.0  -0.300  Below BB midline ($11.44)
+  EMA Trend               BEAR  1.0  -0.500  EMA9 ($10.96) < EMA21 ($11.33) - bearish trend
+  Volume                  NEUT  0.5  +0.000  Volume 0.67x average - neutral
+  News Sentiment          BEAR  0.5  -0.250  News polarity: -0.1201 (BEARISH)
+  Reddit Sentiment        NEUT  0.5  +0.000  Reddit polarity: 0.0091 (NEUTRAL)
+  Options Flow            BEAR  1.0  -0.500  Put/Call ratio 1.518 - heavy put buying (bearish, 
+  Short Interest          BULL  0.5  +0.150  Short 13.1% of float, 5.0 DTC - elevated shorts
+-----------------------------------------------------------------
+  COMPOSITE                    11.5  -0.900
+
+  Bullish signals: 3  |  Bearish: 5  |  Neutral: 3
+
+RISK FACTORS:
+-----------------------------------------------------------------
+  [!] High short interest (13.1%) - volatile, can squeeze or dump
+  [!] Heavy put buying (P/C 1.52) - hedging or bearish bets
+  [!] This is a volatile small-cap. Position size accordingly.
+  [!] Pattern confidence is based on 60 days of data. Patterns can break.
+
+=================================================================
+  This is NOT financial advice. For educational/research purposes only.
+=================================================================
