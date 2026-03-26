@@ -1,16 +1,16 @@
 {
-  "generated": "2026-03-26T13:21:38.490461",
+  "generated": "2026-03-26T18:26:43.724596",
   "direction": "NEUTRAL",
-  "confidence": 8.2,
-  "composite": -0.0409,
+  "confidence": 6.4,
+  "composite": -0.0318,
   "next_day": "Friday",
   "today": "Thursday",
   "stats": {
-    "total_posts": 179,
-    "posts_24h": 28,
-    "posts_weekend": 70,
-    "avg_polarity": -0.011,
-    "trend_diff": -0.033,
+    "total_posts": 188,
+    "posts_24h": 21,
+    "posts_weekend": 74,
+    "avg_polarity": 0.017,
+    "trend_diff": -0.0022,
     "pol_bucket": "neutral",
     "trend_bucket": "stable",
     "buzz_bucket": "viral"
@@ -47,9 +47,9 @@
       "weighted": 0.0
     },
     "buzz_acceleration": {
-      "raw": -0.1,
+      "raw": 0.0,
       "weight": 1.0,
-      "weighted": -0.1
+      "weighted": 0.0
     }
   }
 }
