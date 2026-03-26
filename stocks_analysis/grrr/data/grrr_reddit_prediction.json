@@ -1,18 +1,18 @@
 {
-  "generated": "2026-03-26T07:24:08.391308",
+  "generated": "2026-03-26T13:21:38.490461",
   "direction": "NEUTRAL",
-  "confidence": 5.5,
-  "composite": 0.0273,
+  "confidence": 8.2,
+  "composite": -0.0409,
   "next_day": "Friday",
   "today": "Thursday",
   "stats": {
-    "total_posts": 173,
-    "posts_24h": 27,
+    "total_posts": 179,
+    "posts_24h": 28,
     "posts_weekend": 70,
-    "avg_polarity": -0.0458,
-    "trend_diff": -0.1553,
+    "avg_polarity": -0.011,
+    "trend_diff": -0.033,
     "pol_bucket": "neutral",
-    "trend_bucket": "crashing",
+    "trend_bucket": "stable",
     "buzz_bucket": "viral"
   },
   "factor_scores": {
@@ -32,9 +32,9 @@
       "weighted": 0.0
     },
     "polarity_trend": {
-      "raw": 0.5,
+      "raw": 0.0,
       "weight": 1.5,
-      "weighted": 0.75
+      "weighted": 0.0
     },
     "day_of_week": {
       "raw": -0.4,
