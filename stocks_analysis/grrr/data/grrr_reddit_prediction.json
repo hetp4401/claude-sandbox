@@ -1,16 +1,16 @@
 {
-  "generated": "2026-03-27T06:31:56.064487",
+  "generated": "2026-03-27T13:16:33.487400",
   "direction": "LEAN BUY",
   "confidence": 17.3,
   "composite": 0.0864,
   "next_day": "Monday",
   "today": "Friday",
   "stats": {
-    "total_posts": 183,
-    "posts_24h": 29,
-    "posts_weekend": 69,
-    "avg_polarity": 0.044,
-    "trend_diff": 0.0454,
+    "total_posts": 185,
+    "posts_24h": 21,
+    "posts_weekend": 75,
+    "avg_polarity": 0.0125,
+    "trend_diff": -0.0023,
     "pol_bucket": "neutral",
     "trend_bucket": "stable",
     "buzz_bucket": "viral"

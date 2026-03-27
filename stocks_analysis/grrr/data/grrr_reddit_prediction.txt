@@ -1,6 +1,6 @@
 ======================================================================
   GRRR REDDIT-BASED NEXT-DAY PREDICTION
-  Generated: 2026-03-27 06:31
+  Generated: 2026-03-27 13:16
   Today: Friday | Predicting: Monday
 ======================================================================
 
@@ -11,32 +11,32 @@
   ╚════════════════════════════════════════════════╝
 
 REDDIT STATS:
-  Total posts scraped:    183
-  Posts in last 24h:      29 (viral)
-  Weekend posts:          69
-  Avg polarity:           +0.0440 (neutral)
-  Sentiment trend:        +0.0454 (stable)
+  Total posts scraped:    185
+  Posts in last 24h:      21 (viral)
+  Weekend posts:          75
+  Avg polarity:           +0.0125 (neutral)
+  Sentiment trend:        -0.0023 (stable)
 
 FACTOR BREAKDOWN:
 ----------------------------------------------------------------------
   Factor                    Raw  Weight   Score  Detail
 ----------------------------------------------------------------------
   weekend_buzz           +0.00     3.0  +0.000  Not weekend/Monday pre-market. Weekend posts 
-                                               were: 69
-  buzz_volume            +0.30     1.5  +0.450  Posts in last 24h: 29 (viral). Rule: moderate
+                                               were: 75
+  buzz_volume            +0.30     1.5  +0.450  Posts in last 24h: 21 (viral). Rule: moderate
                                                _buzz → next day UP 70% (30/43)
-  avg_polarity           +0.00     1.0  +0.000  Avg polarity: 0.0440 (neutral). Contrarian ru
+  avg_polarity           +0.00     1.0  +0.000  Avg polarity: 0.0125 (neutral). Contrarian ru
                                                le: negative → next day UP 86% (18/21). Contr
                                                arian bonus: +0.0
-  polarity_trend         +0.00     1.5  +0.000  Trend: +0.0454 (stable). Recent 24h avg: 0.04
-                                               40 (29 posts), Prior 24h avg: -0.0014 (28 pos
-                                               ts). Rule: deteriorating → next day UP 86%
+  polarity_trend         +0.00     1.5  +0.000  Trend: -0.0023 (stable). Recent 24h avg: 0.01
+                                               25 (21 posts), Prior 24h avg: 0.0148 (34 post
+                                               s). Rule: deteriorating → next day UP 86%
   day_of_week            +0.30     2.0  +0.600  Today is Friday. Score: +0.3. 71% → Monday UP
                                                 (15/21)
-  extreme_ratio          +0.00     1.0  +0.000  Extreme posts: 2 strong neg, 2 strong pos out
-                                                of 29 (14% extreme). Strong neg ratio: 7%
-  buzz_acceleration      -0.10     1.0  -0.100  Last 12h: 8 posts, Prior 12h: 21 posts. Accel
-                                               eration: -61.9%
+  extreme_ratio          +0.00     1.0  +0.000  Extreme posts: 2 strong neg, 1 strong pos out
+                                                of 21 (14% extreme). Strong neg ratio: 10%
+  buzz_acceleration      -0.10     1.0  -0.100  Last 12h: 2 posts, Prior 12h: 19 posts. Accel
+                                               eration: -89.5%
 ----------------------------------------------------------------------
   COMPOSITE                        11.0  +0.950
   NORMALIZED                             +0.0864
