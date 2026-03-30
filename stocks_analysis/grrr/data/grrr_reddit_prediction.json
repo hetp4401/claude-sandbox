@@ -1,19 +1,19 @@
 {
-  "generated": "2026-03-27T13:16:33.487400",
-  "direction": "LEAN BUY",
-  "confidence": 17.3,
-  "composite": 0.0864,
-  "next_day": "Monday",
-  "today": "Friday",
+  "generated": "2026-03-30T15:41:01.940320",
+  "direction": "LEAN SELL",
+  "confidence": 10.9,
+  "composite": -0.0545,
+  "next_day": "Tuesday",
+  "today": "Monday",
   "stats": {
-    "total_posts": 185,
-    "posts_24h": 21,
-    "posts_weekend": 75,
-    "avg_polarity": 0.0125,
-    "trend_diff": -0.0023,
-    "pol_bucket": "neutral",
-    "trend_bucket": "stable",
-    "buzz_bucket": "viral"
+    "total_posts": 152,
+    "posts_24h": 12,
+    "posts_weekend": 38,
+    "avg_polarity": 0.0877,
+    "trend_diff": 0.1355,
+    "pol_bucket": "positive",
+    "trend_bucket": "improving",
+    "buzz_bucket": "high"
   },
   "factor_scores": {
     "weekend_buzz": {
@@ -27,19 +27,19 @@
       "weighted": 0.45
     },
     "avg_polarity": {
-      "raw": 0.0,
+      "raw": -0.1,
       "weight": 1.0,
-      "weighted": 0.0
+      "weighted": -0.1
     },
     "polarity_trend": {
-      "raw": 0.0,
+      "raw": -0.1,
       "weight": 1.5,
-      "weighted": 0.0
+      "weighted": -0.15
     },
     "day_of_week": {
-      "raw": 0.3,
+      "raw": -0.4,
       "weight": 2.0,
-      "weighted": 0.6
+      "weighted": -0.8
     },
     "extreme_ratio": {
       "raw": 0.0,
@@ -47,9 +47,9 @@
       "weighted": 0.0
     },
     "buzz_acceleration": {
-      "raw": -0.1,
+      "raw": 0.0,
       "weight": 1.0,
-      "weighted": -0.1
+      "weighted": 0.0
     }
   }
 }
