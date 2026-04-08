@@ -1,17 +1,17 @@
 =================================================================
   GRRR REDDIT SENTIMENT REPORT
-  Generated: 2026-03-25 19:37
+  Generated: 2026-04-08 06:39
   Lookback:  30 days
   Method:    Google News RSS (site:reddit.com)
 =================================================================
 
 OVERALL REDDIT SENTIMENT:
-  Total discussions: 181
-  Positive:          32 (17.7%)
-  Negative:          26 (14.4%)
-  Neutral:           123 (68.0%)
-  Avg polarity:      0.0091
-  Weighted avg:      0.0091
+  Total discussions: 243
+  Positive:          40 (16.5%)
+  Negative:          31 (12.8%)
+  Neutral:           172 (70.8%)
+  Avg polarity:      0.0063
+  Weighted avg:      0.0063
 
   >>> REDDIT SENTIMENT GAUGE: NEUTRAL <<<
 
@@ -19,75 +19,78 @@ SUBREDDIT BREAKDOWN:
 -----------------------------------------------------------------
 Subreddit                  Posts  Avg Polarity
 -----------------------------------------------------------------
-r/unknown                    176        0.0070
-r/MetalsOnReddit               1        0.0000
-r/CoveredCalls                 1        0.0000
-r/BETATechnologi               1       -0.2547
+r/unknown                    239        0.0049
+r/quantum                      1        0.0000
+r/stockstobuytoday             1        0.0000
+r/redditstock                  1       -0.3000
 r/stocks                       1        0.6667
-r/RedditLaqueristas            1        0.0000
 
 DAILY BREAKDOWN:
 -----------------------------------------------------------------
 Date          Items   Avg Pol  Pos  Neg  Neu
 -----------------------------------------------------------------
-2026-03-25        6    0.1749    3    0    3
-2026-03-24       12    0.0475    2    1    9
-2026-03-23       12    0.0028    0    0   12
-2026-03-22        9   -0.0361    0    1    8
-2026-03-21       14    0.0674    4    1    9
-2026-03-20       12   -0.0245    2    1    9
-2026-03-19       17    0.0967    6    2    9
-2026-03-18       22   -0.0900    5   10    7
-2026-03-17       17    0.0497    3    2   12
-2026-03-16        9    0.0063    1    1    7
-2026-03-15        5    0.0267    1    0    4
-2026-03-14        4    0.0649    0    0    4
-2026-03-13        6    0.0000    0    0    6
-2026-03-12        4    0.0126    0    0    4
-2026-03-11        3    0.0997    1    0    2
-2026-03-10        3    0.0111    0    0    3
-2026-03-09        2   -0.2334    0    1    1
-2026-03-07        2    0.0000    0    0    2
-2026-03-06        2    0.0000    0    0    2
-2026-03-05        3   -0.0444    0    1    2
-2026-03-04        1    0.1333    1    0    0
-2026-03-02        4   -0.1120    1    2    1
-2026-02-28        1    0.1131    1    0    0
-2026-02-27        1   -0.4667    0    1    0
-2026-02-26        3    0.0556    1    0    2
-2026-02-25        5   -0.1001    0    2    3
-2026-02-24        2   -0.0334    0    0    2
+2026-04-08        2   -0.1750    0    1    1
+2026-04-07       17    0.0326    3    2   12
+2026-04-06       18    0.0034    2    1   15
+2026-04-05        8   -0.0084    1    1    6
+2026-04-04       17   -0.0021    1    1   15
+2026-04-03       12    0.0743    4    1    7
+2026-04-02       22    0.0239    3    1   18
+2026-04-01       14   -0.0293    2    3    9
+2026-03-31       24    0.0447    9    2   13
+2026-03-30       16   -0.0136    1    1   14
+2026-03-29        5   -0.0413    2    1    2
+2026-03-28        6    0.0354    1    0    5
+2026-03-27        9    0.0125    2    1    6
+2026-03-26        7    0.1092    2    0    5
+2026-03-25        7   -0.0229    0    1    6
+2026-03-24        6    0.0252    0    0    6
+2026-03-23        6   -0.0292    0    1    5
+2026-03-22        2    0.0457    0    0    2
+2026-03-21        3    0.0000    0    0    3
+2026-03-20        3   -0.0444    0    1    2
+2026-03-19        3   -0.1339    0    2    1
+2026-03-18       13   -0.0367    5    6    2
+2026-03-17        3   -0.0667    0    1    2
+2026-03-16        4   -0.0259    0    1    3
+2026-03-15        3   -0.1111    0    1    2
+2026-03-14        5    0.0324    1    0    4
+2026-03-13        3    0.0000    0    0    3
+2026-03-12        1    0.1000    0    0    1
+2026-03-11        1    0.0000    0    0    1
+2026-03-10        2   -0.0375    0    1    1
+2026-03-09        1    0.1875    1    0    0
 
 MOST BULLISH DISCUSSIONS:
 -----------------------------------------------------------------
-  [+0.667] r/unknown | what do you think is the best Crime film ever? - Reddit
-           2026-03-19 10:29
   [+0.667] r/stocks | r/stocks on Reddit: What’s a stock you have that you found t
-           2026-03-17 15:44
-  [+0.600] r/unknown | "Say thank you and get out": Why one top strategist says to 
-           2026-03-19 16:03
-  [+0.533] r/unknown | I am proud for not selling at $190 per ADR. Change my mind -
-           2026-03-25 00:49
-  [+0.467] r/unknown | Mommy why is no one buying our beloved stock (a possibility 
-           2026-03-18 18:28
+           2026-03-18 07:00
+  [+0.640] r/unknown | TD Deluxe Might have the best Hedgehog models istg 🔥 - Reddi
+           2026-03-26 17:34
+  [+0.500] r/unknown | Best recession stocks? - Reddit
+           2026-03-31 12:45
+  [+0.440] r/unknown | Swarmer Stock Surges 520% in Trading Debut. It’s One of the 
+           2026-03-18 07:00
+  [+0.400] r/unknown | What makes GO Markets Great? - Reddit
+           2026-04-06 14:04
 
 MOST BEARISH DISCUSSIONS:
 -----------------------------------------------------------------
-  [-0.500] r/unknown | This is Insane - Reddit
-           2026-03-20 18:27
-  [-0.500] r/unknown | Reading all the news about prediction markets makes me miss 
-           2026-03-17 07:00
-  [-0.467] r/unknown | Gorilla Technology Group Inc. (GRRR) CEO details RSU and sha
-           2026-03-18 22:03
-  [-0.467] r/unknown | Gorilla Technology (GRRR) CTO reports share and RSU holdings
-           2026-03-18 22:02
-  [-0.467] r/unknown | Gorilla Technology (GRRR) director Kelly Ruth reports RSUs a
-           2026-03-18 22:02
+  [-0.667] r/unknown | [Highlight] Jaylen Brown makes RJ Barrett touch earth with a
+           2026-04-06 00:32
+  [-0.667] r/unknown | Is The Chupacabra Real Shocking Clues - Reddit
+           2026-03-31 01:24
+  [-0.500] r/unknown | These jars are literally the WORST - Reddit
+           2026-03-30 14:14
+  [-0.500] r/unknown | Amazon Agencies are the Worst. - Reddit
+           2026-03-29 19:06
+  [-0.467] r/unknown | Gorilla Technology (GRRR) Asia GM reports 34,855-share holdi
+           2026-03-31 21:09
 
 BUZZ TREND (last 7 days vs prior):
-  Recent avg/day: 11.7
-  Prior avg/day:  5.0
-  Change:         +136.7%
+  Recent avg/day: 13.7
+  Prior avg/day:  6.1
+  Change:         +123.9%
   >>> BUZZ SURGING <<<
 
 =================================================================

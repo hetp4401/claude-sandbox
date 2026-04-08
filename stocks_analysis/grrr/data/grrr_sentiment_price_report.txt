@@ -1,439 +1,439 @@
 ================================================================================
   GRRR SENTIMENT → PRICE ASSOCIATION RULES
-  Generated: 2026-03-26 01:30
+  Generated: 2026-04-08 06:41
 ================================================================================
 
 ================================================================================
-  NEWS SENTIMENT → PRICE RULES (2416 rules, 51 samples)
+  NEWS SENTIMENT → PRICE RULES (4557 rules, 81 samples)
 ================================================================================
 
   SIMPLE RULES (1 condition, sorted by sample count):
    Conf  Lift     Hits  Rule
   ----------------------------------------------------------------------
-    78%  1.37   21/27    IF Buzz=moderate_buzz
-                                → NEXT_Gap=big_gap_down
-    64%  1.55   21/33    IF Mkt_trend=downtrend
-                                → NEXT_2h_Max=2h_strong
-    74%  1.22   20/27    IF Subjectivity=mixed
-                                → NEXT_DayDir=day_UP
-    86%  1.41   18/21    IF Sent_Trend=deteriorating
-                                → NEXT_DayDir=day_UP
-    86%  1.41   18/21    IF Sentiment=negative
-                                → NEXT_DayDir=day_UP
-    67%  1.17   18/27    IF Subjectivity=mixed
-                                → NEXT_Gap=big_gap_down
-    81%  1.42   17/21    IF Sent_Trend=deteriorating
-                                → NEXT_Gap=big_gap_down
-    89%  1.56   16/18    IF Mkt_trend=uptrend
-                                → NEXT_Gap=big_gap_down
-    79%  1.30   15/19    IF Mkt_momentum=down
-                                → NEXT_DayDir=day_UP
-    82%  2.10   14/17    IF Post_DOW=Mon
-                                → NEXT_FullDay=day_flat
-    70%  1.78   14/20    IF Sent_Trend=unknown
-                                → NEXT_FullDay=day_flat
-    56%  1.43   14/25    IF Polarity=neutral
+    72%  1.19   33/46    IF Polarity=neutral
                                 → NEXT_DayDir=day_DOWN
-    56%  1.43   14/25    IF Sentiment=neutral
+    72%  1.19   33/46    IF Sentiment=neutral
                                 → NEXT_DayDir=day_DOWN
-    67%  1.17   14/21    IF Sentiment=negative
-                                → NEXT_Gap=big_gap_down
-   100%  1.65   13/13    IF Post_DOW=Wed
-                                → NEXT_DayDir=day_UP
-    93%  1.63   13/14    IF Mkt_momentum=strong_up
-                                → NEXT_Gap=big_gap_down
-    65%  1.58   13/20    IF Sent_Trend=unknown
-                                → NEXT_2h_Max=2h_strong
-    68%  1.20   13/19    IF Mkt_momentum=down
-                                → NEXT_Gap=big_gap_down
-    67%  2.62   12/18    IF Mkt_trend=uptrend
+    80%  1.32   32/40    IF Buzz=moderate_buzz
+                                → NEXT_DayDir=day_DOWN
+    76%  1.25   25/33    IF Sent_Trend=unknown
+                                → NEXT_DayDir=day_DOWN
+    62%  1.27   25/40    IF Buzz=moderate_buzz
+                                → NEXT_1h_Spike=1h_spike
+    67%  1.10   22/33    IF Post_Time=pre_market
+                                → NEXT_DayDir=day_DOWN
+    68%  1.12   19/28    IF Subjectivity=factual
+                                → NEXT_DayDir=day_DOWN
+    58%  1.17   19/33    IF Mkt_trend=uptrend
+                                → NEXT_1h_Spike=1h_spike
+    81%  2.52   17/21    IF Mkt_momentum=strong_up
                                 → NEXT_30m=30m_dump
-    92%  1.62   12/13    IF Post_DOW=Wed
+    65%  1.66   17/26    IF Sent_Trend=deteriorating
+                                → NEXT_DayDir=day_UP
+    80%  2.09   16/20    IF Post_DOW=Wed
                                 → NEXT_Gap=big_gap_down
+    64%  1.62   16/25    IF Buzz=high_buzz
+                                → NEXT_DayDir=day_UP
+    62%  1.61   16/26    IF Sent_Trend=deteriorating
+                                → NEXT_Gap=big_gap_down
+    71%  2.41   15/21    IF Mkt_momentum=strong_up
+                                → NEXT_FullDay=day_big_down
+    75%  1.90   15/20    IF Post_DOW=Wed
+                                → NEXT_DayDir=day_UP
+    60%  1.57   15/25    IF Buzz=high_buzz
+                                → NEXT_Gap=big_gap_down
+    71%  1.18   15/21    IF Mkt_momentum=strong_up
+                                → NEXT_DayDir=day_DOWN
+    68%  1.13   15/22    IF Mkt_momentum=up
+                                → NEXT_DayDir=day_DOWN
+    64%  1.84   14/22    IF Mkt_momentum=up
+                                → NEXT_2h_Max=2h_strong
+    67%  1.35   14/21    IF Post_DOW=Mon
+                                → NEXT_1h_Spike=1h_spike
 
   --- NEXT DAY DIRECTION ---
    Conf  Lift     Hits  Rule
   ----------------------------------------------------------------------
-    86%  1.41   18/21    IF Sent_Trend=deteriorating
-                                → NEXT_DayDir=day_UP
-    86%  1.41   18/21    IF Sentiment=negative
-                                → NEXT_DayDir=day_UP
-    86%  1.41   18/21    IF Sent_Trend=deteriorating & Mkt_volatility=high
-                                → NEXT_DayDir=day_UP
-    86%  1.41   18/21    IF Sent_Trend=deteriorating & Mkt_volume_regime=norma
-                                → NEXT_DayDir=day_UP
-    86%  1.41   18/21    IF Mkt_volatility=high & Sentiment=negative
-                                → NEXT_DayDir=day_UP
-    86%  1.41   18/21    IF Sent_Trend=deteriorating & Mkt_volatility=high & M
-                                → NEXT_DayDir=day_UP
-    74%  1.22   20/27    IF Subjectivity=mixed
-                                → NEXT_DayDir=day_UP
-    74%  1.22   20/27    IF Subjectivity=mixed & Mkt_volume_regime=normal_vol
-                                → NEXT_DayDir=day_UP
-    85%  1.40   17/20    IF Mkt_volume_regime=normal_vol & Sentiment=negative
-                                → NEXT_DayDir=day_UP
-    85%  1.40   17/20    IF Mkt_volatility=high & Mkt_volume_regime=normal_vol
-                                → NEXT_DayDir=day_UP
-   100%  1.65   14/14    IF Buzz=moderate_buzz & Sent_Trend=deteriorating
-                                → NEXT_DayDir=day_UP
-   100%  1.65   14/14    IF Buzz=moderate_buzz & Sent_Trend=deteriorating & Mk
-                                → NEXT_DayDir=day_UP
+    80%  1.32   32/40    IF Buzz=moderate_buzz
+                                → NEXT_DayDir=day_DOWN
+    80%  1.32   32/40    IF Buzz=moderate_buzz & Mkt_volume_regime=normal_vol
+                                → NEXT_DayDir=day_DOWN
+    72%  1.19   33/46    IF Polarity=neutral
+                                → NEXT_DayDir=day_DOWN
+    72%  1.19   33/46    IF Sentiment=neutral
+                                → NEXT_DayDir=day_DOWN
+    72%  1.19   33/46    IF Polarity=neutral & Mkt_volume_regime=normal_vol
+                                → NEXT_DayDir=day_DOWN
+    72%  1.19   33/46    IF Polarity=neutral & Sentiment=neutral
+                                → NEXT_DayDir=day_DOWN
+    72%  1.19   33/46    IF Mkt_volume_regime=normal_vol & Sentiment=neutral
+                                → NEXT_DayDir=day_DOWN
+    72%  1.19   33/46    IF Polarity=neutral & Mkt_volume_regime=normal_vol & 
+                                → NEXT_DayDir=day_DOWN
+    76%  1.25   25/33    IF Sent_Trend=unknown
+                                → NEXT_DayDir=day_DOWN
+    76%  1.25   25/33    IF Sent_Trend=unknown & Mkt_volume_regime=normal_vol
+                                → NEXT_DayDir=day_DOWN
+    84%  1.39   21/25    IF Sent_Trend=unknown & Mkt_trend=downtrend
+                                → NEXT_DayDir=day_DOWN
+    84%  1.39   21/25    IF Sent_Trend=unknown & Mkt_trend=downtrend & Mkt_vol
+                                → NEXT_DayDir=day_DOWN
 
   --- NEXT DAY MAGNITUDE ---
    Conf  Lift     Hits  Rule
   ----------------------------------------------------------------------
-    82%  2.10   14/17    IF Post_DOW=Mon
+    78%  2.62   14/18    IF Mkt_momentum=strong_up & Mkt_volatility=normal
+                                → NEXT_FullDay=day_big_down
+    78%  2.62   14/18    IF Mkt_trend=uptrend & Mkt_momentum=strong_up & Mkt_v
+                                → NEXT_FullDay=day_big_down
+    78%  2.62   14/18    IF Mkt_momentum=strong_up & Mkt_volatility=normal & M
+                                → NEXT_FullDay=day_big_down
+    71%  2.41   15/21    IF Mkt_momentum=strong_up
+                                → NEXT_FullDay=day_big_down
+    71%  2.41   15/21    IF Mkt_trend=uptrend & Mkt_momentum=strong_up
+                                → NEXT_FullDay=day_big_down
+    71%  2.41   15/21    IF Mkt_momentum=strong_up & Mkt_volume_regime=normal_
+                                → NEXT_FullDay=day_big_down
+    71%  2.41   15/21    IF Mkt_trend=uptrend & Mkt_momentum=strong_up & Mkt_v
+                                → NEXT_FullDay=day_big_down
+    86%  3.47   12/14    IF Post_DOW=Mon & Mkt_trend=downtrend
                                 → NEXT_FullDay=day_flat
-    82%  2.10   14/17    IF Post_DOW=Mon & Mkt_volatility=high
+    86%  3.47   12/14    IF Post_DOW=Mon & Mkt_trend=downtrend & Mkt_volume_re
                                 → NEXT_FullDay=day_flat
-    82%  2.10   14/17    IF Post_DOW=Mon & Mkt_volume_regime=normal_vol
-                                → NEXT_FullDay=day_flat
-    82%  2.10   14/17    IF Post_DOW=Mon & Mkt_volatility=high & Mkt_volume_re
-                                → NEXT_FullDay=day_flat
-   100%  2.55   11/11    IF Post_DOW=Mon & Buzz=moderate_buzz
-                                → NEXT_FullDay=day_flat
-   100%  2.55   11/11    IF Post_DOW=Mon & Buzz=moderate_buzz & Mkt_volatility
-                                → NEXT_FullDay=day_flat
-   100%  2.55   11/11    IF Post_DOW=Mon & Buzz=moderate_buzz & Mkt_volume_reg
-                                → NEXT_FullDay=day_flat
-    74%  1.88   14/19    IF Sent_Trend=unknown & Mkt_volatility=high
-                                → NEXT_FullDay=day_flat
-    74%  1.88   14/19    IF Sent_Trend=unknown & Mkt_volatility=high & Mkt_vol
-                                → NEXT_FullDay=day_flat
-    70%  1.78   14/20    IF Sent_Trend=unknown
-                                → NEXT_FullDay=day_flat
-    70%  1.78   14/20    IF Sent_Trend=unknown & Mkt_volume_regime=normal_vol
-                                → NEXT_FullDay=day_flat
-    91%  2.32   10/11    IF Polarity=neutral & Post_DOW=Mon
-                                → NEXT_FullDay=day_flat
+    91%  3.07   10/11    IF Buzz=moderate_buzz & Mkt_momentum=strong_up
+                                → NEXT_FullDay=day_big_down
+    91%  3.07   10/11    IF Buzz=moderate_buzz & Mkt_trend=uptrend & Mkt_momen
+                                → NEXT_FullDay=day_big_down
+    91%  3.07   10/11    IF Buzz=moderate_buzz & Mkt_momentum=strong_up & Mkt_
+                                → NEXT_FullDay=day_big_down
 
   --- NEXT SESSION GAP ---
    Conf  Lift     Hits  Rule
   ----------------------------------------------------------------------
-    78%  1.37   21/27    IF Buzz=moderate_buzz
+    80%  2.09   16/20    IF Post_DOW=Wed
                                 → NEXT_Gap=big_gap_down
-    78%  1.37   21/27    IF Buzz=moderate_buzz & Mkt_volatility=high
+    80%  2.09   16/20    IF Post_DOW=Wed & Mkt_volume_regime=normal_vol
                                 → NEXT_Gap=big_gap_down
-    78%  1.37   21/27    IF Buzz=moderate_buzz & Mkt_volume_regime=normal_vol
+    83%  2.18   15/18    IF Buzz=high_buzz & Sent_Trend=deteriorating
                                 → NEXT_Gap=big_gap_down
-    78%  1.37   21/27    IF Buzz=moderate_buzz & Mkt_volatility=high & Mkt_vol
+    83%  2.18   15/18    IF Buzz=high_buzz & Sent_Trend=deteriorating & Mkt_vo
                                 → NEXT_Gap=big_gap_down
-    89%  1.56   16/18    IF Mkt_trend=uptrend
+    93%  2.43   13/14    IF Subjectivity=mixed & Buzz=high_buzz & Sent_Trend=d
                                 → NEXT_Gap=big_gap_down
-    89%  1.56   16/18    IF Mkt_trend=uptrend & Mkt_volatility=high
+   100%  2.61   12/12    IF Post_DOW=Wed & Buzz=high_buzz
                                 → NEXT_Gap=big_gap_down
-    94%  1.65   15/16    IF Mkt_trend=uptrend & Mkt_volume_regime=normal_vol
+   100%  2.61   12/12    IF Post_DOW=Wed & Buzz=high_buzz & Sent_Trend=deterio
                                 → NEXT_Gap=big_gap_down
-    94%  1.65   15/16    IF Mkt_trend=uptrend & Mkt_volatility=high & Mkt_volu
+   100%  2.61   12/12    IF Post_DOW=Wed & Buzz=high_buzz & Mkt_volume_regime=
                                 → NEXT_Gap=big_gap_down
-    81%  1.42   17/21    IF Sent_Trend=deteriorating
+    87%  2.26   13/15    IF Subjectivity=mixed & Buzz=high_buzz
                                 → NEXT_Gap=big_gap_down
-    81%  1.42   17/21    IF Sent_Trend=deteriorating & Mkt_volatility=high
+    87%  2.26   13/15    IF Subjectivity=mixed & Buzz=high_buzz & Mkt_volume_r
                                 → NEXT_Gap=big_gap_down
-    81%  1.42   17/21    IF Sent_Trend=deteriorating & Mkt_volume_regime=norma
+    92%  2.41   12/13    IF Post_DOW=Wed & Sent_Trend=deteriorating
                                 → NEXT_Gap=big_gap_down
-    81%  1.42   17/21    IF Sent_Trend=deteriorating & Mkt_volatility=high & M
+    92%  2.41   12/13    IF Post_DOW=Wed & Sent_Trend=deteriorating & Mkt_volu
                                 → NEXT_Gap=big_gap_down
 
   --- FIRST HOUR SPIKE ---
    Conf  Lift     Hits  Rule
   ----------------------------------------------------------------------
-    90%  3.83    9/10    IF Post_DOW=Mon & Mkt_trend=uptrend
-                                → NEXT_1h_Spike=1h_no_spike
-    90%  3.83    9/10    IF Post_DOW=Mon & Mkt_momentum=strong_up
-                                → NEXT_1h_Spike=1h_no_spike
-    90%  3.83    9/10    IF Post_DOW=Mon & Mkt_trend=uptrend & Mkt_momentum=st
-                                → NEXT_1h_Spike=1h_no_spike
-    90%  3.83    9/10    IF Post_DOW=Mon & Mkt_trend=uptrend & Mkt_volatility=
-                                → NEXT_1h_Spike=1h_no_spike
-    90%  3.83    9/10    IF Post_DOW=Mon & Mkt_trend=uptrend & Mkt_volume_regi
-                                → NEXT_1h_Spike=1h_no_spike
-    90%  3.83    9/10    IF Post_DOW=Mon & Mkt_momentum=strong_up & Mkt_volati
-                                → NEXT_1h_Spike=1h_no_spike
-    90%  3.83    9/10    IF Post_DOW=Mon & Mkt_momentum=strong_up & Mkt_volume
-                                → NEXT_1h_Spike=1h_no_spike
-    69%  2.92   11/16    IF Mkt_trend=uptrend & Mkt_volume_regime=normal_vol
-                                → NEXT_1h_Spike=1h_no_spike
-    69%  2.92   11/16    IF Mkt_trend=uptrend & Mkt_volatility=high & Mkt_volu
-                                → NEXT_1h_Spike=1h_no_spike
-    71%  2.02   10/14    IF Mkt_trend=downtrend & Sentiment=negative
+    62%  1.27   25/40    IF Buzz=moderate_buzz
                                 → NEXT_1h_Spike=1h_spike
-    71%  2.02   10/14    IF Mkt_trend=downtrend & Mkt_volatility=high & Sentim
+    62%  1.27   25/40    IF Buzz=moderate_buzz & Mkt_volume_regime=normal_vol
                                 → NEXT_1h_Spike=1h_spike
-    71%  2.02   10/14    IF Mkt_trend=downtrend & Mkt_volume_regime=normal_vol
+    79%  1.60   15/19    IF Buzz=moderate_buzz & Mkt_trend=uptrend
+                                → NEXT_1h_Spike=1h_spike
+    79%  1.60   15/19    IF Buzz=moderate_buzz & Mkt_trend=uptrend & Mkt_volat
+                                → NEXT_1h_Spike=1h_spike
+    79%  1.60   15/19    IF Buzz=moderate_buzz & Mkt_trend=uptrend & Mkt_volum
+                                → NEXT_1h_Spike=1h_spike
+    58%  1.17   19/33    IF Mkt_trend=uptrend
+                                → NEXT_1h_Spike=1h_spike
+    58%  1.17   19/33    IF Mkt_trend=uptrend & Mkt_volume_regime=normal_vol
+                                → NEXT_1h_Spike=1h_spike
+    60%  1.22   18/30    IF Mkt_trend=uptrend & Mkt_volatility=normal
+                                → NEXT_1h_Spike=1h_spike
+    60%  1.22   18/30    IF Mkt_trend=uptrend & Mkt_volatility=normal & Mkt_vo
+                                → NEXT_1h_Spike=1h_spike
+    62%  1.25   16/26    IF Buzz=moderate_buzz & Mkt_volatility=normal
+                                → NEXT_1h_Spike=1h_spike
+    62%  1.25   16/26    IF Buzz=moderate_buzz & Mkt_volatility=normal & Mkt_v
+                                → NEXT_1h_Spike=1h_spike
+    65%  1.32   15/23    IF Subjectivity=mixed & Buzz=moderate_buzz
                                 → NEXT_1h_Spike=1h_spike
 
   --- FIRST 2 HOURS ---
    Conf  Lift     Hits  Rule
   ----------------------------------------------------------------------
-    66%  1.59   21/32    IF Mkt_trend=downtrend & Mkt_volatility=high
+    67%  1.93   16/24    IF Subjectivity=mixed & Mkt_trend=downtrend
                                 → NEXT_2h_Max=2h_strong
-    66%  1.59   21/32    IF Mkt_trend=downtrend & Mkt_volatility=high & Mkt_vo
+    67%  1.93   16/24    IF Subjectivity=mixed & Mkt_trend=downtrend & Mkt_vol
                                 → NEXT_2h_Max=2h_strong
-    64%  1.55   21/33    IF Mkt_trend=downtrend
+    76%  2.21   13/17    IF Buzz=moderate_buzz & Sent_Trend=unknown
                                 → NEXT_2h_Max=2h_strong
-    64%  1.55   21/33    IF Mkt_trend=downtrend & Mkt_volume_regime=normal_vol
+    76%  2.21   13/17    IF Buzz=moderate_buzz & Sent_Trend=unknown & Mkt_volu
                                 → NEXT_2h_Max=2h_strong
-    81%  1.97   13/16    IF Sent_Trend=unknown & Mkt_trend=downtrend & Mkt_vol
+    85%  2.45   11/13    IF Mkt_trend=downtrend & Mkt_momentum=up
                                 → NEXT_2h_Max=2h_strong
-    76%  1.86   13/17    IF Sent_Trend=unknown & Mkt_trend=downtrend
+    85%  2.45   11/13    IF Sent_Trend=unknown & Mkt_trend=downtrend & Mkt_mom
                                 → NEXT_2h_Max=2h_strong
-    76%  1.86   13/17    IF Sent_Trend=unknown & Mkt_trend=downtrend & Mkt_vol
+    85%  2.45   11/13    IF Mkt_trend=downtrend & Mkt_momentum=up & Mkt_volume
                                 → NEXT_2h_Max=2h_strong
-    75%  1.82   12/16    IF Subjectivity=mixed & Mkt_trend=downtrend & Mkt_vol
+    91%  2.63   10/11    IF Post_DOW=Wed & Mkt_trend=downtrend
                                 → NEXT_2h_Max=2h_strong
-    68%  1.66   13/19    IF Sent_Trend=unknown & Mkt_volatility=high
+    91%  2.63   10/11    IF Post_DOW=Wed & Mkt_momentum=down
                                 → NEXT_2h_Max=2h_strong
-    68%  1.66   13/19    IF Sent_Trend=unknown & Mkt_volatility=high & Mkt_vol
+    91%  2.63   10/11    IF Post_DOW=Wed & Mkt_trend=downtrend & Mkt_momentum=
                                 → NEXT_2h_Max=2h_strong
-    79%  1.91   11/14    IF Mkt_trend=downtrend & Sentiment=negative
+    91%  2.63   10/11    IF Post_DOW=Wed & Mkt_trend=downtrend & Mkt_volume_re
                                 → NEXT_2h_Max=2h_strong
-    79%  1.91   11/14    IF Mkt_trend=downtrend & Mkt_volatility=high & Sentim
+    91%  2.63   10/11    IF Post_DOW=Wed & Mkt_momentum=down & Mkt_volume_regi
                                 → NEXT_2h_Max=2h_strong
 
   --- 2-DAY MOVE ---
    Conf  Lift     Hits  Rule
   ----------------------------------------------------------------------
-   100%  5.10    7/7     IF Post_DOW=Mon & Buzz=moderate_buzz & Mkt_trend=uptr
-                                → NEXT_2Day=2day_down
-   100%  5.10    7/7     IF Post_DOW=Mon & Buzz=moderate_buzz & Mkt_momentum=s
-                                → NEXT_2Day=2day_down
-    80%  4.08    8/10    IF Post_DOW=Mon & Mkt_trend=uptrend
-                                → NEXT_2Day=2day_down
-    80%  4.08    8/10    IF Post_DOW=Mon & Mkt_momentum=strong_up
-                                → NEXT_2Day=2day_down
-    80%  4.08    8/10    IF Post_DOW=Mon & Mkt_trend=uptrend & Mkt_momentum=st
-                                → NEXT_2Day=2day_down
-    80%  4.08    8/10    IF Post_DOW=Mon & Mkt_trend=uptrend & Mkt_volatility=
-                                → NEXT_2Day=2day_down
-    80%  4.08    8/10    IF Post_DOW=Mon & Mkt_trend=uptrend & Mkt_volume_regi
-                                → NEXT_2Day=2day_down
-    80%  4.08    8/10    IF Post_DOW=Mon & Mkt_momentum=strong_up & Mkt_volati
-                                → NEXT_2Day=2day_down
-    80%  4.08    8/10    IF Post_DOW=Mon & Mkt_momentum=strong_up & Mkt_volume
-                                → NEXT_2Day=2day_down
-    80%  2.40    8/10    IF Subjectivity=mixed & Sent_Trend=deteriorating & Se
+    71%  2.12   17/24    IF Subjectivity=mixed & Mkt_trend=downtrend
                                 → NEXT_2Day=2day_big_down
-    69%  2.08    9/13    IF Subjectivity=mixed & Sent_Trend=deteriorating
+    71%  2.12   17/24    IF Subjectivity=mixed & Mkt_trend=downtrend & Mkt_vol
                                 → NEXT_2Day=2day_big_down
-    69%  2.08    9/13    IF Subjectivity=mixed & Sentiment=negative
+   100%  3.00   12/12    IF Buzz=moderate_buzz & Sent_Trend=unknown & Mkt_tren
+                                → NEXT_2Day=2day_big_down
+    92%  2.77   12/13    IF Mkt_trend=downtrend & Mkt_momentum=up
+                                → NEXT_2Day=2day_big_down
+    92%  2.77   12/13    IF Sent_Trend=unknown & Mkt_trend=downtrend & Mkt_mom
+                                → NEXT_2Day=2day_big_down
+    92%  2.77   12/13    IF Mkt_trend=downtrend & Mkt_momentum=up & Mkt_volume
+                                → NEXT_2Day=2day_big_down
+   100%  3.00   11/11    IF Buzz=moderate_buzz & Mkt_trend=downtrend & Mkt_mom
+                                → NEXT_2Day=2day_big_down
+    60%  1.80   18/30    IF Post_Time=pre_market & Mkt_trend=downtrend
+                                → NEXT_2Day=2day_big_down
+    60%  1.80   18/30    IF Post_Time=pre_market & Mkt_trend=downtrend & Mkt_v
+                                → NEXT_2Day=2day_big_down
+    74%  2.21   14/19    IF Subjectivity=mixed & Mkt_volatility=high
+                                → NEXT_2Day=2day_big_down
+    74%  2.21   14/19    IF Subjectivity=mixed & Mkt_volatility=high & Mkt_vol
+                                → NEXT_2Day=2day_big_down
+    80%  2.40   12/15    IF Subjectivity=mixed & Post_Time=pre_market & Mkt_tr
                                 → NEXT_2Day=2day_big_down
 
 ================================================================================
-  REDDIT SENTIMENT → PRICE RULES (5469 rules, 177 samples)
+  REDDIT SENTIMENT → PRICE RULES (7289 rules, 231 samples)
 ================================================================================
 
   SIMPLE RULES (1 condition, sorted by sample count):
    Conf  Lift     Hits  Rule
   ----------------------------------------------------------------------
-    56%  1.26   55/98    IF Mkt_momentum=strong_down
-                                → NEXT_2Day=2day_flat
-    55%  1.41   54/98    IF Mkt_momentum=strong_down
-                                → NEXT_1h_Spike=1h_big_spike
-   100%  1.72   35/35    IF Post_Time=weekend
-                                → NEXT_DayDir=day_UP
-    94%  2.42   33/35    IF Post_Time=weekend
-                                → NEXT_1h_Spike=1h_big_spike
-    94%  2.11   33/35    IF Post_Time=weekend
-                                → NEXT_2Day=2day_flat
-    70%  1.20   30/43    IF Buzz=moderate_buzz
-                                → NEXT_DayDir=day_UP
-    82%  1.97   28/34    IF Post_DOW=Tue
+    75%  1.28  113/151   IF Mkt_volatility=normal
                                 → NEXT_DayDir=day_DOWN
-    63%  3.09   27/43    IF Buzz=moderate_buzz
-                                → NEXT_FullDay=day_flat
-    82%  1.41   27/33    IF Post_DOW=Wed
-                                → NEXT_DayDir=day_UP
-    56%  1.64   25/45    IF Mkt_momentum=down
-                                → NEXT_1h_Spike=1h_spike
-    69%  2.53   24/35    IF Post_Time=weekend
-                                → NEXT_FullDay=day_big_up
-    69%  2.38   24/35    IF Post_Time=weekend
-                                → NEXT_30m=30m_surge
-    69%  2.38   24/35    IF Post_Time=weekend
-                                → NEXT_2h_Max=2h_rip
-    56%  1.70   24/43    IF Buzz=moderate_buzz
-                                → NEXT_2h_Max=2h_strong
-    68%  3.24   23/34    IF Post_DOW=Tue
-                                → NEXT_FullDay=day_down
-    66%  2.42   23/35    IF Post_Time=weekend
+    82%  1.40   95/116   IF Mkt_trend=uptrend
+                                → NEXT_DayDir=day_DOWN
+    59%  1.14   89/151   IF Mkt_volatility=normal
                                 → NEXT_Gap=gap_up
-   100%  1.72   21/21    IF Post_DOW=Sat
-                                → NEXT_DayDir=day_UP
-    64%  1.88   21/33    IF Post_DOW=Wed
+    74%  1.25   86/116   IF Mkt_trend=uptrend
                                 → NEXT_1h_Spike=1h_spike
-    61%  3.35   20/33    IF Post_DOW=Wed
-                                → NEXT_FullDay=day_up
-    61%  2.82   20/33    IF Post_DOW=Wed
-                                → NEXT_2Day=2day_big_down
+    56%  1.14   84/151   IF Mkt_volatility=normal
+                                → NEXT_30m=30m_dump
+    65%  1.57   75/115   IF Mkt_trend=downtrend
+                                → NEXT_DayDir=day_UP
+    94%  2.35   73/78    IF Mkt_momentum=strong_up
+                                → NEXT_FullDay=day_big_down
+    94%  1.91   73/78    IF Mkt_momentum=strong_up
+                                → NEXT_30m=30m_dump
+    94%  1.60   73/78    IF Mkt_momentum=strong_up
+                                → NEXT_DayDir=day_DOWN
+    63%  1.58   73/116   IF Mkt_trend=uptrend
+                                → NEXT_FullDay=day_big_down
+    63%  1.29   73/116   IF Mkt_trend=uptrend
+                                → NEXT_30m=30m_dump
+    62%  1.20   72/116   IF Mkt_trend=uptrend
+                                → NEXT_Gap=gap_up
+    67%  1.61   69/103   IF Mkt_momentum=strong_down
+                                → NEXT_DayDir=day_UP
+    82%  2.00   64/78    IF Mkt_momentum=strong_up
+                                → NEXT_2h_Max=2h_up
+    82%  1.38   64/78    IF Mkt_momentum=strong_up
+                                → NEXT_1h_Spike=1h_spike
+    55%  1.34   64/116   IF Mkt_trend=uptrend
+                                → NEXT_2h_Max=2h_up
+    81%  1.57   63/78    IF Mkt_momentum=strong_up
+                                → NEXT_Gap=gap_up
+    57%  1.70   59/103   IF Mkt_momentum=strong_down
+                                → NEXT_2Day=2day_big_up
+    79%  1.91   58/73    IF Mkt_volatility=high
+                                → NEXT_DayDir=day_UP
+    69%  1.16   42/61    IF Subjectivity=mixed
+                                → NEXT_1h_Spike=1h_spike
 
   --- NEXT DAY DIRECTION ---
    Conf  Lift     Hits  Rule
   ----------------------------------------------------------------------
-   100%  1.72   35/35    IF Post_Time=weekend
-                                → NEXT_DayDir=day_UP
-   100%  1.72   35/35    IF Post_Time=weekend & Mkt_volatility=high
-                                → NEXT_DayDir=day_UP
-   100%  1.72   35/35    IF Post_Time=weekend & Mkt_volume_regime=normal_vol
-                                → NEXT_DayDir=day_UP
-   100%  1.72   35/35    IF Post_Time=weekend & Mkt_volatility=high & Mkt_volu
-                                → NEXT_DayDir=day_UP
-   100%  1.72   32/32    IF Post_Time=weekend & Mkt_trend=downtrend
-                                → NEXT_DayDir=day_UP
-   100%  1.72   32/32    IF Post_Time=weekend & Mkt_momentum=strong_down
-                                → NEXT_DayDir=day_UP
-   100%  1.72   32/32    IF Post_Time=weekend & Mkt_trend=downtrend & Mkt_mome
-                                → NEXT_DayDir=day_UP
-   100%  1.72   32/32    IF Post_Time=weekend & Mkt_trend=downtrend & Mkt_vola
-                                → NEXT_DayDir=day_UP
-   100%  1.72   32/32    IF Post_Time=weekend & Mkt_trend=downtrend & Mkt_volu
-                                → NEXT_DayDir=day_UP
-   100%  1.72   32/32    IF Post_Time=weekend & Mkt_momentum=strong_down & Mkt
-                                → NEXT_DayDir=day_UP
-   100%  1.72   32/32    IF Post_Time=weekend & Mkt_momentum=strong_down & Mkt
-                                → NEXT_DayDir=day_UP
-   100%  1.72   31/31    IF Post_Time=weekend & Sent_Trend=stable
-                                → NEXT_DayDir=day_UP
+    76%  1.31  113/148   IF Sent_Trend=stable & Mkt_volatility=normal
+                                → NEXT_DayDir=day_DOWN
+    76%  1.31  113/148   IF Sent_Trend=stable & Mkt_volatility=normal & Mkt_vo
+                                → NEXT_DayDir=day_DOWN
+    75%  1.28  113/151   IF Mkt_volatility=normal
+                                → NEXT_DayDir=day_DOWN
+    75%  1.28  113/151   IF Mkt_volatility=normal & Mkt_volume_regime=normal_v
+                                → NEXT_DayDir=day_DOWN
+    76%  1.31  104/136   IF Buzz=high_buzz & Sent_Trend=stable & Mkt_volatilit
+                                → NEXT_DayDir=day_DOWN
+    75%  1.28  104/139   IF Buzz=high_buzz & Mkt_volatility=normal
+                                → NEXT_DayDir=day_DOWN
+    75%  1.28  104/139   IF Buzz=high_buzz & Mkt_volatility=normal & Mkt_volum
+                                → NEXT_DayDir=day_DOWN
+    82%  1.40   95/116   IF Mkt_trend=uptrend
+                                → NEXT_DayDir=day_DOWN
+    82%  1.40   95/116   IF Mkt_trend=uptrend & Mkt_volume_regime=normal_vol
+                                → NEXT_DayDir=day_DOWN
+    82%  1.40   94/115   IF Buzz=high_buzz & Mkt_trend=uptrend
+                                → NEXT_DayDir=day_DOWN
+    82%  1.40   94/115   IF Sent_Trend=stable & Mkt_trend=uptrend
+                                → NEXT_DayDir=day_DOWN
+    82%  1.40   94/115   IF Mkt_trend=uptrend & Mkt_volatility=normal
+                                → NEXT_DayDir=day_DOWN
 
   --- NEXT DAY MAGNITUDE ---
    Conf  Lift     Hits  Rule
   ----------------------------------------------------------------------
-   100%  3.69   23/23    IF Post_Time=weekend & Buzz=high_buzz
-                                → NEXT_FullDay=day_big_up
-   100%  3.69   23/23    IF Post_Time=weekend & Buzz=high_buzz & Mkt_trend=dow
-                                → NEXT_FullDay=day_big_up
-   100%  3.69   23/23    IF Post_Time=weekend & Buzz=high_buzz & Mkt_momentum=
-                                → NEXT_FullDay=day_big_up
-   100%  3.69   23/23    IF Post_Time=weekend & Buzz=high_buzz & Mkt_volatilit
-                                → NEXT_FullDay=day_big_up
-   100%  3.69   23/23    IF Post_Time=weekend & Buzz=high_buzz & Mkt_volume_re
-                                → NEXT_FullDay=day_big_up
-   100%  3.69   19/19    IF Post_Time=weekend & Buzz=high_buzz & Sent_Trend=st
-                                → NEXT_FullDay=day_big_up
-   100%  3.69   18/18    IF Subjectivity=factual & Post_Time=weekend & Buzz=hi
-                                → NEXT_FullDay=day_big_up
-    64%  3.16   27/42    IF Buzz=moderate_buzz & Mkt_volume_regime=normal_vol
-                                → NEXT_FullDay=day_flat
-    64%  3.16   27/42    IF Buzz=moderate_buzz & Mkt_volatility=high & Mkt_vol
-                                → NEXT_FullDay=day_flat
-    74%  3.65   23/31    IF Buzz=moderate_buzz & Mkt_trend=downtrend
-                                → NEXT_FullDay=day_flat
-    74%  3.65   23/31    IF Buzz=moderate_buzz & Mkt_trend=downtrend & Mkt_vol
-                                → NEXT_FullDay=day_flat
-    74%  3.65   23/31    IF Buzz=moderate_buzz & Mkt_trend=downtrend & Mkt_vol
-                                → NEXT_FullDay=day_flat
+    94%  2.35   73/78    IF Mkt_momentum=strong_up
+                                → NEXT_FullDay=day_big_down
+    94%  2.35   73/78    IF Mkt_trend=uptrend & Mkt_momentum=strong_up
+                                → NEXT_FullDay=day_big_down
+    94%  2.35   73/78    IF Mkt_momentum=strong_up & Mkt_volume_regime=normal_
+                                → NEXT_FullDay=day_big_down
+    94%  2.35   73/78    IF Mkt_trend=uptrend & Mkt_momentum=strong_up & Mkt_v
+                                → NEXT_FullDay=day_big_down
+    94%  2.35   72/77    IF Buzz=high_buzz & Mkt_momentum=strong_up
+                                → NEXT_FullDay=day_big_down
+    94%  2.35   72/77    IF Sent_Trend=stable & Mkt_momentum=strong_up
+                                → NEXT_FullDay=day_big_down
+    94%  2.35   72/77    IF Mkt_momentum=strong_up & Mkt_volatility=normal
+                                → NEXT_FullDay=day_big_down
+    94%  2.35   72/77    IF Buzz=high_buzz & Sent_Trend=stable & Mkt_momentum=
+                                → NEXT_FullDay=day_big_down
+    94%  2.35   72/77    IF Buzz=high_buzz & Mkt_trend=uptrend & Mkt_momentum=
+                                → NEXT_FullDay=day_big_down
+    94%  2.35   72/77    IF Buzz=high_buzz & Mkt_momentum=strong_up & Mkt_vola
+                                → NEXT_FullDay=day_big_down
+    94%  2.35   72/77    IF Buzz=high_buzz & Mkt_momentum=strong_up & Mkt_volu
+                                → NEXT_FullDay=day_big_down
+    94%  2.35   72/77    IF Sent_Trend=stable & Mkt_trend=uptrend & Mkt_moment
+                                → NEXT_FullDay=day_big_down
 
   --- NEXT SESSION GAP ---
    Conf  Lift     Hits  Rule
   ----------------------------------------------------------------------
-   100%  3.69   23/23    IF Post_Time=weekend & Buzz=high_buzz
+    62%  1.20   86/139   IF Buzz=high_buzz & Mkt_volatility=normal
                                 → NEXT_Gap=gap_up
-   100%  3.69   23/23    IF Post_Time=weekend & Buzz=high_buzz & Mkt_trend=dow
+    62%  1.20   86/139   IF Buzz=high_buzz & Mkt_volatility=normal & Mkt_volum
                                 → NEXT_Gap=gap_up
-   100%  3.69   23/23    IF Post_Time=weekend & Buzz=high_buzz & Mkt_momentum=
+    59%  1.14   89/151   IF Mkt_volatility=normal
                                 → NEXT_Gap=gap_up
-   100%  3.69   23/23    IF Post_Time=weekend & Buzz=high_buzz & Mkt_volatilit
+    59%  1.14   89/151   IF Mkt_volatility=normal & Mkt_volume_regime=normal_v
                                 → NEXT_Gap=gap_up
-   100%  3.69   23/23    IF Post_Time=weekend & Buzz=high_buzz & Mkt_volume_re
+    82%  1.59   63/77    IF Buzz=high_buzz & Mkt_momentum=strong_up
                                 → NEXT_Gap=gap_up
-   100%  3.69   19/19    IF Post_Time=weekend & Buzz=high_buzz & Sent_Trend=st
+    82%  1.59   63/77    IF Sent_Trend=stable & Mkt_momentum=strong_up
                                 → NEXT_Gap=gap_up
-   100%  3.69   18/18    IF Subjectivity=factual & Post_Time=weekend & Buzz=hi
+    82%  1.59   63/77    IF Mkt_momentum=strong_up & Mkt_volatility=normal
                                 → NEXT_Gap=gap_up
-   100%  3.69   17/17    IF Polarity=neutral & Post_Time=weekend & Buzz=high_b
+    82%  1.59   63/77    IF Buzz=high_buzz & Sent_Trend=stable & Mkt_momentum=
                                 → NEXT_Gap=gap_up
-   100%  3.69   17/17    IF Post_Time=weekend & Buzz=high_buzz & Sentiment=neu
+    82%  1.59   63/77    IF Buzz=high_buzz & Mkt_trend=uptrend & Mkt_momentum=
                                 → NEXT_Gap=gap_up
-    72%  2.65   23/32    IF Post_Time=weekend & Mkt_trend=downtrend
+    82%  1.59   63/77    IF Buzz=high_buzz & Mkt_momentum=strong_up & Mkt_vola
                                 → NEXT_Gap=gap_up
-    72%  2.65   23/32    IF Post_Time=weekend & Mkt_momentum=strong_down
+    82%  1.59   63/77    IF Buzz=high_buzz & Mkt_momentum=strong_up & Mkt_volu
                                 → NEXT_Gap=gap_up
-    72%  2.65   23/32    IF Post_Time=weekend & Mkt_trend=downtrend & Mkt_mome
+    82%  1.59   63/77    IF Sent_Trend=stable & Mkt_trend=uptrend & Mkt_moment
                                 → NEXT_Gap=gap_up
 
   --- FIRST HOUR SPIKE ---
    Conf  Lift     Hits  Rule
   ----------------------------------------------------------------------
-   100%  2.57   32/32    IF Post_Time=weekend & Mkt_trend=downtrend
-                                → NEXT_1h_Spike=1h_big_spike
-   100%  2.57   32/32    IF Post_Time=weekend & Mkt_momentum=strong_down
-                                → NEXT_1h_Spike=1h_big_spike
-   100%  2.57   32/32    IF Post_Time=weekend & Mkt_trend=downtrend & Mkt_mome
-                                → NEXT_1h_Spike=1h_big_spike
-   100%  2.57   32/32    IF Post_Time=weekend & Mkt_trend=downtrend & Mkt_vola
-                                → NEXT_1h_Spike=1h_big_spike
-   100%  2.57   32/32    IF Post_Time=weekend & Mkt_trend=downtrend & Mkt_volu
-                                → NEXT_1h_Spike=1h_big_spike
-   100%  2.57   32/32    IF Post_Time=weekend & Mkt_momentum=strong_down & Mkt
-                                → NEXT_1h_Spike=1h_big_spike
-   100%  2.57   32/32    IF Post_Time=weekend & Mkt_momentum=strong_down & Mkt
-                                → NEXT_1h_Spike=1h_big_spike
-    94%  2.42   33/35    IF Post_Time=weekend
-                                → NEXT_1h_Spike=1h_big_spike
-    94%  2.42   33/35    IF Post_Time=weekend & Mkt_volatility=high
-                                → NEXT_1h_Spike=1h_big_spike
-    94%  2.42   33/35    IF Post_Time=weekend & Mkt_volume_regime=normal_vol
-                                → NEXT_1h_Spike=1h_big_spike
-    94%  2.42   33/35    IF Post_Time=weekend & Mkt_volatility=high & Mkt_volu
-                                → NEXT_1h_Spike=1h_big_spike
-    55%  1.41   54/98    IF Mkt_momentum=strong_down
-                                → NEXT_1h_Spike=1h_big_spike
+    74%  1.25   86/116   IF Mkt_trend=uptrend
+                                → NEXT_1h_Spike=1h_spike
+    74%  1.25   86/116   IF Mkt_trend=uptrend & Mkt_volume_regime=normal_vol
+                                → NEXT_1h_Spike=1h_spike
+    74%  1.25   85/115   IF Buzz=high_buzz & Mkt_trend=uptrend
+                                → NEXT_1h_Spike=1h_spike
+    74%  1.25   85/115   IF Sent_Trend=stable & Mkt_trend=uptrend
+                                → NEXT_1h_Spike=1h_spike
+    74%  1.25   85/115   IF Mkt_trend=uptrend & Mkt_volatility=normal
+                                → NEXT_1h_Spike=1h_spike
+    74%  1.25   85/115   IF Buzz=high_buzz & Sent_Trend=stable & Mkt_trend=upt
+                                → NEXT_1h_Spike=1h_spike
+    74%  1.25   85/115   IF Buzz=high_buzz & Mkt_trend=uptrend & Mkt_volatilit
+                                → NEXT_1h_Spike=1h_spike
+    74%  1.25   85/115   IF Buzz=high_buzz & Mkt_trend=uptrend & Mkt_volume_re
+                                → NEXT_1h_Spike=1h_spike
+    74%  1.25   85/115   IF Sent_Trend=stable & Mkt_trend=uptrend & Mkt_volati
+                                → NEXT_1h_Spike=1h_spike
+    74%  1.25   85/115   IF Sent_Trend=stable & Mkt_trend=uptrend & Mkt_volume
+                                → NEXT_1h_Spike=1h_spike
+    74%  1.25   85/115   IF Mkt_trend=uptrend & Mkt_volatility=normal & Mkt_vo
+                                → NEXT_1h_Spike=1h_spike
+    82%  1.38   64/78    IF Mkt_momentum=strong_up
+                                → NEXT_1h_Spike=1h_spike
 
   --- FIRST 2 HOURS ---
    Conf  Lift     Hits  Rule
   ----------------------------------------------------------------------
-   100%  3.47   23/23    IF Post_Time=weekend & Buzz=high_buzz
-                                → NEXT_2h_Max=2h_rip
-   100%  3.47   23/23    IF Post_Time=weekend & Buzz=high_buzz & Mkt_trend=dow
-                                → NEXT_2h_Max=2h_rip
-   100%  3.47   23/23    IF Post_Time=weekend & Buzz=high_buzz & Mkt_momentum=
-                                → NEXT_2h_Max=2h_rip
-   100%  3.47   23/23    IF Post_Time=weekend & Buzz=high_buzz & Mkt_volatilit
-                                → NEXT_2h_Max=2h_rip
-   100%  3.47   23/23    IF Post_Time=weekend & Buzz=high_buzz & Mkt_volume_re
-                                → NEXT_2h_Max=2h_rip
-   100%  3.47   19/19    IF Post_Time=weekend & Buzz=high_buzz & Sent_Trend=st
-                                → NEXT_2h_Max=2h_rip
-    77%  2.36   24/31    IF Buzz=moderate_buzz & Mkt_trend=downtrend
-                                → NEXT_2h_Max=2h_strong
-    77%  2.36   24/31    IF Buzz=moderate_buzz & Mkt_trend=downtrend & Mkt_vol
-                                → NEXT_2h_Max=2h_strong
-    77%  2.36   24/31    IF Buzz=moderate_buzz & Mkt_trend=downtrend & Mkt_vol
-                                → NEXT_2h_Max=2h_strong
-   100%  3.47   18/18    IF Subjectivity=factual & Post_Time=weekend & Buzz=hi
-                                → NEXT_2h_Max=2h_rip
-    81%  2.49   22/27    IF Polarity=neutral & Buzz=moderate_buzz & Mkt_trend=
-                                → NEXT_2h_Max=2h_strong
-    81%  2.49   22/27    IF Buzz=moderate_buzz & Mkt_trend=downtrend & Sentime
-                                → NEXT_2h_Max=2h_strong
+    82%  2.00   64/78    IF Mkt_momentum=strong_up
+                                → NEXT_2h_Max=2h_up
+    82%  2.00   64/78    IF Mkt_trend=uptrend & Mkt_momentum=strong_up
+                                → NEXT_2h_Max=2h_up
+    82%  2.00   64/78    IF Mkt_momentum=strong_up & Mkt_volume_regime=normal_
+                                → NEXT_2h_Max=2h_up
+    82%  2.00   64/78    IF Mkt_trend=uptrend & Mkt_momentum=strong_up & Mkt_v
+                                → NEXT_2h_Max=2h_up
+    82%  1.99   63/77    IF Buzz=high_buzz & Mkt_momentum=strong_up
+                                → NEXT_2h_Max=2h_up
+    82%  1.99   63/77    IF Sent_Trend=stable & Mkt_momentum=strong_up
+                                → NEXT_2h_Max=2h_up
+    82%  1.99   63/77    IF Mkt_momentum=strong_up & Mkt_volatility=normal
+                                → NEXT_2h_Max=2h_up
+    82%  1.99   63/77    IF Buzz=high_buzz & Sent_Trend=stable & Mkt_momentum=
+                                → NEXT_2h_Max=2h_up
+    82%  1.99   63/77    IF Buzz=high_buzz & Mkt_trend=uptrend & Mkt_momentum=
+                                → NEXT_2h_Max=2h_up
+    82%  1.99   63/77    IF Buzz=high_buzz & Mkt_momentum=strong_up & Mkt_vola
+                                → NEXT_2h_Max=2h_up
+    82%  1.99   63/77    IF Buzz=high_buzz & Mkt_momentum=strong_up & Mkt_volu
+                                → NEXT_2h_Max=2h_up
+    82%  1.99   63/77    IF Sent_Trend=stable & Mkt_trend=uptrend & Mkt_moment
+                                → NEXT_2h_Max=2h_up
 
   --- 2-DAY MOVE ---
    Conf  Lift     Hits  Rule
   ----------------------------------------------------------------------
-   100%  2.24   32/32    IF Post_Time=weekend & Mkt_trend=downtrend
-                                → NEXT_2Day=2day_flat
-   100%  2.24   32/32    IF Post_Time=weekend & Mkt_momentum=strong_down
-                                → NEXT_2Day=2day_flat
-   100%  2.24   32/32    IF Post_Time=weekend & Mkt_trend=downtrend & Mkt_mome
-                                → NEXT_2Day=2day_flat
-   100%  2.24   32/32    IF Post_Time=weekend & Mkt_trend=downtrend & Mkt_vola
-                                → NEXT_2Day=2day_flat
-   100%  2.24   32/32    IF Post_Time=weekend & Mkt_trend=downtrend & Mkt_volu
-                                → NEXT_2Day=2day_flat
-   100%  2.24   32/32    IF Post_Time=weekend & Mkt_momentum=strong_down & Mkt
-                                → NEXT_2Day=2day_flat
-   100%  2.24   32/32    IF Post_Time=weekend & Mkt_momentum=strong_down & Mkt
-                                → NEXT_2Day=2day_flat
-    94%  2.11   33/35    IF Post_Time=weekend
-                                → NEXT_2Day=2day_flat
-    94%  2.11   33/35    IF Post_Time=weekend & Mkt_volatility=high
-                                → NEXT_2Day=2day_flat
-    94%  2.11   33/35    IF Post_Time=weekend & Mkt_volume_regime=normal_vol
-                                → NEXT_2Day=2day_flat
-    94%  2.11   33/35    IF Post_Time=weekend & Mkt_volatility=high & Mkt_volu
-                                → NEXT_2Day=2day_flat
-    56%  1.26   55/98    IF Mkt_momentum=strong_down
-                                → NEXT_2Day=2day_flat
+   100%  2.96   38/38    IF Buzz=high_buzz & Mkt_momentum=strong_down & Mkt_vo
+                                → NEXT_2Day=2day_big_up
+    72%  2.13   49/68    IF Buzz=high_buzz & Mkt_momentum=strong_down
+                                → NEXT_2Day=2day_big_up
+    72%  2.13   49/68    IF Buzz=high_buzz & Mkt_momentum=strong_down & Mkt_vo
+                                → NEXT_2Day=2day_big_up
+    87%  2.58   40/46    IF Mkt_momentum=strong_down & Mkt_volatility=normal
+                                → NEXT_2Day=2day_big_up
+    87%  2.58   40/46    IF Mkt_momentum=strong_down & Mkt_volatility=normal &
+                                → NEXT_2Day=2day_big_up
+    57%  1.70   59/103   IF Mkt_momentum=strong_down
+                                → NEXT_2Day=2day_big_up
+    57%  1.70   59/103   IF Mkt_momentum=strong_down & Mkt_volume_regime=norma
+                                → NEXT_2Day=2day_big_up
+    71%  2.10   46/65    IF Buzz=high_buzz & Sent_Trend=stable & Mkt_momentum=
+                                → NEXT_2Day=2day_big_up
+    86%  2.55   37/43    IF Sent_Trend=stable & Mkt_momentum=strong_down & Mkt
+                                → NEXT_2Day=2day_big_up
+    57%  1.68   56/99    IF Sent_Trend=stable & Mkt_momentum=strong_down
+                                → NEXT_2Day=2day_big_up
+    57%  1.68   56/99    IF Sent_Trend=stable & Mkt_momentum=strong_down & Mkt
+                                → NEXT_2Day=2day_big_up
+    88%  2.61   30/34    IF Subjectivity=factual & Mkt_momentum=strong_down & 
+                                → NEXT_2Day=2day_big_up
 
 ================================================================================
 This is NOT financial advice.
