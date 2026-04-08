@@ -1,58 +1,58 @@
 =====================================================================================
   GRRR MASTER ASSOCIATION RULES REPORT
-  Generated: 2026-04-08 06:42
-  Total rules: 50,922
+  Generated: 2026-04-08 17:08
+  Total rules: 71,879
 =====================================================================================
 
 =====================================================================================
-  TIER S: PERFECT RULES (100% confidence, 10+ samples) [125]
+  TIER S: PERFECT RULES (100% confidence, 10+ samples) [126]
 =====================================================================================
 
   Src           Conf  Lift      Hits  Rule
   ---------------------------------------------------------------------------
   REDDIT        100%  2.96   38/38    IF Buzz=high_buzz & Mkt_momentum=strong_down & Mkt_
                                       → NEXT_2Day=2day_big_up
-  REDDIT        100%  1.69   25/25    IF Post_Time=weekend & Buzz=high_buzz & Mkt_volatil
+  REDDIT        100%  1.69   25/25    IF Post_Time=weekend & Mkt_volatility=normal & Mkt_
                                       → NEXT_1h_Spike=1h_spike
-  REDDIT        100%  1.94   25/25    IF Post_Time=weekend & Buzz=high_buzz & Mkt_momentu
+  REDDIT        100%  1.94   25/25    IF Post_Time=weekend & Mkt_momentum=strong_up & Mkt
                                       → NEXT_Gap=gap_up
-  REDDIT        100%  2.04   25/25    IF Post_Time=weekend & Mkt_volatility=normal & Mkt_
+  REDDIT        100%  2.04   25/25    IF Post_Time=weekend & Mkt_trend=uptrend & Mkt_volu
                                       → NEXT_30m=30m_dump
-  REDDIT        100%  2.51   25/25    IF Post_Time=weekend & Mkt_momentum=strong_up
+  REDDIT        100%  2.51   25/25    IF Post_Time=weekend & Buzz=high_buzz & Mkt_volatil
                                       → NEXT_FullDay=day_big_down
-  REDDIT        100%  1.71   25/25    IF Post_Time=weekend & Mkt_momentum=strong_up & Mkt
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT        100%  2.43   25/25    IF Post_Time=weekend & Sent_Trend=stable & Mkt_tren
+  REDDIT        100%  2.43   25/25    IF Post_Time=weekend & Mkt_trend=uptrend
                                       → NEXT_2h_Max=2h_up
-  REDDIT        100%  3.08   24/24    IF Post_DOW=Tue & Mkt_trend=uptrend & Mkt_volume_re
-                                      → NEXT_30m=30m_surge
-  REDDIT        100%  2.41   24/24    IF Post_Time=weekend & Mkt_trend=downtrend & Mkt_vo
+  REDDIT        100%  1.71   25/25    IF Post_Time=weekend & Mkt_trend=uptrend
+                                      → NEXT_DayDir=day_DOWN
+  REDDIT        100%  2.41   24/24    IF Post_Time=weekend & Mkt_trend=downtrend
                                       → NEXT_DayDir=day_UP
-  REDDIT        100%  2.96   24/24    IF Mkt_trend=uptrend & Mkt_momentum=strong_down & M
+  REDDIT        100%  2.96   24/24    IF Post_DOW=Tue & Mkt_trend=uptrend
                                       → NEXT_2Day=2day_big_up
+  REDDIT        100%  3.08   24/24    IF Mkt_trend=uptrend & Mkt_momentum=strong_down & M
+                                      → NEXT_30m=30m_surge
   INTRADAY_5MIN  100%  1.91   22/22    IF RSI=neutral & MACD_H=strong_bear & VWAP=above
                                       → NEXT_2h_dir=2h_DOWN
-  REDDIT        100%  7.00   21/21    IF Post_DOW=Wed & Mkt_trend=downtrend
-                                      → NEXT_2Day=2day_big_down
-  REDDIT        100%  3.08   21/21    IF Post_DOW=Wed & Mkt_volatility=normal
-                                      → NEXT_30m=30m_surge
-  REDDIT        100%  2.43   21/21    IF Polarity=neutral & Post_Time=weekend & Mkt_trend
-                                      → NEXT_2h_Max=2h_up
-  REDDIT        100%  2.51   21/21    IF Post_Time=weekend & Mkt_momentum=strong_up & Sen
+  REDDIT        100%  2.51   21/21    IF Polarity=neutral & Post_Time=weekend & Mkt_volat
                                       → NEXT_FullDay=day_big_down
-  REDDIT        100%  2.04   21/21    IF Polarity=neutral & Post_Time=weekend & Mkt_volat
-                                      → NEXT_30m=30m_dump
-  REDDIT        100%  1.69   21/21    IF Polarity=neutral & Post_Time=weekend & Mkt_volat
+  REDDIT        100%  1.69   21/21    IF Post_Time=weekend & Mkt_volatility=normal & Sent
                                       → NEXT_1h_Spike=1h_spike
+  REDDIT        100%  2.04   21/21    IF Polarity=neutral & Post_Time=weekend & Mkt_trend
+                                      → NEXT_30m=30m_dump
+  REDDIT        100%  1.71   21/21    IF Polarity=neutral & Post_Time=weekend & Mkt_trend
+                                      → NEXT_DayDir=day_DOWN
+  REDDIT        100%  7.00   21/21    IF Post_DOW=Wed & Mkt_trend=downtrend & Mkt_volume_
+                                      → NEXT_2Day=2day_big_down
   INTRADAY_5MIN  100%  2.13   21/21    IF Time_Block=open_30min & MACD_X=below & Day_Pos=d
                                       → NEXT_2h_dir=2h_UP
   INTRADAY_5MIN  100%  2.15   21/21    IF Time_Block=open_30min & MACD_X=below & Day_Pos=d
                                       → NEXT_1h_dir=1h_UP
-  REDDIT        100%  1.94   21/21    IF Post_Time=weekend & Mkt_volatility=normal & Sent
-                                      → NEXT_Gap=gap_up
+  REDDIT        100%  2.43   21/21    IF Polarity=neutral & Post_Time=weekend & Mkt_volat
+                                      → NEXT_2h_Max=2h_up
+  REDDIT        100%  3.73   21/21    IF Post_Time=pre_market & Post_DOW=Wed & Buzz=high_
+                                      → NEXT_Gap=big_gap_down
 
 =====================================================================================
-  TIER A: NEAR-PERFECT (80-99% confidence, 7+ samples) [398]
+  TIER A: NEAR-PERFECT (80-99% confidence, 7+ samples) [414]
 =====================================================================================
 
   Src           Conf  Lift      Hits  Rule
@@ -233,7 +233,7 @@
                                       → NEXT_2h_Max=2h_up
 
 =====================================================================================
-  BEST BUY SIGNALS (UP, 65%+ conf, 5+ samples) [283]
+  BEST BUY SIGNALS (UP, 65%+ conf, 5+ samples) [298]
 =====================================================================================
 
   Src           Conf  Lift      Hits  Rule
@@ -280,7 +280,7 @@
                                       → NEXT_2h_dir=2h_UP
 
 =====================================================================================
-  BEST SELL SIGNALS (DOWN, 65%+ conf, 5+ samples) [417]
+  BEST SELL SIGNALS (DOWN, 65%+ conf, 5+ samples) [440]
 =====================================================================================
 
   Src           Conf  Lift      Hits  Rule
@@ -327,6 +327,6 @@
                                       → NEXT_1h_dir=1h_DOWN
 
 =====================================================================================
-  Last computed: 2026-04-08 06:42
+  Last computed: 2026-04-08 17:08
   Run: python3 compute_rules.py
 =====================================================================================

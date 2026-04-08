@@ -205,12 +205,58 @@ def step_daily_rules():
 
     # === Outcomes ===
     outcomes = pd.DataFrame(index=df.index)
+
+    # 1. Intraday return (open-to-close of NEXT day)
     next_ret = df["Daily_Return"].shift(-1)
     outcomes["NEXT_UpDown"] = np.where(next_ret > 0, "NEXT_UP", "NEXT_DOWN")
     outcomes.loc[next_ret.isna(), "NEXT_UpDown"] = np.nan
     outcomes["NEXT_Dir"] = pd.cut(next_ret, bins=[-999,-3,-1,0,1,3,999],
                                   labels=["next_big_down","next_mod_down","next_slight_down",
                                           "next_slight_up","next_mod_up","next_big_up"])
+
+    # 2. GAP return (today close → next day open)
+    next_open = df["Open"].shift(-1)
+    gap_ret = (next_open - df["Close"]) / df["Close"] * 100
+    outcomes["NEXT_GapDir"] = np.where(gap_ret > 0, "gap_UP", "gap_DOWN")
+    outcomes.loc[gap_ret.isna(), "NEXT_GapDir"] = np.nan
+    outcomes["NEXT_GapSize"] = pd.cut(gap_ret, bins=[-999,-3,-1,-0.3,0.3,1,3,999],
+                                       labels=["gap_crash","gap_big_down","gap_down","gap_flat",
+                                               "gap_up","gap_big_up","gap_rip"])
+
+    # 3. TOTAL return (today close → next day close) - the one that matters for holding overnight
+    next_close = df["Close"].shift(-1)
+    total_ret = (next_close - df["Close"]) / df["Close"] * 100
+    outcomes["NEXT_TotalDir"] = np.where(total_ret > 0, "total_UP", "total_DOWN")
+    outcomes.loc[total_ret.isna(), "NEXT_TotalDir"] = np.nan
+    outcomes["NEXT_TotalSize"] = pd.cut(total_ret, bins=[-999,-5,-2,-0.5,0.5,2,5,999],
+                                         labels=["total_crash","total_big_down","total_down","total_flat",
+                                                 "total_up","total_big_up","total_rip"])
+
+    # 4. WHERE does the move happen? Gap vs Intraday
+    # If gap accounts for >70% of total move, it's a "gap move"
+    # If intraday accounts for >70%, it's an "intraday move"
+    abs_gap = gap_ret.abs()
+    abs_intra = next_ret.abs()
+    abs_total = abs_gap + abs_intra
+    gap_pct_of_move = abs_gap / abs_total.replace(0, np.nan)
+    move_type = pd.Series("mixed", index=df.index)
+    move_type[gap_pct_of_move > 0.7] = "gap_move"
+    move_type[(1 - gap_pct_of_move) > 0.7] = "intraday_move"
+    move_type[abs_total < 0.5] = "no_move"
+    outcomes["NEXT_MoveType"] = move_type
+    outcomes.loc[total_ret.isna(), "NEXT_MoveType"] = np.nan
+
+    # 5. After-gap intraday: does the gap hold or fade?
+    # gap_up then intraday_down = "gap_fade", gap_up then intraday_up = "gap_and_go"
+    gap_hold = pd.Series("neutral", index=df.index)
+    gap_hold[(gap_ret > 0.5) & (next_ret > 0)] = "gap_and_go"
+    gap_hold[(gap_ret > 0.5) & (next_ret < -0.5)] = "gap_fade"
+    gap_hold[(gap_ret > 0.5) & (next_ret >= -0.5) & (next_ret <= 0)] = "gap_hold"
+    gap_hold[(gap_ret < -0.5) & (next_ret < 0)] = "gap_down_continue"
+    gap_hold[(gap_ret < -0.5) & (next_ret > 0.5)] = "gap_down_recover"
+    gap_hold[(gap_ret < -0.5) & (next_ret >= 0) & (next_ret <= 0.5)] = "gap_down_hold"
+    outcomes["NEXT_GapAction"] = gap_hold
+    outcomes.loc[total_ret.isna(), "NEXT_GapAction"] = np.nan
 
     # Trim to last 60 days for relevance
     cat = cat.tail(60)
