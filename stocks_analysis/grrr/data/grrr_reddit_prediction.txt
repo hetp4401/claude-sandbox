@@ -1,45 +1,45 @@
 ======================================================================
   GRRR REDDIT-BASED NEXT-DAY PREDICTION
-  Generated: 2026-04-08 06:43
-  Today: Wednesday | Predicting: Thursday
+  Generated: 2026-04-09 21:14
+  Today: Thursday | Predicting: Friday
 ======================================================================
 
   ╔════════════════════════════════════════════════╗
-  ║  PREDICTION:  BUY                                ║
-  ║  CONFIDENCE:   38.2%                          ║
-  ║  COMPOSITE:   +0.1909                         ║
+  ║  PREDICTION:  LEAN SELL                          ║
+  ║  CONFIDENCE:   10.9%                          ║
+  ║  COMPOSITE:   -0.0545                         ║
   ╚════════════════════════════════════════════════╝
 
 REDDIT STATS:
-  Total posts scraped:    134
-  Posts in last 24h:      22 (viral)
-  Weekend posts:          50
-  Avg polarity:           -0.0169 (neutral)
-  Sentiment trend:        -0.0980 (declining)
+  Total posts scraped:    136
+  Posts in last 24h:      27 (viral)
+  Weekend posts:          45
+  Avg polarity:           +0.0589 (neutral)
+  Sentiment trend:        +0.0749 (improving)
 
 FACTOR BREAKDOWN:
 ----------------------------------------------------------------------
   Factor                    Raw  Weight   Score  Detail
 ----------------------------------------------------------------------
   weekend_buzz           +0.00     3.0  +0.000  Not weekend/Monday pre-market. Weekend posts 
-                                               were: 50
-  buzz_volume            +0.30     1.5  +0.450  Posts in last 24h: 22 (viral). Rule: moderate
+                                               were: 45
+  buzz_volume            +0.30     1.5  +0.450  Posts in last 24h: 27 (viral). Rule: moderate
                                                _buzz → next day UP 70% (30/43)
-  avg_polarity           +0.00     1.0  +0.000  Avg polarity: -0.0169 (neutral). Contrarian r
-                                               ule: negative → next day UP 86% (18/21). Cont
-                                               rarian bonus: +0.0
-  polarity_trend         +0.30     1.5  +0.450  Trend: -0.0980 (declining). Recent 24h avg: -
-                                               0.0169 (22 posts), Prior 24h avg: 0.0811 (22 
+  avg_polarity           +0.00     1.0  +0.000  Avg polarity: 0.0589 (neutral). Contrarian ru
+                                               le: negative → next day UP 86% (18/21). Contr
+                                               arian bonus: +0.0
+  polarity_trend         -0.10     1.5  -0.150  Trend: +0.0749 (improving). Recent 24h avg: 0
+                                               .0589 (27 posts), Prior 24h avg: -0.0160 (27 
                                                posts). Rule: deteriorating → next day UP 86%
-  day_of_week            +0.60     2.0  +1.200  Today is Wednesday. Score: +0.6. 82% → Thursd
-                                               ay UP (27/33)
-  extreme_ratio          +0.00     1.0  +0.000  Extreme posts: 2 strong neg, 2 strong pos out
-                                                of 22 (18% extreme). Strong neg ratio: 9%
-  buzz_acceleration      +0.00     1.0  +0.000  Last 12h: 12 posts, Prior 12h: 10 posts. Acce
-                                               leration: +20.0%
+  day_of_week            -0.40     2.0  -0.800  Today is Thursday. Score: -0.4. 63% → Friday 
+                                               DOWN (17/27)
+  extreme_ratio          +0.00     1.0  +0.000  Extreme posts: 2 strong neg, 4 strong pos out
+                                                of 27 (22% extreme). Strong neg ratio: 7%
+  buzz_acceleration      -0.10     1.0  -0.100  Last 12h: 8 posts, Prior 12h: 19 posts. Accel
+                                               eration: -57.9%
 ----------------------------------------------------------------------
-  COMPOSITE                        11.0  +2.100
-  NORMALIZED                             +0.1909
+  COMPOSITE                        11.0  -0.600
+  NORMALIZED                             -0.0545
 
 SCORING THRESHOLDS:
   Buzz:      dead(0-1), quiet(2-3), moderate(4-7), high(8-14), viral(15+)
