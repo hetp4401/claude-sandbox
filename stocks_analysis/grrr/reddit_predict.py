@@ -81,6 +81,7 @@ TREND_THRESHOLDS = {
 # ================================================================
 WEIGHTS = {
     "weekend_buzz":       3.0,   # Strongest signal (100% hit rate historically)
+    "mean_reversion":     2.5,   # GRRR is a mean-reversion stock - this matters most after big moves
     "buzz_volume":        1.5,   # More posts = more attention
     "avg_polarity":       1.0,   # What sentiment says
     "polarity_trend":     1.5,   # Direction sentiment is moving
@@ -289,6 +290,73 @@ def compute_prediction(posts):
         detail = f"Not weekend/Monday pre-market. Weekend posts were: {weekend_count}"
 
     scores["weekend_buzz"] = (raw, WEIGHTS["weekend_buzz"], detail)
+
+    # ================================================================
+    # FACTOR 1B: MEAN REVERSION (weight 2.5)
+    # GRRR is a mean-reversion stock. After big drops → bounce.
+    # After big rallies → fade. This overrides trend signals.
+    # ================================================================
+    try:
+        ticker_data = yf.Ticker(TICKER)
+        hist = ticker_data.history(period="10d", interval="1d")
+        if len(hist) >= 2:
+            today_close = hist["Close"].iloc[-1]
+            today_open = hist["Open"].iloc[-1]
+            today_ret = (today_close - today_open) / today_open * 100
+            prev_close = hist["Close"].iloc[-2]
+            gap_today = (today_open - prev_close) / prev_close * 100
+
+            # EMA5 for fast trend (not SMA10 which lags)
+            ema5_series = hist["Close"].ewm(span=5, adjust=False).mean()
+            ema5 = ema5_series.iloc[-1]
+            ema5_dist = (today_close - ema5) / ema5 * 100
+
+            # Trend breaking detection
+            trend_breaking = (today_ret < -3 and abs(ema5_dist) < 2) or today_ret < -5
+
+            # Mean reversion scoring
+            if today_ret < -5:
+                raw = +0.9  # Huge drop = strong bounce (big_down + wide range → gap UP 80%)
+                detail = f"BIG DROP {today_ret:+.1f}% → STRONG bounce signal. Rule: big_down+wide→gap UP 80% (4/5)"
+            elif today_ret < -3:
+                raw = +0.6  # Large drop = bounce
+                detail = f"LARGE DROP {today_ret:+.1f}% → bounce signal. Rule: mod_down→UP 83% (10/12)"
+            elif today_ret < -1:
+                raw = +0.3  # Moderate drop
+                detail = f"Mod drop {today_ret:+.1f}% → mild bounce signal"
+            elif today_ret > 5:
+                raw = -0.7  # Huge rally = fade
+                detail = f"HUGE RALLY {today_ret:+.1f}% → fade signal. Rule: strong_up→DOWN 94% (73/78)"
+            elif today_ret > 3:
+                raw = -0.4  # Large rally = fade
+                detail = f"Large rally {today_ret:+.1f}% → fade signal"
+            elif today_ret > 1:
+                raw = -0.1
+                detail = f"Mild rally {today_ret:+.1f}% → slight fade"
+            else:
+                raw = 0.0
+                detail = f"Flat day {today_ret:+.1f}% → no reversion signal"
+
+            # Override: if trend is breaking, boost bounce signal
+            if trend_breaking and raw > 0:
+                raw = min(raw + 0.2, 1.0)
+                detail += f" [TREND BREAKING: EMA5 dist {ema5_dist:+.1f}%]"
+
+            # Add gap context
+            if gap_today > 3:
+                raw -= 0.3  # Big gap up today = already bounced, less upside tomorrow
+                detail += f" [Gapped up {gap_today:+.1f}% today - some bounce used up]"
+            elif gap_today < -2:
+                raw += 0.2  # Gap down = more bounce fuel
+                detail += f" [Gapped down {gap_today:+.1f}% - extra bounce fuel]"
+        else:
+            raw = 0.0
+            detail = "Not enough price data"
+    except Exception as e:
+        raw = 0.0
+        detail = f"Price data error: {e}"
+
+    scores["mean_reversion"] = (raw, WEIGHTS["mean_reversion"], detail)
 
     # ================================================================
     # FACTOR 2: BUZZ VOLUME last 24h (weight 1.5)

@@ -1,7 +1,7 @@
 =====================================================================================
   GRRR MASTER ASSOCIATION RULES REPORT
-  Generated: 2026-04-09 21:14
-  Total rules: 69,634
+  Generated: 2026-04-10 18:54
+  Total rules: 96,335
 =====================================================================================
 
 =====================================================================================
@@ -14,45 +14,45 @@
                                       → NEXT_2h_dir=2h_DOWN
   INTRADAY_5MIN  100%  1.91   26/26    IF Time_Block=midday & RSI=strong & Day_Pos=deep_re
                                       → NEXT_2h_dir=2h_DOWN
-  REDDIT        100%  1.49   24/24    IF Subjectivity=mixed & Mkt_trend=uptrend & Mkt_mom
+  REDDIT        100%  1.49   24/24    IF Subjectivity=mixed & Mkt_momentum=strong_up
+                                      → NEXT_DayDir=day_DOWN
+  REDDIT        100%  1.49   23/23    IF Post_DOW=Wed & Mkt_momentum=strong_up & Mkt_vola
                                       → NEXT_DayDir=day_DOWN
   REDDIT        100%  3.03   23/23    IF Post_Time=weekend & Mkt_trend=downtrend & Mkt_mo
                                       → NEXT_DayDir=day_UP
-  REDDIT        100%  1.49   23/23    IF Post_DOW=Wed & Mkt_trend=uptrend & Mkt_momentum=
-                                      → NEXT_DayDir=day_DOWN
   INTRADAY_5MIN  100%  1.91   23/23    IF Bar_Range=tight & RSI=strong & VWAP=slight_below
-                                      → NEXT_2h_dir=2h_DOWN
-  INTRADAY_5MIN  100%  1.91   22/22    IF RSI=neutral & MACD_H=strong_bear & VWAP=above
                                       → NEXT_2h_dir=2h_DOWN
   INTRADAY_5MIN  100%  2.13   22/22    IF Time_Block=open_30min & MACD_X=below & Day_Pos=d
                                       → NEXT_2h_dir=2h_UP
   INTRADAY_5MIN  100%  2.14   22/22    IF Time_Block=open_30min & MACD_X=below & Day_Pos=d
                                       → NEXT_1h_dir=1h_UP
-  REDDIT        100%  1.49   21/21    IF Post_Time=after_hours & Mkt_volatility=normal & 
-                                      → NEXT_DayDir=day_DOWN
+  INTRADAY_5MIN  100%  1.91   22/22    IF RSI=neutral & MACD_H=strong_bear & VWAP=above
+                                      → NEXT_2h_dir=2h_DOWN
   REDDIT        100%  4.19   21/21    IF Sent_Trend=stable & Mkt_momentum=strong_down & M
                                       → NEXT_2Day=2day_big_up
-  REDDIT        100%  1.93   20/20    IF Post_Time=weekend & Sent_Trend=stable & Mkt_mome
-                                      → NEXT_30m=30m_dump
-  REDDIT        100%  2.45   20/20    IF Post_Time=weekend & Mkt_trend=uptrend & Mkt_vola
-                                      → NEXT_Gap=gap_up
-  REDDIT        100%  1.77   20/20    IF Post_Time=weekend & Mkt_momentum=strong_up & Mkt
-                                      → NEXT_1h_Spike=1h_spike
-  REDDIT        100%  1.49   20/20    IF Post_Time=weekend & Mkt_trend=uptrend
+  REDDIT        100%  1.49   21/21    IF Post_Time=after_hours & Sent_Trend=stable & Mkt_
                                       → NEXT_DayDir=day_DOWN
-  REDDIT        100%  2.60   20/20    IF Post_Time=weekend & Mkt_momentum=strong_up
+  REDDIT        100%  1.49   20/20    IF Post_Time=weekend & Mkt_trend=uptrend & Mkt_volu
+                                      → NEXT_DayDir=day_DOWN
+  REDDIT        100%  1.77   20/20    IF Post_Time=weekend & Sent_Trend=stable & Mkt_mome
+                                      → NEXT_1h_Spike=1h_spike
+  REDDIT        100%  2.45   20/20    IF Post_Time=weekend & Mkt_volatility=normal
+                                      → NEXT_Gap=gap_up
+  REDDIT        100%  2.60   20/20    IF Post_Time=weekend & Mkt_momentum=strong_up & Mkt
                                       → NEXT_FullDay=day_big_down
-  REDDIT        100%  2.16   20/20    IF Post_Time=weekend & Mkt_volatility=normal
+  REDDIT        100%  1.93   20/20    IF Post_Time=weekend & Mkt_volatility=normal & Mkt_
+                                      → NEXT_30m=30m_dump
+  REDDIT        100%  2.16   20/20    IF Post_Time=weekend & Sent_Trend=stable & Mkt_mome
                                       → NEXT_2Day=2day_big_down
-  REDDIT        100%  2.29   20/20    IF Post_Time=weekend & Mkt_momentum=strong_up
+  REDDIT        100%  2.29   20/20    IF Post_Time=weekend & Mkt_trend=uptrend & Mkt_vola
                                       → NEXT_2h_Max=2h_up
   REDDIT        100%  1.49   19/19    IF Post_Time=after_hours & Buzz=high_buzz & Mkt_vol
                                       → NEXT_DayDir=day_DOWN
-  REDDIT        100%  3.03   19/19    IF Post_Time=weekend & Sent_Trend=stable & Mkt_vola
-                                      → NEXT_DayDir=day_UP
+  REDDIT        100%  4.27   19/19    IF Post_DOW=Tue & Buzz=high_buzz & Mkt_momentum=str
+                                      → NEXT_30m=30m_surge
 
 =====================================================================================
-  TIER A: NEAR-PERFECT (80-99% confidence, 7+ samples) [394]
+  TIER A: NEAR-PERFECT (80-99% confidence, 7+ samples) [396]
 =====================================================================================
 
   Src           Conf  Lift      Hits  Rule
@@ -233,7 +233,7 @@
                                       → NEXT_DayDir=day_DOWN
 
 =====================================================================================
-  BEST BUY SIGNALS (UP, 65%+ conf, 5+ samples) [284]
+  BEST BUY SIGNALS (UP, 65%+ conf, 5+ samples) [285]
 =====================================================================================
 
   Src           Conf  Lift      Hits  Rule
@@ -280,7 +280,7 @@
                                       → NEXT_2h_dir=2h_UP
 
 =====================================================================================
-  BEST SELL SIGNALS (DOWN, 65%+ conf, 5+ samples) [432]
+  BEST SELL SIGNALS (DOWN, 65%+ conf, 5+ samples) [435]
 =====================================================================================
 
   Src           Conf  Lift      Hits  Rule
@@ -327,6 +327,6 @@
                                       → NEXT_DayDir=day_DOWN
 
 =====================================================================================
-  Last computed: 2026-04-09 21:14
+  Last computed: 2026-04-10 18:54
   Run: python3 compute_rules.py
 =====================================================================================

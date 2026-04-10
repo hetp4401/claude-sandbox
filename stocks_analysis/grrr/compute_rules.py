@@ -166,6 +166,23 @@ def step_daily_rules():
         streak.append(current)
     df["Streak"] = streak
 
+    # EMA5 for fast trend detection (fixes SMA10 lag problem)
+    df["EMA_5"] = df["Close"].ewm(span=5, adjust=False).mean()
+    df["EMA5_Dist"] = (df["Close"] - df["EMA_5"]) / df["EMA_5"] * 100
+
+    # Trend breaking: big drop while near EMA crossover
+    df["Trend_Breaking"] = (
+        (df["Daily_Return"] < -3) &
+        (df["EMA5_Dist"].abs() < 2)
+    ) | (df["Daily_Return"] < -5)
+
+    # Mean reversion signal
+    df["Reversion_Setup"] = np.where(
+        df["Daily_Return"] < -3, "bounce_setup",
+        np.where(df["Daily_Return"] < -1, "mild_dip",
+        np.where(df["Daily_Return"] > 3, "fade_setup",
+        np.where(df["Daily_Return"] > 1, "mild_rally", "neutral"))))
+
     # === Discretize ===
     cat = pd.DataFrame(index=df.index)
     cat["DOW"] = df.index.dayofweek.map({0:"Mon",1:"Tue",2:"Wed",3:"Thu",4:"Fri"})
@@ -202,6 +219,16 @@ def step_daily_rules():
                            labels=["long_down","3_down","2_down","1_down","1_up","2_up","3_up","long_up"])
     cat["Prev_Change"] = pd.cut(df["Prev_Return"], bins=[-999,-4,-2,-0.5,0.5,2,4,999],
                                 labels=["crash","big_drop","drop","flat","gain","big_gain","surge"])
+
+    # NEW: Fast trend (EMA5 instead of SMA10 - fixes lagging issue)
+    cat["Fast_Trend"] = pd.cut(df["EMA5_Dist"], bins=[-999,-3,-0.5,0.5,3,999],
+                                labels=["strong_down","down","flat","up","strong_up"])
+
+    # NEW: Trend breaking flag
+    cat["Trend_Break"] = np.where(df["Trend_Breaking"], "breaking", "intact")
+
+    # NEW: Mean reversion setup (GRRR is a mean-reversion stock)
+    cat["Reversion"] = df["Reversion_Setup"]
 
     # === Outcomes ===
     outcomes = pd.DataFrame(index=df.index)

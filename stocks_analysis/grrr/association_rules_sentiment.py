@@ -222,12 +222,48 @@ def get_market_context(dt, daily):
     last = prior.iloc[-1]
     context = {}
 
-    # Simple trend: is price above or below 10-day SMA?
-    if len(prior) >= 10:
-        sma10 = prior["Close"].tail(10).mean()
-        context["trend"] = "uptrend" if last["Close"] > sma10 else "downtrend"
+    # Trend: use EMA5 (fast) instead of SMA10 (was lagging during crashes)
+    if len(prior) >= 5:
+        ema5 = prior["Close"].ewm(span=5, adjust=False).iloc[-1]
+        sma5 = prior["Close"].tail(5).mean()
+        context["trend"] = "uptrend" if last["Close"] > ema5 else "downtrend"
     else:
         context["trend"] = "unknown"
+
+    # Trend breaking: if today dropped >3% while near the EMA crossover, trend is broken
+    if len(prior) >= 5:
+        today_ret = (last["Close"] - last["Open"]) / last["Open"] * 100 if last["Open"] > 0 else 0
+        ema5_dist = abs(last["Close"] - ema5) / ema5 * 100
+        if today_ret < -3 and ema5_dist < 2:
+            context["trend"] = "trend_breaking"
+        elif today_ret < -5:
+            context["trend"] = "trend_breaking"
+
+    # Trend strength: how far from EMA5
+    if len(prior) >= 5:
+        ema5_pct = (last["Close"] - ema5) / ema5 * 100
+        if ema5_pct > 3:
+            context["trend_strength"] = "strong_uptrend"
+        elif ema5_pct > 0:
+            context["trend_strength"] = "weak_uptrend"
+        elif ema5_pct > -3:
+            context["trend_strength"] = "weak_downtrend"
+        else:
+            context["trend_strength"] = "strong_downtrend"
+
+    # Mean reversion signal: big drop = bounce likely (GRRR-specific)
+    if len(prior) >= 2:
+        last_ret = (last["Close"] - last["Open"]) / last["Open"] * 100 if last["Open"] > 0 else 0
+        if last_ret < -3:
+            context["reversion"] = "bounce_setup"
+        elif last_ret < -1:
+            context["reversion"] = "mild_dip"
+        elif last_ret > 3:
+            context["reversion"] = "fade_setup"
+        elif last_ret > 1:
+            context["reversion"] = "mild_rally"
+        else:
+            context["reversion"] = "neutral"
 
     # Recent momentum: last 5 days
     if len(prior) >= 5:

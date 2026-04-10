@@ -1,45 +1,46 @@
 ======================================================================
   GRRR REDDIT-BASED NEXT-DAY PREDICTION
-  Generated: 2026-04-09 21:14
-  Today: Thursday | Predicting: Friday
+  Generated: 2026-04-10 18:55
+  Today: Friday | Predicting: Monday
 ======================================================================
 
   ╔════════════════════════════════════════════════╗
-  ║  PREDICTION:  LEAN SELL                          ║
-  ║  CONFIDENCE:   10.9%                          ║
-  ║  COMPOSITE:   -0.0545                         ║
+  ║  PREDICTION:  NEUTRAL                            ║
+  ║  CONFIDENCE:    9.6%                          ║
+  ║  COMPOSITE:   +0.0481                         ║
   ╚════════════════════════════════════════════════╝
 
 REDDIT STATS:
-  Total posts scraped:    136
-  Posts in last 24h:      27 (viral)
-  Weekend posts:          45
-  Avg polarity:           +0.0589 (neutral)
-  Sentiment trend:        +0.0749 (improving)
+  Total posts scraped:    147
+  Posts in last 24h:      19 (viral)
+  Weekend posts:          44
+  Avg polarity:           +0.0767 (neutral)
+  Sentiment trend:        +0.0849 (improving)
 
 FACTOR BREAKDOWN:
 ----------------------------------------------------------------------
   Factor                    Raw  Weight   Score  Detail
 ----------------------------------------------------------------------
   weekend_buzz           +0.00     3.0  +0.000  Not weekend/Monday pre-market. Weekend posts 
-                                               were: 45
-  buzz_volume            +0.30     1.5  +0.450  Posts in last 24h: 27 (viral). Rule: moderate
+                                               were: 44
+  mean_reversion         -0.10     2.5  -0.250  Mild rally +2.8% → slight fade
+  buzz_volume            +0.30     1.5  +0.450  Posts in last 24h: 19 (viral). Rule: moderate
                                                _buzz → next day UP 70% (30/43)
-  avg_polarity           +0.00     1.0  +0.000  Avg polarity: 0.0589 (neutral). Contrarian ru
+  avg_polarity           +0.00     1.0  +0.000  Avg polarity: 0.0767 (neutral). Contrarian ru
                                                le: negative → next day UP 86% (18/21). Contr
                                                arian bonus: +0.0
-  polarity_trend         -0.10     1.5  -0.150  Trend: +0.0749 (improving). Recent 24h avg: 0
-                                               .0589 (27 posts), Prior 24h avg: -0.0160 (27 
+  polarity_trend         -0.10     1.5  -0.150  Trend: +0.0849 (improving). Recent 24h avg: 0
+                                               .0767 (19 posts), Prior 24h avg: -0.0082 (36 
                                                posts). Rule: deteriorating → next day UP 86%
-  day_of_week            -0.40     2.0  -0.800  Today is Thursday. Score: -0.4. 63% → Friday 
-                                               DOWN (17/27)
-  extreme_ratio          +0.00     1.0  +0.000  Extreme posts: 2 strong neg, 4 strong pos out
-                                                of 27 (22% extreme). Strong neg ratio: 7%
-  buzz_acceleration      -0.10     1.0  -0.100  Last 12h: 8 posts, Prior 12h: 19 posts. Accel
-                                               eration: -57.9%
+  day_of_week            +0.30     2.0  +0.600  Today is Friday. Score: +0.3. 71% → Monday UP
+                                                (15/21)
+  extreme_ratio          +0.00     1.0  +0.000  Extreme posts: 1 strong neg, 3 strong pos out
+                                                of 19 (21% extreme). Strong neg ratio: 5%
+  buzz_acceleration      +0.00     1.0  +0.000  Last 12h: 9 posts, Prior 12h: 10 posts. Accel
+                                               eration: -10.0%
 ----------------------------------------------------------------------
-  COMPOSITE                        11.0  -0.600
-  NORMALIZED                             -0.0545
+  COMPOSITE                        13.5  +0.650
+  NORMALIZED                             +0.0481
 
 SCORING THRESHOLDS:
   Buzz:      dead(0-1), quiet(2-3), moderate(4-7), high(8-14), viral(15+)
