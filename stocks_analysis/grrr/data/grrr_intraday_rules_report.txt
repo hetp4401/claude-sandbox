@@ -1,66 +1,66 @@
 ================================================================================
   GRRR INTRADAY ASSOCIATION RULES (5-MIN BARS)
-  Generated: 2026-04-09 21:13
-  Sample: 4483 five-minute bars (~60 trading days)
+  Generated: 2026-06-18 19:22
+  Sample: 4626 five-minute bars (~60 trading days)
 ================================================================================
 
   Features: 14 | Outcomes: 10
   Min support: 15 | Min confidence: 58% | Min lift: 1.1
-  Total rules: 32884
+  Total rules: 35436
 
 TOP 25 RULES (ranked by confidence × lift × count):
 --------------------------------------------------------------------------------
  Conf  Lift     Hits   Sup  Rule
 --------------------------------------------------------------------------------
-  59%  1.11  442/748   9.9%  IF Bar_Dir=up
-                                    → NEXT_5m_dir=5m_DOWN
-  59%  1.11  426/721   9.5%  IF MACD_X=above & Mom_3bar=flat
-                                    → NEXT_5m_dir=5m_DOWN
-  59%  1.12  419/711   9.3%  IF Day_Pos=green
-                                    → NEXT_2h_dir=2h_DOWN
-  60%  1.15  380/633   8.5%  IF RSI=neutral & MACD_X=above
-                                    → NEXT_30m_dir=30m_DOWN
-  63%  1.21  330/520   7.4%  IF Day_Pos=flat
-                                    → NEXT_2h_dir=2h_DOWN
-  59%  1.10  367/624   8.2%  IF Time_Block=midday & MACD_X=above
-                                    → NEXT_5m_dir=5m_DOWN
-  59%  1.14  349/588   7.8%  IF MACD_X=above & BB_Pos=high_mid
-                                    → NEXT_30m_dir=30m_DOWN
-  59%  1.11  354/598   7.9%  IF MACD_X=above & Prev_Bar=prev_flat
-                                    → NEXT_5m_dir=5m_DOWN
-  59%  1.26  310/524   6.9%  IF EMA=strong_bear & Day_Pos=deep_red
+  62%  1.20  886/1428 19.1%  IF Day_Pos=deep_green
                                     → NEXT_2h_dir=2h_UP
-  58%  1.10  352/602   7.8%  IF Bar_Range=tight & MACD_X=above
-                                    → NEXT_1h_dir=1h_DOWN
-  58%  1.11  346/593   7.7%  IF RSI=strong & MACD_X=above
-                                    → NEXT_2h_dir=2h_DOWN
-  58%  1.10  344/588   7.7%  IF MACD_X=above & BB_Pos=high_mid
-                                    → NEXT_1h_dir=1h_DOWN
-  59%  1.12  331/561   7.4%  IF MACD_X=below & EMA=bear
-                                    → NEXT_2h_dir=2h_DOWN
-  61%  1.18  302/492   6.7%  IF MACD_X=above & EMA=bull
-                                    → NEXT_30m_dir=30m_DOWN
-  61%  1.16  306/503   6.8%  IF MACD_H=strong_bull & MACD_X=above
-                                    → NEXT_2h_dir=2h_DOWN
-  61%  1.16  306/504   6.8%  IF MACD_H=strong_bull
-                                    → NEXT_2h_dir=2h_DOWN
-  59%  1.11  329/561   7.3%  IF MACD_X=below & EMA=bear
-                                    → NEXT_1h_dir=1h_DOWN
-  59%  1.12  323/552   7.2%  IF Time_Block=afternoon & RSI=neutral
-                                    → NEXT_30m_dir=30m_DOWN
-  63%  1.19  277/442   6.2%  IF MACD_X=above & VWAP=above
-                                    → NEXT_2h_dir=2h_DOWN
-  62%  1.18  272/442   6.1%  IF MACD_X=above & VWAP=above
-                                    → NEXT_30m_dir=30m_DOWN
-  60%  1.28  257/430   5.7%  IF EMA=bull & Day_Pos=deep_green
+  68%  1.31  601/889  13.0%  IF VWAP=far_above & Day_Pos=deep_green
+                                    → NEXT_2h_dir=2h_UP
+  61%  1.18  679/1116 14.7%  IF VWAP=far_above
+                                    → NEXT_2h_dir=2h_UP
+  63%  1.23  562/889  12.2%  IF VWAP=far_above & Day_Pos=deep_green
                                     → NEXT_1h_dir=1h_UP
-  59%  1.13  291/492   6.5%  IF MACD_X=above & EMA=bull
-                                    → NEXT_2h_dir=2h_DOWN
-  58%  1.11  300/517   6.7%  IF MACD_X=above & Mom_3bar=rising
+  69%  1.33  408/592   8.8%  IF Time_Block=afternoon & Day_Pos=deep_green
+                                    → NEXT_2h_dir=2h_UP
+  62%  1.20  433/695   9.4%  IF MACD_X=above & Day_Pos=deep_green
+                                    → NEXT_2h_dir=2h_UP
+  63%  1.23  389/614   8.4%  IF RSI=strong & Day_Pos=deep_green
+                                    → NEXT_1h_dir=1h_UP
+  63%  1.21  385/614   8.3%  IF RSI=strong & Day_Pos=deep_green
+                                    → NEXT_2h_dir=2h_UP
+  65%  1.25  353/546   7.6%  IF MACD_H=neutral & Day_Pos=deep_green
+                                    → NEXT_2h_dir=2h_UP
+  60%  1.16  414/695   8.9%  IF MACD_X=above & Day_Pos=deep_green
+                                    → NEXT_1h_dir=1h_UP
+  63%  1.21  375/599   8.1%  IF Bar_Range=normal & Day_Pos=deep_green
+                                    → NEXT_2h_dir=2h_UP
+  59%  1.21  390/657   8.4%  IF Time_Block=afternoon & RSI=neutral
                                     → NEXT_30m_dir=30m_DOWN
-  59%  1.11  296/502   6.6%  IF Streak=1_up & Prev_Bar=prev_down
-                                    → NEXT_5m_dir=5m_DOWN
-  60%  1.27  256/430   5.7%  IF EMA=bull & Day_Pos=deep_green
+  60%  1.16  400/667   8.6%  IF EMA=strong_bear
+                                    → NEXT_1h_dir=1h_UP
+  59%  1.22  386/657   8.3%  IF Time_Block=afternoon & RSI=neutral
+                                    → NEXT_1h_dir=1h_DOWN
+  59%  1.16  395/667   8.5%  IF EMA=strong_bear
+                                    → NEXT_30m_dir=30m_UP
+  61%  1.17  381/629   8.2%  IF MACD_X=below & Day_Pos=deep_green
+                                    → NEXT_2h_dir=2h_UP
+  58%  1.13  399/684   8.6%  IF Time_Block=midday & MACD_X=below
+                                    → NEXT_1h_dir=1h_UP
+  65%  1.27  311/475   6.7%  IF MACD_X=above & VWAP=far_above & Day_Pos=deep_green
+                                    → NEXT_2h_dir=2h_UP
+  61%  1.18  359/592   7.8%  IF Time_Block=afternoon & Day_Pos=deep_green
+                                    → NEXT_1h_dir=1h_UP
+  63%  1.23  329/519   7.1%  IF VWAP=far_above & EMA=strong_bull & Day_Pos=deep_gr
+                                    → NEXT_2h_dir=2h_UP
+  60%  1.18  359/597   7.8%  IF RSI=weak & MACD_X=below
+                                    → NEXT_30m_dir=30m_UP
+  68%  1.32  282/414   6.1%  IF Time_Block=afternoon & VWAP=far_above & Day_Pos=de
+                                    → NEXT_2h_dir=2h_UP
+  60%  1.15  366/613   7.9%  IF MACD_X=above & VWAP=far_above
+                                    → NEXT_2h_dir=2h_UP
+  68%  1.31  282/416   6.1%  IF EMA=bull & Day_Pos=deep_green
+                                    → NEXT_2h_dir=2h_UP
+  60%  1.17  353/585   7.6%  IF VWAP=far_above & EMA=strong_bull
                                     → NEXT_2h_dir=2h_UP
 
 
@@ -71,35 +71,31 @@ TOP 25 RULES (ranked by confidence × lift × count):
   Simple rules (1 condition):
    Conf  Lift       Hits  Rule
   ----------------------------------------------------------------------
-    59%  1.11   442/748    IF Bar_Dir=up
-                                → NEXT_5m_dir=5m_DOWN
-    58%  1.25    69/118    IF Bar_Dir=sharp_down
-                                → NEXT_5m_dir=5m_UP
-    62%  1.17    50/80     IF RSI=extreme_overbought
+    58%  1.13   137/235    IF BB_Pos=above_upper
                                 → NEXT_5m_dir=5m_DOWN
 
   Highest sample count:
    Conf  Lift       Hits  Rule
   ----------------------------------------------------------------------
-    59%  1.11   442/748    IF Bar_Dir=up
+    60%  1.16   192/321    IF RSI=neutral & VWAP=below
                                 → NEXT_5m_dir=5m_DOWN
-    59%  1.11   426/721    IF MACD_X=above & Mom_3bar=flat
+    58%  1.13   179/306    IF Streak=2_up & Prev_Bar=prev_up
                                 → NEXT_5m_dir=5m_DOWN
-    59%  1.10   367/624    IF Time_Block=midday & MACD_X=above
+    59%  1.14   178/303    IF Bar_Dir=slight_up & BB_Pos=high_mid
                                 → NEXT_5m_dir=5m_DOWN
-    59%  1.11   354/598    IF MACD_X=above & Prev_Bar=prev_flat
+    59%  1.14   170/289    IF VWAP=below & Mom_3bar=flat
                                 → NEXT_5m_dir=5m_DOWN
-    59%  1.11   296/502    IF Streak=1_up & Prev_Bar=prev_down
+    59%  1.14   169/287    IF Bar_Dir=slight_down & RSI=neutral & MACD_X=below
                                 → NEXT_5m_dir=5m_DOWN
-    59%  1.11   268/452    IF MACD_X=above & Streak=1_up
+    59%  1.13   167/285    IF MACD_H=neutral & EMA=slight_bull
                                 → NEXT_5m_dir=5m_DOWN
-    60%  1.12   235/393    IF BB_Pos=high_mid & Mom_3bar=flat
+    60%  1.15   166/279    IF MACD_X=above & VWAP=below
                                 → NEXT_5m_dir=5m_DOWN
-    60%  1.13   234/390    IF Bar_Dir=up & Bar_Range=normal
+    59%  1.14   159/269    IF Time_Block=afternoon & EMA=slight_bull
                                 → NEXT_5m_dir=5m_DOWN
-    60%  1.12   219/368    IF Time_Block=afternoon & Mom_3bar=rising
+    62%  1.20   157/254    IF Bar_Dir=slight_up & Bar_Range=tight & MACD_X=above
                                 → NEXT_5m_dir=5m_DOWN
-    60%  1.13   217/359    IF RSI=neutral & Streak=1_up
+    60%  1.16   152/254    IF Rel_Vol=low & RSI=strong & BB_Pos=high_mid
                                 → NEXT_5m_dir=5m_DOWN
 
 ================================================================================
@@ -109,34 +105,46 @@ TOP 25 RULES (ranked by confidence × lift × count):
   Simple rules (1 condition):
    Conf  Lift       Hits  Rule
   ----------------------------------------------------------------------
-    58%  1.11   194/334    IF RSI=overbought
+    59%  1.16   395/667    IF EMA=strong_bear
+                                → NEXT_30m_dir=30m_UP
+    59%  1.20   306/522    IF EMA=slight_bull
                                 → NEXT_30m_dir=30m_DOWN
-    58%  1.11    75/129    IF RSI=extreme_oversold
+    58%  1.14   284/489    IF Mom_3bar=falling_fast
+                                → NEXT_30m_dir=30m_UP
+    65%  1.28   282/433    IF MACD_H=strong_bear
+                                → NEXT_30m_dir=30m_UP
+    61%  1.19   212/350    IF RSI=oversold
+                                → NEXT_30m_dir=30m_UP
+    60%  1.17   153/256    IF BB_Pos=below_lower
+                                → NEXT_30m_dir=30m_UP
+    58%  1.19   137/235    IF BB_Pos=above_upper
                                 → NEXT_30m_dir=30m_DOWN
+    59%  1.16    89/151    IF Bar_Dir=sharp_down
+                                → NEXT_30m_dir=30m_UP
 
   Highest sample count:
    Conf  Lift       Hits  Rule
   ----------------------------------------------------------------------
-    60%  1.15   380/633    IF RSI=neutral & MACD_X=above
+    59%  1.16   395/667    IF EMA=strong_bear
+                                → NEXT_30m_dir=30m_UP
+    59%  1.21   390/657    IF Time_Block=afternoon & RSI=neutral
                                 → NEXT_30m_dir=30m_DOWN
-    59%  1.14   349/588    IF MACD_X=above & BB_Pos=high_mid
+    60%  1.18   359/597    IF RSI=weak & MACD_X=below
+                                → NEXT_30m_dir=30m_UP
+    59%  1.20   306/522    IF EMA=slight_bull
                                 → NEXT_30m_dir=30m_DOWN
-    59%  1.12   323/552    IF Time_Block=afternoon & RSI=neutral
-                                → NEXT_30m_dir=30m_DOWN
-    61%  1.18   302/492    IF MACD_X=above & EMA=bull
-                                → NEXT_30m_dir=30m_DOWN
-    58%  1.11   300/517    IF MACD_X=above & Mom_3bar=rising
-                                → NEXT_30m_dir=30m_DOWN
-    59%  1.14   273/459    IF Rel_Vol=dead & MACD_X=above
-                                → NEXT_30m_dir=30m_DOWN
-    62%  1.18   272/442    IF MACD_X=above & VWAP=above
-                                → NEXT_30m_dir=30m_DOWN
-    59%  1.14   268/452    IF MACD_X=above & Streak=1_up
-                                → NEXT_30m_dir=30m_DOWN
-    58%  1.11   249/429    IF Rel_Vol=normal & MACD_X=above
-                                → NEXT_30m_dir=30m_DOWN
-    60%  1.15   244/407    IF MACD_X=above & Prev_Bar=prev_down
-                                → NEXT_30m_dir=30m_DOWN
+    58%  1.14   292/501    IF MACD_X=below & BB_Pos=low
+                                → NEXT_30m_dir=30m_UP
+    65%  1.28   290/445    IF MACD_X=below & EMA=strong_bear
+                                → NEXT_30m_dir=30m_UP
+    59%  1.16   286/483    IF MACD_X=below & Day_Pos=deep_red
+                                → NEXT_30m_dir=30m_UP
+    58%  1.14   284/489    IF Mom_3bar=falling_fast
+                                → NEXT_30m_dir=30m_UP
+    65%  1.28   282/433    IF MACD_H=strong_bear
+                                → NEXT_30m_dir=30m_UP
+    65%  1.28   281/431    IF MACD_H=strong_bear & MACD_X=below
+                                → NEXT_30m_dir=30m_UP
 
 ================================================================================
   NEXT 1 HOUR DIRECTION
@@ -145,36 +153,48 @@ TOP 25 RULES (ranked by confidence × lift × count):
   Simple rules (1 condition):
    Conf  Lift       Hits  Rule
   ----------------------------------------------------------------------
-    59%  1.12   126/213    IF Streak=long_up
+    60%  1.16   400/667    IF EMA=strong_bear
+                                → NEXT_1h_dir=1h_UP
+    62%  1.21   304/489    IF Mom_3bar=falling_fast
+                                → NEXT_1h_dir=1h_UP
+    58%  1.21   280/479    IF MACD_H=strong_bull
                                 → NEXT_1h_dir=1h_DOWN
-    64%  1.22    83/129    IF RSI=extreme_oversold
+    59%  1.15   256/433    IF MACD_H=strong_bear
+                                → NEXT_1h_dir=1h_UP
+    61%  1.18   212/350    IF RSI=oversold
+                                → NEXT_1h_dir=1h_UP
+    62%  1.20   158/256    IF BB_Pos=below_lower
+                                → NEXT_1h_dir=1h_UP
+    60%  1.24   119/199    IF Streak=long_up
                                 → NEXT_1h_dir=1h_DOWN
-    62%  1.18    50/80     IF RSI=extreme_overbought
+    61%  1.18    92/151    IF Bar_Dir=sharp_down
+                                → NEXT_1h_dir=1h_UP
+    63%  1.30    56/89     IF RSI=extreme_overbought
                                 → NEXT_1h_dir=1h_DOWN
 
   Highest sample count:
    Conf  Lift       Hits  Rule
   ----------------------------------------------------------------------
-    58%  1.10   352/602    IF Bar_Range=tight & MACD_X=above
-                                → NEXT_1h_dir=1h_DOWN
-    58%  1.10   344/588    IF MACD_X=above & BB_Pos=high_mid
-                                → NEXT_1h_dir=1h_DOWN
-    59%  1.11   329/561    IF MACD_X=below & EMA=bear
-                                → NEXT_1h_dir=1h_DOWN
-    59%  1.12   290/489    IF Bar_Range=tight & RSI=neutral
-                                → NEXT_1h_dir=1h_DOWN
-    59%  1.11   288/492    IF MACD_X=above & EMA=bull
-                                → NEXT_1h_dir=1h_DOWN
-    59%  1.11   268/457    IF Time_Block=afternoon & EMA=bear
-                                → NEXT_1h_dir=1h_DOWN
-    60%  1.13   264/442    IF MACD_X=above & VWAP=above
-                                → NEXT_1h_dir=1h_DOWN
-    61%  1.16   263/429    IF Rel_Vol=normal & MACD_X=above
-                                → NEXT_1h_dir=1h_DOWN
-    60%  1.28   257/430    IF EMA=bull & Day_Pos=deep_green
+    63%  1.23   562/889    IF VWAP=far_above & Day_Pos=deep_green
                                 → NEXT_1h_dir=1h_UP
-    60%  1.13   240/401    IF EMA=bear & Mom_3bar=flat
+    60%  1.16   414/695    IF MACD_X=above & Day_Pos=deep_green
+                                → NEXT_1h_dir=1h_UP
+    60%  1.16   400/667    IF EMA=strong_bear
+                                → NEXT_1h_dir=1h_UP
+    58%  1.13   399/684    IF Time_Block=midday & MACD_X=below
+                                → NEXT_1h_dir=1h_UP
+    63%  1.23   389/614    IF RSI=strong & Day_Pos=deep_green
+                                → NEXT_1h_dir=1h_UP
+    59%  1.22   386/657    IF Time_Block=afternoon & RSI=neutral
                                 → NEXT_1h_dir=1h_DOWN
+    61%  1.18   359/592    IF Time_Block=afternoon & Day_Pos=deep_green
+                                → NEXT_1h_dir=1h_UP
+    59%  1.15   356/599    IF Bar_Range=normal & Day_Pos=deep_green
+                                → NEXT_1h_dir=1h_UP
+    58%  1.13   348/597    IF RSI=weak & MACD_X=below
+                                → NEXT_1h_dir=1h_UP
+    61%  1.18   331/546    IF MACD_H=neutral & Day_Pos=deep_green
+                                → NEXT_1h_dir=1h_UP
 
 ================================================================================
   NEXT 2 HOUR DIRECTION
@@ -183,36 +203,40 @@ TOP 25 RULES (ranked by confidence × lift × count):
   Simple rules (1 condition):
    Conf  Lift       Hits  Rule
   ----------------------------------------------------------------------
-    59%  1.12   419/711    IF Day_Pos=green
-                                → NEXT_2h_dir=2h_DOWN
-    63%  1.21   330/520    IF Day_Pos=flat
-                                → NEXT_2h_dir=2h_DOWN
-    61%  1.16   306/504    IF MACD_H=strong_bull
-                                → NEXT_2h_dir=2h_DOWN
+    62%  1.20   886/1428   IF Day_Pos=deep_green
+                                → NEXT_2h_dir=2h_UP
+    61%  1.18   679/1116   IF VWAP=far_above
+                                → NEXT_2h_dir=2h_UP
+    62%  1.20   304/489    IF Mom_3bar=falling_fast
+                                → NEXT_2h_dir=2h_UP
+    58%  1.13   149/256    IF BB_Pos=below_lower
+                                → NEXT_2h_dir=2h_UP
+    59%  1.14    89/151    IF Bar_Dir=sharp_down
+                                → NEXT_2h_dir=2h_UP
 
   Highest sample count:
    Conf  Lift       Hits  Rule
   ----------------------------------------------------------------------
-    59%  1.12   419/711    IF Day_Pos=green
-                                → NEXT_2h_dir=2h_DOWN
-    58%  1.11   346/593    IF RSI=strong & MACD_X=above
-                                → NEXT_2h_dir=2h_DOWN
-    59%  1.12   331/561    IF MACD_X=below & EMA=bear
-                                → NEXT_2h_dir=2h_DOWN
-    63%  1.21   330/520    IF Day_Pos=flat
-                                → NEXT_2h_dir=2h_DOWN
-    59%  1.26   310/524    IF EMA=strong_bear & Day_Pos=deep_red
+    62%  1.20   886/1428   IF Day_Pos=deep_green
                                 → NEXT_2h_dir=2h_UP
-    61%  1.16   306/503    IF MACD_H=strong_bull & MACD_X=above
-                                → NEXT_2h_dir=2h_DOWN
-    61%  1.16   306/504    IF MACD_H=strong_bull
-                                → NEXT_2h_dir=2h_DOWN
-    59%  1.12   292/496    IF MACD_X=above & BB_Pos=high
-                                → NEXT_2h_dir=2h_DOWN
-    59%  1.13   291/492    IF MACD_X=above & EMA=bull
-                                → NEXT_2h_dir=2h_DOWN
-    63%  1.19   277/442    IF MACD_X=above & VWAP=above
-                                → NEXT_2h_dir=2h_DOWN
+    61%  1.18   679/1116   IF VWAP=far_above
+                                → NEXT_2h_dir=2h_UP
+    68%  1.31   601/889    IF VWAP=far_above & Day_Pos=deep_green
+                                → NEXT_2h_dir=2h_UP
+    62%  1.20   433/695    IF MACD_X=above & Day_Pos=deep_green
+                                → NEXT_2h_dir=2h_UP
+    69%  1.33   408/592    IF Time_Block=afternoon & Day_Pos=deep_green
+                                → NEXT_2h_dir=2h_UP
+    63%  1.21   385/614    IF RSI=strong & Day_Pos=deep_green
+                                → NEXT_2h_dir=2h_UP
+    61%  1.17   381/629    IF MACD_X=below & Day_Pos=deep_green
+                                → NEXT_2h_dir=2h_UP
+    63%  1.21   375/599    IF Bar_Range=normal & Day_Pos=deep_green
+                                → NEXT_2h_dir=2h_UP
+    60%  1.15   366/613    IF MACD_X=above & VWAP=far_above
+                                → NEXT_2h_dir=2h_UP
+    65%  1.25   353/546    IF MACD_H=neutral & Day_Pos=deep_green
+                                → NEXT_2h_dir=2h_UP
 
 ================================================================================
   MAX GAIN IN NEXT HOUR
@@ -221,26 +245,26 @@ TOP 25 RULES (ranked by confidence × lift × count):
   Highest sample count:
    Conf  Lift       Hits  Rule
   ----------------------------------------------------------------------
-    68%  3.03    28/41     IF RSI=strong & EMA=bull & Day_Pos=deep_red
-                                → NEXT_1h_MaxGain=1h_no_gain
-    60%  2.11    25/42     IF VWAP=slight_below & EMA=slight_bear & Day_Pos=flat
+    59%  3.00    30/51     IF Bar_Range=wide & Rel_Vol=normal & MACD_H=strong_be
+                                → NEXT_1h_MaxGain=1h_big_gain
+    60%  3.04    25/42     IF Rel_Vol=normal & MACD_H=strong_bear & BB_Pos=low
+                                → NEXT_1h_MaxGain=1h_big_gain
+    58%  2.13    25/43     IF RSI=weak & BB_Pos=mid & VWAP=far_below
                                 → NEXT_1h_MaxGain=1h_med_gain
-    59%  2.62    23/39     IF EMA=bull & Prev_Bar=prev_flat & Day_Pos=deep_red
-                                → NEXT_1h_MaxGain=1h_no_gain
-    59%  2.09    23/39     IF BB_Pos=low & VWAP=below & Day_Pos=flat
-                                → NEXT_1h_MaxGain=1h_med_gain
-    76%  3.37    22/29     IF RSI=strong & MACD_X=below & VWAP=slight_below
-                                → NEXT_1h_MaxGain=1h_no_gain
-    58%  2.59    21/36     IF Bar_Range=tight & RSI=strong & Day_Pos=red
-                                → NEXT_1h_MaxGain=1h_no_gain
-    61%  2.99    20/33     IF RSI=neutral & MACD_H=strong_bear & Streak=long_dow
-                                → NEXT_1h_MaxGain=1h_small_gain
-    61%  5.57    19/31     IF Time_Block=open_30min & EMA=slight_bull
+    65%  4.51    24/37     IF VWAP=far_above & EMA=slight_bear & Day_Pos=deep_gr
                                 → NEXT_1h_MaxGain=1h_huge_gain
-    59%  2.64    19/32     IF RSI=strong & Prev_Bar=prev_flat & Day_Pos=red
-                                → NEXT_1h_MaxGain=1h_no_gain
-    72%  3.20    18/25     IF MACD_H=neutral & VWAP=above & Day_Pos=deep_red
-                                → NEXT_1h_MaxGain=1h_no_gain
+    75%  5.21    21/28     IF Time_Block=afternoon & RSI=extreme_overbought & EM
+                                → NEXT_1h_MaxGain=1h_huge_gain
+    72%  5.03    21/29     IF Time_Block=afternoon & RSI=extreme_overbought
+                                → NEXT_1h_MaxGain=1h_huge_gain
+    72%  5.03    21/29     IF Time_Block=afternoon & RSI=extreme_overbought & VW
+                                → NEXT_1h_MaxGain=1h_huge_gain
+    72%  5.03    21/29     IF Time_Block=afternoon & RSI=extreme_overbought & Da
+                                → NEXT_1h_MaxGain=1h_huge_gain
+    66%  2.41    21/32     IF Rel_Vol=low & BB_Pos=mid & VWAP=far_below
+                                → NEXT_1h_MaxGain=1h_med_gain
+    71%  4.96    20/28     IF Time_Block=afternoon & RSI=extreme_overbought & MA
+                                → NEXT_1h_MaxGain=1h_huge_gain
 
 ================================================================================
   MAX DRAWDOWN IN NEXT HOUR
@@ -249,25 +273,25 @@ TOP 25 RULES (ranked by confidence × lift × count):
   Highest sample count:
    Conf  Lift       Hits  Rule
   ----------------------------------------------------------------------
-    60%  2.06    29/48     IF Rel_Vol=dead & RSI=weak & MACD_H=bull
+    64%  2.40    27/42     IF BB_Pos=low_mid & EMA=slight_bull & Mom_3bar=flat
                                 → NEXT_1h_MaxDD=1h_small_drop
-    61%  2.07    28/46     IF Streak=long_up & Day_Pos=deep_red
+    62%  2.34    25/40     IF Time_Block=midday & VWAP=above & Day_Pos=green
                                 → NEXT_1h_MaxDD=1h_small_drop
-    60%  2.04    27/45     IF Bar_Dir=slight_up & BB_Pos=high_mid & Day_Pos=deep
+    69%  2.56    24/35     IF MACD_H=bear & BB_Pos=low_mid & EMA=slight_bull
                                 → NEXT_1h_MaxDD=1h_small_drop
-    60%  2.84    26/43     IF VWAP=above & EMA=slight_bear & Day_Pos=deep_green
-                                → NEXT_1h_MaxDD=1h_med_drop
-    62%  3.25    25/40     IF RSI=oversold & VWAP=below & Mom_3bar=flat
-                                → NEXT_1h_MaxDD=1h_dip
-    58%  1.98    25/43     IF BB_Pos=high & Day_Pos=red
+    61%  2.26    23/38     IF Time_Block=midday & BB_Pos=high_mid & EMA=slight_b
                                 → NEXT_1h_MaxDD=1h_small_drop
-    59%  2.01    23/39     IF EMA=bull & Prev_Bar=prev_flat & Day_Pos=deep_red
+    70%  2.62    21/30     IF Bar_Range=tight & MACD_H=bull & BB_Pos=mid
                                 → NEXT_1h_MaxDD=1h_small_drop
-    81%  2.77    22/27     IF Time_Block=midday & Bar_Range=tight & MACD_H=stron
+    65%  2.41    20/31     IF MACD_H=bear & EMA=slight_bull & Mom_3bar=flat
                                 → NEXT_1h_MaxDD=1h_small_drop
-    65%  2.20    22/34     IF Time_Block=midday & EMA=bull & Day_Pos=deep_red
+    60%  2.24    18/30     IF Rel_Vol=dead & Streak=3_down & Day_Pos=green
                                 → NEXT_1h_MaxDD=1h_small_drop
-    65%  2.20    22/34     IF Bar_Range=tight & VWAP=above & Day_Pos=deep_red
+    58%  2.17    18/31     IF Time_Block=afternoon & Rel_Vol=dead & Day_Pos=gree
+                                → NEXT_1h_MaxDD=1h_small_drop
+    65%  2.44    17/26     IF Time_Block=midday & Rel_Vol=low & RSI=oversold
+                                → NEXT_1h_MaxDD=1h_small_drop
+    65%  2.44    17/26     IF Rel_Vol=dead & VWAP=slight_above & Day_Pos=green
                                 → NEXT_1h_MaxDD=1h_small_drop
 
 ================================================================================

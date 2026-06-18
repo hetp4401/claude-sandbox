@@ -1,332 +1,332 @@
 =====================================================================================
   GRRR MASTER ASSOCIATION RULES REPORT
-  Generated: 2026-04-10 18:54
-  Total rules: 96,335
+  Generated: 2026-06-18 19:24
+  Total rules: 105,224
 =====================================================================================
 
 =====================================================================================
-  TIER S: PERFECT RULES (100% confidence, 10+ samples) [96]
+  TIER S: PERFECT RULES (100% confidence, 10+ samples) [267]
 =====================================================================================
 
   Src           Conf  Lift      Hits  Rule
   ---------------------------------------------------------------------------
-  INTRADAY_5MIN  100%  1.91   32/32    IF VWAP=below & Mom_3bar=flat & Day_Pos=deep_green
-                                      → NEXT_2h_dir=2h_DOWN
-  INTRADAY_5MIN  100%  1.91   26/26    IF Time_Block=midday & RSI=strong & Day_Pos=deep_re
-                                      → NEXT_2h_dir=2h_DOWN
-  REDDIT        100%  1.49   24/24    IF Subjectivity=mixed & Mkt_momentum=strong_up
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT        100%  1.49   23/23    IF Post_DOW=Wed & Mkt_momentum=strong_up & Mkt_vola
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT        100%  3.03   23/23    IF Post_Time=weekend & Mkt_trend=downtrend & Mkt_mo
+  NEWS          100%  1.49   58/58    IF Post_Time=pre_market & Buzz=high_buzz & Mkt_mome
+                                      → NEXT_1h_Spike=1h_big_spike
+  NEWS          100%  1.49   58/58    IF Post_Time=pre_market & Buzz=high_buzz & Mkt_mome
+                                      → NEXT_2h_Max=2h_rip
+  NEWS          100%  1.49   58/58    IF Post_Time=pre_market & Buzz=high_buzz & Mkt_mome
                                       → NEXT_DayDir=day_UP
-  INTRADAY_5MIN  100%  1.91   23/23    IF Bar_Range=tight & RSI=strong & VWAP=slight_below
-                                      → NEXT_2h_dir=2h_DOWN
-  INTRADAY_5MIN  100%  2.13   22/22    IF Time_Block=open_30min & MACD_X=below & Day_Pos=d
-                                      → NEXT_2h_dir=2h_UP
-  INTRADAY_5MIN  100%  2.14   22/22    IF Time_Block=open_30min & MACD_X=below & Day_Pos=d
-                                      → NEXT_1h_dir=1h_UP
-  INTRADAY_5MIN  100%  1.91   22/22    IF RSI=neutral & MACD_H=strong_bear & VWAP=above
-                                      → NEXT_2h_dir=2h_DOWN
-  REDDIT        100%  4.19   21/21    IF Sent_Trend=stable & Mkt_momentum=strong_down & M
+  NEWS          100%  1.49   49/49    IF Post_DOW=Wed & Mkt_volume_regime=high_vol
+                                      → NEXT_2h_Max=2h_rip
+  NEWS          100%  1.42   49/49    IF Post_DOW=Wed & Mkt_momentum=strong_up
+                                      → NEXT_Gap=big_gap_down
+  NEWS          100%  1.49   49/49    IF Post_DOW=Wed & Buzz=high_buzz & Mkt_volume_regim
+                                      → NEXT_DayDir=day_UP
+  NEWS          100%  1.49   49/49    IF Post_DOW=Wed & Mkt_volume_regime=high_vol
+                                      → NEXT_1h_Spike=1h_big_spike
+  NEWS          100%  1.42   48/48    IF Polarity=neutral & Buzz=high_buzz
+                                      → NEXT_Gap=big_gap_down
+  NEWS          100%  1.42   43/43    IF Polarity=neutral & Buzz=high_buzz & Mkt_momentum
+                                      → NEXT_Gap=big_gap_down
+  NEWS          100%  1.49   43/43    IF Polarity=neutral & Buzz=high_buzz & Mkt_momentum
+                                      → NEXT_2h_Max=2h_rip
+  NEWS          100%  1.49   43/43    IF Polarity=neutral & Buzz=high_buzz & Mkt_momentum
+                                      → NEXT_1h_Spike=1h_big_spike
+  NEWS          100%  1.49   43/43    IF Polarity=neutral & Buzz=high_buzz & Mkt_momentum
+                                      → NEXT_DayDir=day_UP
+  NEWS          100%  1.91   42/42    IF Post_Time=pre_market & Buzz=high_buzz & Mkt_tren
                                       → NEXT_2Day=2day_big_up
-  REDDIT        100%  1.49   21/21    IF Post_Time=after_hours & Sent_Trend=stable & Mkt_
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT        100%  1.49   20/20    IF Post_Time=weekend & Mkt_trend=uptrend & Mkt_volu
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT        100%  1.77   20/20    IF Post_Time=weekend & Sent_Trend=stable & Mkt_mome
-                                      → NEXT_1h_Spike=1h_spike
-  REDDIT        100%  2.45   20/20    IF Post_Time=weekend & Mkt_volatility=normal
-                                      → NEXT_Gap=gap_up
-  REDDIT        100%  2.60   20/20    IF Post_Time=weekend & Mkt_momentum=strong_up & Mkt
-                                      → NEXT_FullDay=day_big_down
-  REDDIT        100%  1.93   20/20    IF Post_Time=weekend & Mkt_volatility=normal & Mkt_
-                                      → NEXT_30m=30m_dump
-  REDDIT        100%  2.16   20/20    IF Post_Time=weekend & Sent_Trend=stable & Mkt_mome
-                                      → NEXT_2Day=2day_big_down
-  REDDIT        100%  2.29   20/20    IF Post_Time=weekend & Mkt_trend=uptrend & Mkt_vola
-                                      → NEXT_2h_Max=2h_up
-  REDDIT        100%  1.49   19/19    IF Post_Time=after_hours & Buzz=high_buzz & Mkt_vol
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT        100%  4.27   19/19    IF Post_DOW=Tue & Buzz=high_buzz & Mkt_momentum=str
-                                      → NEXT_30m=30m_surge
-
-=====================================================================================
-  TIER A: NEAR-PERFECT (80-99% confidence, 7+ samples) [396]
-=====================================================================================
-
-  Src           Conf  Lift      Hits  Rule
-  ---------------------------------------------------------------------------
-  REDDIT         86%  1.28  130/152   IF Mkt_volatility=normal
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT         85%  1.27  125/147   IF Sent_Trend=stable & Mkt_volatility=normal
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT         89%  1.33  119/134   IF Mkt_trend=uptrend
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT         89%  1.32  118/133   IF Sent_Trend=stable & Mkt_trend=uptrend
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT         88%  1.32  115/130   IF Buzz=high_buzz & Mkt_trend=uptrend
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT         88%  1.32  114/129   IF Buzz=high_buzz & Sent_Trend=stable & Mkt_trend=u
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT         88%  1.32  111/126   IF Buzz=high_buzz & Mkt_trend=uptrend & Mkt_volatil
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT         82%  1.23   87/106   IF Subjectivity=factual & Mkt_volatility=normal
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT         84%  1.26   86/102   IF Mkt_volatility=normal & Sentiment=neutral
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT         94%  1.41   85/90    IF Mkt_momentum=strong_up
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT         94%  1.41   84/89    IF Sent_Trend=stable & Mkt_momentum=strong_up
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT         84%  1.25   83/99    IF Polarity=neutral & Mkt_volatility=normal
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT         94%  1.41   81/86    IF Buzz=high_buzz & Mkt_momentum=strong_up
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT         94%  1.41   80/85    IF Buzz=high_buzz & Sent_Trend=stable & Mkt_momentu
-                                      → NEXT_DayDir=day_DOWN
-  INTRADAY_5MIN   84%  1.79   80/95    IF MACD_H=bear & EMA=bull & Day_Pos=deep_green
-                                      → NEXT_2h_dir=2h_UP
-  REDDIT         87%  1.30   79/91    IF Subjectivity=factual & Buzz=high_buzz & Mkt_vola
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT         83%  1.24   78/94    IF Polarity=neutral & Sent_Trend=stable & Mkt_volat
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT         90%  1.34   77/86    IF Mkt_trend=uptrend & Sentiment=neutral
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT         86%  1.65   77/90    IF Mkt_momentum=strong_up
-                                      → NEXT_30m=30m_dump
-  INTRADAY_5MIN   81%  1.73   77/95    IF MACD_H=bear & EMA=bull & Day_Pos=deep_green
-                                      → NEXT_1h_dir=1h_UP
-  REDDIT         89%  1.34   76/85    IF Sent_Trend=stable & Mkt_trend=uptrend & Sentimen
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT         85%  1.65   76/89    IF Sent_Trend=stable & Mkt_momentum=strong_up
-                                      → NEXT_30m=30m_dump
-  REDDIT         89%  1.33   75/84    IF Polarity=neutral & Mkt_trend=uptrend
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT         89%  1.33   74/83    IF Polarity=neutral & Buzz=high_buzz & Mkt_volatili
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT         89%  1.33   73/82    IF Polarity=neutral & Mkt_trend=uptrend & Mkt_volat
-                                      → NEXT_DayDir=day_DOWN
-
-=====================================================================================
-  TIER B: HIGH-VOLUME RULES (65%+ confidence, 20+ samples) [705]
-=====================================================================================
-
-  Src           Conf  Lift      Hits  Rule
-  ---------------------------------------------------------------------------
-  INTRADAY_5MIN   65%  1.23  177/271   IF Bar_Dir=up & Mom_3bar=rising
-                                      → NEXT_5m_dir=5m_DOWN
-  INTRADAY_5MIN   68%  1.44  165/243   IF RSI=oversold & Day_Pos=deep_red
-                                      → NEXT_2h_dir=2h_UP
-  INTRADAY_5MIN   66%  1.42  161/243   IF RSI=oversold & Day_Pos=deep_red
-                                      → NEXT_1h_dir=1h_UP
-  INTRADAY_5MIN   66%  1.26  160/241   IF RSI=strong & Day_Pos=green
-                                      → NEXT_2h_dir=2h_DOWN
-  INTRADAY_5MIN   65%  1.24  147/225   IF MACD_X=above & Day_Pos=flat
-                                      → NEXT_2h_dir=2h_DOWN
-  INTRADAY_5MIN   66%  1.26  144/219   IF Time_Block=afternoon & MACD_X=above & EMA=bull
-                                      → NEXT_30m_dir=30m_DOWN
-  INTRADAY_5MIN   65%  1.24  140/215   IF MACD_H=strong_bull & BB_Pos=high
-                                      → NEXT_2h_dir=2h_DOWN
-  INTRADAY_5MIN   66%  1.41  139/210   IF MACD_X=below & EMA=bull & Day_Pos=deep_green
-                                      → NEXT_1h_dir=1h_UP
-  INTRADAY_5MIN   73%  1.56  138/188   IF RSI=oversold & EMA=strong_bear & Day_Pos=deep_re
-                                      → NEXT_2h_dir=2h_UP
-  INTRADAY_5MIN   69%  1.32  136/197   IF Time_Block=afternoon & Day_Pos=green
-                                      → NEXT_2h_dir=2h_DOWN
-  INTRADAY_5MIN   78%  1.66  135/173   IF Time_Block=midday & EMA=bull & Day_Pos=deep_gree
-                                      → NEXT_2h_dir=2h_UP
-  INTRADAY_5MIN   69%  1.32  134/193   IF Bar_Range=normal & Day_Pos=flat
-                                      → NEXT_2h_dir=2h_DOWN
-  INTRADAY_5MIN   68%  1.28  134/197   IF Time_Block=afternoon & Day_Pos=green
-                                      → NEXT_1h_dir=1h_DOWN
-  INTRADAY_5MIN   67%  1.43  132/197   IF BB_Pos=low_mid & EMA=strong_bear & Day_Pos=deep_
-                                      → NEXT_2h_dir=2h_UP
-  INTRADAY_5MIN   70%  1.49  131/188   IF RSI=oversold & EMA=strong_bear & Day_Pos=deep_re
-                                      → NEXT_1h_dir=1h_UP
-  REDDIT         86%  1.28  130/152   IF Mkt_volatility=normal
-                                      → NEXT_DayDir=day_DOWN
-  INTRADAY_5MIN   65%  1.24  130/200   IF Bar_Dir=slight_down & Day_Pos=flat
-                                      → NEXT_2h_dir=2h_DOWN
-  REDDIT         85%  1.27  125/147   IF Sent_Trend=stable & Mkt_volatility=normal
-                                      → NEXT_DayDir=day_DOWN
-  INTRADAY_5MIN   67%  1.43  124/185   IF RSI=oversold & MACD_X=below & Day_Pos=deep_red
-                                      → NEXT_2h_dir=2h_UP
-  INTRADAY_5MIN   66%  1.24  122/185   IF MACD_X=above & BB_Pos=high_mid & Prev_Bar=prev_f
-                                      → NEXT_5m_dir=5m_DOWN
-  INTRADAY_5MIN   69%  1.48  120/173   IF Time_Block=midday & EMA=bull & Day_Pos=deep_gree
-                                      → NEXT_1h_dir=1h_UP
-  REDDIT         89%  1.33  119/134   IF Mkt_trend=uptrend
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT         89%  1.32  118/133   IF Sent_Trend=stable & Mkt_trend=uptrend
-                                      → NEXT_DayDir=day_DOWN
-  INTRADAY_5MIN   68%  1.45  118/174   IF Bar_Range=tight & EMA=bull & Day_Pos=deep_green
-                                      → NEXT_1h_dir=1h_UP
-  INTRADAY_5MIN   67%  1.27  118/176   IF Time_Block=midday & EMA=slight_bull
-                                      → NEXT_1h_dir=1h_DOWN
-
-=====================================================================================
-  SIMPLEST RULES (1 condition, 5+ samples, 58%+ conf) [114]
-=====================================================================================
-
-  Src           Conf  Lift      Hits  Rule
-  ---------------------------------------------------------------------------
-  INTRADAY_5MIN   59%  1.11  442/748   IF Bar_Dir=up
-                                      → NEXT_5m_dir=5m_DOWN
-  INTRADAY_5MIN   59%  1.12  419/711   IF Day_Pos=green
-                                      → NEXT_2h_dir=2h_DOWN
-  INTRADAY_5MIN   63%  1.21  330/520   IF Day_Pos=flat
-                                      → NEXT_2h_dir=2h_DOWN
-  INTRADAY_5MIN   61%  1.16  306/504   IF MACD_H=strong_bull
-                                      → NEXT_2h_dir=2h_DOWN
-  INTRADAY_5MIN   58%  1.11  194/334   IF RSI=overbought
-                                      → NEXT_30m_dir=30m_DOWN
-  REDDIT         86%  1.28  130/152   IF Mkt_volatility=normal
-                                      → NEXT_DayDir=day_DOWN
-  INTRADAY_5MIN   59%  1.12  126/213   IF Streak=long_up
-                                      → NEXT_1h_dir=1h_DOWN
-  REDDIT         89%  1.33  119/134   IF Mkt_trend=uptrend
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT         59%  1.14   90/152   IF Mkt_volatility=normal
-                                      → NEXT_30m=30m_dump
-  REDDIT         65%  1.25   87/134   IF Mkt_trend=uptrend
-                                      → NEXT_30m=30m_dump
-  REDDIT         64%  1.14   86/134   IF Mkt_trend=uptrend
-                                      → NEXT_1h_Spike=1h_spike
-  REDDIT         94%  1.41   85/90    IF Mkt_momentum=strong_up
-                                      → NEXT_DayDir=day_DOWN
-  INTRADAY_5MIN   64%  1.22   83/129   IF RSI=extreme_oversold
-                                      → NEXT_1h_dir=1h_DOWN
-  REDDIT         86%  1.65   77/90    IF Mkt_momentum=strong_up
-                                      → NEXT_30m=30m_dump
-  INTRADAY_5MIN   58%  1.11   75/129   IF RSI=extreme_oversold
-                                      → NEXT_30m_dir=30m_DOWN
-  REDDIT         77%  1.99   69/90    IF Mkt_momentum=strong_up
-                                      → NEXT_FullDay=day_big_down
-  INTRADAY_5MIN   58%  1.25   69/118   IF Bar_Dir=sharp_down
-                                      → NEXT_5m_dir=5m_UP
-  REDDIT         69%  1.58   62/90    IF Mkt_momentum=strong_up
-                                      → NEXT_2h_Max=2h_up
-  REDDIT         69%  1.49   62/90    IF Mkt_momentum=strong_up
-                                      → NEXT_2Day=2day_big_down
-  REDDIT         69%  1.22   62/90    IF Mkt_momentum=strong_up
-                                      → NEXT_1h_Spike=1h_spike
-  REDDIT         68%  2.05   57/84    IF Mkt_trend=downtrend
+  NEWS          100%  1.49   42/42    IF Post_Time=pre_market & Buzz=high_buzz & Mkt_tren
+                                      → NEXT_1h_Spike=1h_big_spike
+  NEWS          100%  1.49   42/42    IF Post_Time=pre_market & Buzz=high_buzz & Mkt_tren
                                       → NEXT_DayDir=day_UP
-  REDDIT         60%  1.47   54/90    IF Mkt_momentum=strong_up
-                                      → NEXT_Gap=gap_up
-  REDDIT         70%  2.12   51/73    IF Mkt_momentum=strong_down
-                                      → NEXT_DayDir=day_UP
-  REDDIT         76%  2.29   50/66    IF Mkt_volatility=high
-                                      → NEXT_DayDir=day_UP
-  INTRADAY_5MIN   62%  1.18   50/80    IF RSI=extreme_overbought
-                                      → NEXT_1h_dir=1h_DOWN
-  INTRADAY_5MIN   62%  1.17   50/80    IF RSI=extreme_overbought
-                                      → NEXT_5m_dir=5m_DOWN
-  REDDIT         85%  1.27   35/41    IF Post_Time=overnight
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT         58%  1.26   35/60    IF Subjectivity=mixed
-                                      → NEXT_2Day=2day_big_down
-  REDDIT         79%  1.94   34/43    IF Post_Time=weekend
-                                      → NEXT_Gap=gap_up
-  REDDIT         83%  1.24   30/36    IF Mkt_momentum=up
-                                      → NEXT_DayDir=day_DOWN
+  NEWS          100%  1.49   42/42    IF Post_Time=pre_market & Buzz=high_buzz & Mkt_tren
+                                      → NEXT_2h_Max=2h_rip
+  NEWS          100%  1.91   41/41    IF Buzz=high_buzz & Mkt_trend_strength=strong_uptre
+                                      → NEXT_2Day=2day_big_up
+  NEWS          100%  1.86   41/41    IF Buzz=high_buzz & Mkt_volatility=normal & Mkt_vol
+                                      → NEXT_FullDay=day_big_up
+  NEWS          100%  1.49   41/41    IF Buzz=high_buzz & Mkt_volatility=normal
+                                      → NEXT_1h_Spike=1h_big_spike
+  NEWS          100%  1.49   41/41    IF Buzz=high_buzz & Mkt_trend=uptrend & Mkt_momentu
+                                      → NEXT_2h_Max=2h_rip
 
 =====================================================================================
-  BEST BUY SIGNALS (UP, 65%+ conf, 5+ samples) [285]
+  TIER A: NEAR-PERFECT (80-99% confidence, 7+ samples) [617]
 =====================================================================================
 
   Src           Conf  Lift      Hits  Rule
   ---------------------------------------------------------------------------
-  INTRADAY_5MIN   68%  1.44  165/243   IF RSI=oversold & Day_Pos=deep_red
+  INTRADAY_5MIN   81%  1.69  123/152   IF Time_Block=afternoon & VWAP=far_below & EMA=bear
+                                      → NEXT_2h_dir=2h_DOWN
+  INTRADAY_5MIN   80%  1.55  116/145   IF RSI=neutral & VWAP=far_above & Day_Pos=deep_gree
                                       → NEXT_2h_dir=2h_UP
-  INTRADAY_5MIN   66%  1.42  161/243   IF RSI=oversold & Day_Pos=deep_red
+  NEWS           91%  1.29   88/97    IF Mkt_volume_regime=high_vol
+                                      → NEXT_Gap=big_gap_down
+  NEWS           86%  1.28   84/98    IF Mkt_momentum=strong_up
+                                      → NEXT_1h_Spike=1h_big_spike
+  NEWS           86%  1.28   84/98    IF Mkt_momentum=strong_up
+                                      → NEXT_2h_Max=2h_rip
+  NEWS           86%  1.28   84/98    IF Mkt_momentum=strong_up
+                                      → NEXT_DayDir=day_UP
+  NEWS           94%  1.40   83/88    IF Mkt_momentum=strong_up & Mkt_volume_regime=high_
+                                      → NEXT_1h_Spike=1h_big_spike
+  NEWS           94%  1.40   83/88    IF Mkt_momentum=strong_up & Mkt_volume_regime=high_
+                                      → NEXT_2h_Max=2h_rip
+  NEWS           94%  1.40   83/88    IF Mkt_momentum=strong_up & Mkt_volume_regime=high_
+                                      → NEXT_DayDir=day_UP
+  NEWS           94%  1.34   83/88    IF Buzz=high_buzz
+                                      → NEXT_Gap=big_gap_down
+  NEWS           82%  1.16   80/98    IF Mkt_momentum=strong_up
+                                      → NEXT_Gap=big_gap_down
+  NEWS           90%  1.28   79/88    IF Mkt_momentum=strong_up & Mkt_volume_regime=high_
+                                      → NEXT_Gap=big_gap_down
+  NEWS           96%  1.43   76/79    IF Buzz=high_buzz & Mkt_momentum=strong_up
+                                      → NEXT_1h_Spike=1h_big_spike
+  NEWS           96%  1.43   76/79    IF Buzz=high_buzz & Mkt_momentum=strong_up
+                                      → NEXT_2h_Max=2h_rip
+  NEWS           96%  1.43   76/79    IF Buzz=high_buzz & Mkt_momentum=strong_up
+                                      → NEXT_DayDir=day_UP
+  INTRADAY_5MIN   83%  1.60   76/92    IF Time_Block=midday & MACD_H=strong_bear
                                       → NEXT_1h_dir=1h_UP
-  INTRADAY_5MIN   66%  1.41  139/210   IF MACD_X=below & EMA=bull & Day_Pos=deep_green
-                                      → NEXT_1h_dir=1h_UP
-  INTRADAY_5MIN   73%  1.56  138/188   IF RSI=oversold & EMA=strong_bear & Day_Pos=deep_re
+  NEWS           94%  1.33   74/79    IF Buzz=high_buzz & Mkt_momentum=strong_up
+                                      → NEXT_Gap=big_gap_down
+  INTRADAY_5MIN   84%  1.75   71/85    IF BB_Pos=low & VWAP=far_below & EMA=bear
+                                      → NEXT_2h_dir=2h_DOWN
+  INTRADAY_5MIN   82%  1.70   69/84    IF Time_Block=afternoon & RSI=neutral & Day_Pos=gre
+                                      → NEXT_1h_dir=1h_DOWN
+  NEWS           94%  1.34   68/72    IF Post_Time=pre_market & Mkt_volume_regime=high_vo
+                                      → NEXT_Gap=big_gap_down
+  NEWS           97%  1.38   64/66    IF Post_Time=pre_market & Buzz=high_buzz
+                                      → NEXT_Gap=big_gap_down
+  INTRADAY_5MIN   81%  1.57   64/79    IF Time_Block=afternoon & Rel_Vol=surge & Day_Pos=d
                                       → NEXT_2h_dir=2h_UP
-  INTRADAY_5MIN   78%  1.66  135/173   IF Time_Block=midday & EMA=bull & Day_Pos=deep_gree
+  INTRADAY_5MIN   80%  1.67   64/80    IF Bar_Range=tight & VWAP=far_below & EMA=bear
+                                      → NEXT_2h_dir=2h_DOWN
+  NEWS           97%  1.44   62/64    IF Post_Time=pre_market & Mkt_momentum=strong_up & 
+                                      → NEXT_1h_Spike=1h_big_spike
+  NEWS           97%  1.44   62/64    IF Post_Time=pre_market & Mkt_momentum=strong_up & 
+                                      → NEXT_2h_Max=2h_rip
+
+=====================================================================================
+  TIER B: HIGH-VOLUME RULES (65%+ confidence, 20+ samples) [960]
+=====================================================================================
+
+  Src           Conf  Lift      Hits  Rule
+  ---------------------------------------------------------------------------
+  INTRADAY_5MIN   68%  1.31  601/889   IF VWAP=far_above & Day_Pos=deep_green
                                       → NEXT_2h_dir=2h_UP
-  INTRADAY_5MIN   67%  1.43  132/197   IF BB_Pos=low_mid & EMA=strong_bear & Day_Pos=deep_
+  INTRADAY_5MIN   69%  1.33  408/592   IF Time_Block=afternoon & Day_Pos=deep_green
                                       → NEXT_2h_dir=2h_UP
-  INTRADAY_5MIN   70%  1.49  131/188   IF RSI=oversold & EMA=strong_bear & Day_Pos=deep_re
-                                      → NEXT_1h_dir=1h_UP
-  INTRADAY_5MIN   67%  1.43  124/185   IF RSI=oversold & MACD_X=below & Day_Pos=deep_red
+  INTRADAY_5MIN   65%  1.27  311/475   IF MACD_X=above & VWAP=far_above & Day_Pos=deep_gre
                                       → NEXT_2h_dir=2h_UP
-  INTRADAY_5MIN   69%  1.48  120/173   IF Time_Block=midday & EMA=bull & Day_Pos=deep_gree
-                                      → NEXT_1h_dir=1h_UP
-  INTRADAY_5MIN   68%  1.45  118/174   IF Bar_Range=tight & EMA=bull & Day_Pos=deep_green
-                                      → NEXT_1h_dir=1h_UP
-  INTRADAY_5MIN   66%  1.37  114/174   IF Bar_Range=tight & EMA=bull & Day_Pos=deep_green
+  INTRADAY_5MIN   65%  1.28  290/445   IF MACD_X=below & EMA=strong_bear
                                       → NEXT_30m_dir=30m_UP
-  INTRADAY_5MIN   65%  1.37  113/173   IF Time_Block=midday & EMA=bull & Day_Pos=deep_gree
+  INTRADAY_5MIN   68%  1.32  282/414   IF Time_Block=afternoon & VWAP=far_above & Day_Pos=
+                                      → NEXT_2h_dir=2h_UP
+  INTRADAY_5MIN   65%  1.28  282/433   IF MACD_H=strong_bear
                                       → NEXT_30m_dir=30m_UP
-  INTRADAY_5MIN   66%  1.41  112/170   IF RSI=oversold & VWAP=far_below & Day_Pos=deep_red
+  INTRADAY_5MIN   65%  1.28  281/431   IF MACD_H=strong_bear & MACD_X=below
+                                      → NEXT_30m_dir=30m_UP
+  INTRADAY_5MIN   67%  1.29  272/408   IF RSI=strong & VWAP=far_above & Day_Pos=deep_green
                                       → NEXT_1h_dir=1h_UP
-  INTRADAY_5MIN   67%  1.43  111/166   IF Bar_Dir=slight_down & EMA=bull & Day_Pos=deep_gr
-                                      → NEXT_1h_dir=1h_UP
-  INTRADAY_5MIN   67%  1.42  110/165   IF Time_Block=morning & EMA=strong_bear & Day_Pos=d
-                                      → NEXT_1h_dir=1h_UP
-  INTRADAY_5MIN   67%  1.42  110/165   IF Time_Block=afternoon & EMA=strong_bull
+  INTRADAY_5MIN   69%  1.34  243/350   IF MACD_X=below & VWAP=far_above & Day_Pos=deep_gre
                                       → NEXT_2h_dir=2h_UP
-  INTRADAY_5MIN   65%  1.39  108/165   IF MACD_H=neutral & EMA=strong_bull
-                                      → NEXT_2h_dir=2h_UP
-  INTRADAY_5MIN   68%  1.44  106/157   IF EMA=bull & Prev_Bar=prev_flat & Day_Pos=deep_gre
+  INTRADAY_5MIN   66%  1.29  242/364   IF Time_Block=midday & VWAP=far_above
                                       → NEXT_1h_dir=1h_UP
-  INTRADAY_5MIN   72%  1.53  104/145   IF Time_Block=afternoon & VWAP=far_above & EMA=stro
+  INTRADAY_5MIN   67%  1.38  241/361   IF RSI=neutral & BB_Pos=high_mid
+                                      → NEXT_1h_dir=1h_DOWN
+  INTRADAY_5MIN   66%  1.27  239/364   IF Bar_Dir=slight_up & Day_Pos=deep_green
                                       → NEXT_2h_dir=2h_UP
-  INTRADAY_5MIN   71%  1.51  103/145   IF Bar_Range=tight & VWAP=far_above & Day_Pos=deep_
+  INTRADAY_5MIN   66%  1.29  238/358   IF Bar_Range=normal & VWAP=far_above & Day_Pos=deep
+                                      → NEXT_2h_dir=2h_UP
+  INTRADAY_5MIN   73%  1.41  233/320   IF MACD_H=neutral & VWAP=far_above & Day_Pos=deep_g
+                                      → NEXT_2h_dir=2h_UP
+  INTRADAY_5MIN   71%  1.38  227/320   IF MACD_H=neutral & VWAP=far_above & Day_Pos=deep_g
+                                      → NEXT_1h_dir=1h_UP
+  INTRADAY_5MIN   72%  1.40  215/299   IF Time_Block=midday & VWAP=far_above & Day_Pos=dee
+                                      → NEXT_1h_dir=1h_UP
+  INTRADAY_5MIN   72%  1.50  210/292   IF Time_Block=afternoon & VWAP=far_below
+                                      → NEXT_2h_dir=2h_DOWN
+  INTRADAY_5MIN   66%  1.28  207/314   IF MACD_X=below & Mom_3bar=falling_fast
+                                      → NEXT_1h_dir=1h_UP
+  INTRADAY_5MIN   67%  1.30  206/307   IF BB_Pos=high & VWAP=far_above & Day_Pos=deep_gree
+                                      → NEXT_2h_dir=2h_UP
+  INTRADAY_5MIN   69%  1.33  205/299   IF Time_Block=midday & VWAP=far_above & Day_Pos=dee
+                                      → NEXT_2h_dir=2h_UP
+  INTRADAY_5MIN   65%  1.26  202/310   IF Time_Block=afternoon & MACD_X=below & Day_Pos=de
+                                      → NEXT_2h_dir=2h_UP
+  INTRADAY_5MIN   67%  1.29  201/302   IF Bar_Range=tight & Day_Pos=deep_green
+                                      → NEXT_2h_dir=2h_UP
+  INTRADAY_5MIN   69%  1.34  200/290   IF VWAP=far_above & Mom_3bar=flat & Day_Pos=deep_gr
+                                      → NEXT_1h_dir=1h_UP
+  INTRADAY_5MIN   69%  1.33  200/290   IF VWAP=far_above & Mom_3bar=flat & Day_Pos=deep_gr
+                                      → NEXT_2h_dir=2h_UP
+  INTRADAY_5MIN   69%  1.34  199/287   IF Rel_Vol=low & VWAP=far_above & Day_Pos=deep_gree
                                       → NEXT_2h_dir=2h_UP
 
 =====================================================================================
-  BEST SELL SIGNALS (DOWN, 65%+ conf, 5+ samples) [435]
+  SIMPLEST RULES (1 condition, 5+ samples, 58%+ conf) [315]
 =====================================================================================
 
   Src           Conf  Lift      Hits  Rule
   ---------------------------------------------------------------------------
-  INTRADAY_5MIN   65%  1.23  177/271   IF Bar_Dir=up & Mom_3bar=rising
-                                      → NEXT_5m_dir=5m_DOWN
-  INTRADAY_5MIN   66%  1.26  160/241   IF RSI=strong & Day_Pos=green
-                                      → NEXT_2h_dir=2h_DOWN
-  INTRADAY_5MIN   65%  1.24  147/225   IF MACD_X=above & Day_Pos=flat
-                                      → NEXT_2h_dir=2h_DOWN
-  INTRADAY_5MIN   66%  1.26  144/219   IF Time_Block=afternoon & MACD_X=above & EMA=bull
+  INTRADAY_5MIN   62%  1.20  886/1428  IF Day_Pos=deep_green
+                                      → NEXT_2h_dir=2h_UP
+  INTRADAY_5MIN   61%  1.18  679/1116  IF VWAP=far_above
+                                      → NEXT_2h_dir=2h_UP
+  INTRADAY_5MIN   60%  1.16  400/667   IF EMA=strong_bear
+                                      → NEXT_1h_dir=1h_UP
+  INTRADAY_5MIN   59%  1.16  395/667   IF EMA=strong_bear
+                                      → NEXT_30m_dir=30m_UP
+  INTRADAY_5MIN   59%  1.20  306/522   IF EMA=slight_bull
                                       → NEXT_30m_dir=30m_DOWN
-  INTRADAY_5MIN   65%  1.24  140/215   IF MACD_H=strong_bull & BB_Pos=high
-                                      → NEXT_2h_dir=2h_DOWN
-  INTRADAY_5MIN   69%  1.32  136/197   IF Time_Block=afternoon & Day_Pos=green
-                                      → NEXT_2h_dir=2h_DOWN
-  INTRADAY_5MIN   69%  1.32  134/193   IF Bar_Range=normal & Day_Pos=flat
-                                      → NEXT_2h_dir=2h_DOWN
-  INTRADAY_5MIN   68%  1.28  134/197   IF Time_Block=afternoon & Day_Pos=green
+  INTRADAY_5MIN   62%  1.21  304/489   IF Mom_3bar=falling_fast
+                                      → NEXT_1h_dir=1h_UP
+  INTRADAY_5MIN   62%  1.20  304/489   IF Mom_3bar=falling_fast
+                                      → NEXT_2h_dir=2h_UP
+  INTRADAY_5MIN   58%  1.14  284/489   IF Mom_3bar=falling_fast
+                                      → NEXT_30m_dir=30m_UP
+  INTRADAY_5MIN   65%  1.28  282/433   IF MACD_H=strong_bear
+                                      → NEXT_30m_dir=30m_UP
+  INTRADAY_5MIN   58%  1.21  280/479   IF MACD_H=strong_bull
                                       → NEXT_1h_dir=1h_DOWN
-  REDDIT         86%  1.28  130/152   IF Mkt_volatility=normal
-                                      → NEXT_DayDir=day_DOWN
-  INTRADAY_5MIN   65%  1.24  130/200   IF Bar_Dir=slight_down & Day_Pos=flat
-                                      → NEXT_2h_dir=2h_DOWN
-  REDDIT         85%  1.27  125/147   IF Sent_Trend=stable & Mkt_volatility=normal
-                                      → NEXT_DayDir=day_DOWN
-  INTRADAY_5MIN   66%  1.24  122/185   IF MACD_X=above & BB_Pos=high_mid & Prev_Bar=prev_f
-                                      → NEXT_5m_dir=5m_DOWN
-  REDDIT         89%  1.33  119/134   IF Mkt_trend=uptrend
-                                      → NEXT_DayDir=day_DOWN
-  REDDIT         89%  1.32  118/133   IF Sent_Trend=stable & Mkt_trend=uptrend
-                                      → NEXT_DayDir=day_DOWN
-  INTRADAY_5MIN   67%  1.27  118/176   IF Time_Block=midday & EMA=slight_bull
-                                      → NEXT_1h_dir=1h_DOWN
-  INTRADAY_5MIN   66%  1.27  118/178   IF Bar_Range=normal & MACD_X=above & EMA=bull
+  INTRADAY_5MIN   59%  1.15  256/433   IF MACD_H=strong_bear
+                                      → NEXT_1h_dir=1h_UP
+  INTRADAY_5MIN   61%  1.19  212/350   IF RSI=oversold
+                                      → NEXT_30m_dir=30m_UP
+  INTRADAY_5MIN   61%  1.18  212/350   IF RSI=oversold
+                                      → NEXT_1h_dir=1h_UP
+  INTRADAY_5MIN   62%  1.20  158/256   IF BB_Pos=below_lower
+                                      → NEXT_1h_dir=1h_UP
+  INTRADAY_5MIN   60%  1.17  153/256   IF BB_Pos=below_lower
+                                      → NEXT_30m_dir=30m_UP
+  INTRADAY_5MIN   58%  1.13  149/256   IF BB_Pos=below_lower
+                                      → NEXT_2h_dir=2h_UP
+  INTRADAY_5MIN   58%  1.19  137/235   IF BB_Pos=above_upper
                                       → NEXT_30m_dir=30m_DOWN
-  INTRADAY_5MIN   66%  1.24  117/178   IF BB_Pos=high_mid & Day_Pos=green
+  INTRADAY_5MIN   58%  1.13  137/235   IF BB_Pos=above_upper
+                                      → NEXT_5m_dir=5m_DOWN
+  INTRADAY_5MIN   60%  1.24  119/199   IF Streak=long_up
                                       → NEXT_1h_dir=1h_DOWN
-  REDDIT         88%  1.32  115/130   IF Buzz=high_buzz & Mkt_trend=uptrend
-                                      → NEXT_DayDir=day_DOWN
-  INTRADAY_5MIN   71%  1.35  115/162   IF RSI=strong & MACD_X=above & Day_Pos=green
-                                      → NEXT_2h_dir=2h_DOWN
-  REDDIT         88%  1.32  114/129   IF Buzz=high_buzz & Sent_Trend=stable & Mkt_trend=u
-                                      → NEXT_DayDir=day_DOWN
+  INTRADAY_5MIN   61%  1.18   92/151   IF Bar_Dir=sharp_down
+                                      → NEXT_1h_dir=1h_UP
+  INTRADAY_5MIN   59%  1.16   89/151   IF Bar_Dir=sharp_down
+                                      → NEXT_30m_dir=30m_UP
+  INTRADAY_5MIN   59%  1.14   89/151   IF Bar_Dir=sharp_down
+                                      → NEXT_2h_dir=2h_UP
+  NEWS           91%  1.29   88/97    IF Mkt_volume_regime=high_vol
+                                      → NEXT_Gap=big_gap_down
+  NEWS           86%  1.28   84/98    IF Mkt_momentum=strong_up
+                                      → NEXT_1h_Spike=1h_big_spike
+  NEWS           86%  1.28   84/98    IF Mkt_momentum=strong_up
+                                      → NEXT_2h_Max=2h_rip
+  NEWS           86%  1.28   84/98    IF Mkt_momentum=strong_up
+                                      → NEXT_DayDir=day_UP
+  NEWS           94%  1.34   83/88    IF Buzz=high_buzz
+                                      → NEXT_Gap=big_gap_down
+  NEWS           86%  1.27   83/97    IF Mkt_volume_regime=high_vol
+                                      → NEXT_1h_Spike=1h_big_spike
+  NEWS           86%  1.27   83/97    IF Mkt_volume_regime=high_vol
+                                      → NEXT_2h_Max=2h_rip
+  NEWS           86%  1.27   83/97    IF Mkt_volume_regime=high_vol
+                                      → NEXT_DayDir=day_UP
 
 =====================================================================================
-  Last computed: 2026-04-10 18:54
+  BEST BUY SIGNALS (UP, 65%+ conf, 5+ samples) [504]
+=====================================================================================
+
+  Src           Conf  Lift      Hits  Rule
+  ---------------------------------------------------------------------------
+  INTRADAY_5MIN   68%  1.31  601/889   IF VWAP=far_above & Day_Pos=deep_green
+                                      → NEXT_2h_dir=2h_UP
+  INTRADAY_5MIN   69%  1.33  408/592   IF Time_Block=afternoon & Day_Pos=deep_green
+                                      → NEXT_2h_dir=2h_UP
+  INTRADAY_5MIN   65%  1.27  311/475   IF MACD_X=above & VWAP=far_above & Day_Pos=deep_gre
+                                      → NEXT_2h_dir=2h_UP
+  INTRADAY_5MIN   65%  1.28  290/445   IF MACD_X=below & EMA=strong_bear
+                                      → NEXT_30m_dir=30m_UP
+  INTRADAY_5MIN   68%  1.32  282/414   IF Time_Block=afternoon & VWAP=far_above & Day_Pos=
+                                      → NEXT_2h_dir=2h_UP
+  INTRADAY_5MIN   65%  1.28  282/433   IF MACD_H=strong_bear
+                                      → NEXT_30m_dir=30m_UP
+  INTRADAY_5MIN   65%  1.28  281/431   IF MACD_H=strong_bear & MACD_X=below
+                                      → NEXT_30m_dir=30m_UP
+  INTRADAY_5MIN   67%  1.29  272/408   IF RSI=strong & VWAP=far_above & Day_Pos=deep_green
+                                      → NEXT_1h_dir=1h_UP
+  INTRADAY_5MIN   69%  1.34  243/350   IF MACD_X=below & VWAP=far_above & Day_Pos=deep_gre
+                                      → NEXT_2h_dir=2h_UP
+  INTRADAY_5MIN   66%  1.29  242/364   IF Time_Block=midday & VWAP=far_above
+                                      → NEXT_1h_dir=1h_UP
+  INTRADAY_5MIN   66%  1.27  239/364   IF Bar_Dir=slight_up & Day_Pos=deep_green
+                                      → NEXT_2h_dir=2h_UP
+  INTRADAY_5MIN   66%  1.29  238/358   IF Bar_Range=normal & VWAP=far_above & Day_Pos=deep
+                                      → NEXT_2h_dir=2h_UP
+  INTRADAY_5MIN   73%  1.41  233/320   IF MACD_H=neutral & VWAP=far_above & Day_Pos=deep_g
+                                      → NEXT_2h_dir=2h_UP
+  INTRADAY_5MIN   71%  1.38  227/320   IF MACD_H=neutral & VWAP=far_above & Day_Pos=deep_g
+                                      → NEXT_1h_dir=1h_UP
+  INTRADAY_5MIN   72%  1.40  215/299   IF Time_Block=midday & VWAP=far_above & Day_Pos=dee
+                                      → NEXT_1h_dir=1h_UP
+  INTRADAY_5MIN   66%  1.28  207/314   IF MACD_X=below & Mom_3bar=falling_fast
+                                      → NEXT_1h_dir=1h_UP
+  INTRADAY_5MIN   67%  1.30  206/307   IF BB_Pos=high & VWAP=far_above & Day_Pos=deep_gree
+                                      → NEXT_2h_dir=2h_UP
+  INTRADAY_5MIN   69%  1.33  205/299   IF Time_Block=midday & VWAP=far_above & Day_Pos=dee
+                                      → NEXT_2h_dir=2h_UP
+  INTRADAY_5MIN   65%  1.26  202/310   IF Time_Block=afternoon & MACD_X=below & Day_Pos=de
+                                      → NEXT_2h_dir=2h_UP
+  INTRADAY_5MIN   67%  1.29  201/302   IF Bar_Range=tight & Day_Pos=deep_green
+                                      → NEXT_2h_dir=2h_UP
+
+=====================================================================================
+  BEST SELL SIGNALS (DOWN, 65%+ conf, 5+ samples) [369]
+=====================================================================================
+
+  Src           Conf  Lift      Hits  Rule
+  ---------------------------------------------------------------------------
+  INTRADAY_5MIN   67%  1.38  241/361   IF RSI=neutral & BB_Pos=high_mid
+                                      → NEXT_1h_dir=1h_DOWN
+  INTRADAY_5MIN   72%  1.50  210/292   IF Time_Block=afternoon & VWAP=far_below
+                                      → NEXT_2h_dir=2h_DOWN
+  INTRADAY_5MIN   67%  1.38  199/298   IF RSI=neutral & MACD_X=above & BB_Pos=high_mid
+                                      → NEXT_1h_dir=1h_DOWN
+  INTRADAY_5MIN   69%  1.45  189/273   IF VWAP=far_below & EMA=bear
+                                      → NEXT_2h_dir=2h_DOWN
+  INTRADAY_5MIN   73%  1.53  150/205   IF Time_Block=afternoon & VWAP=far_below & Day_Pos=
+                                      → NEXT_2h_dir=2h_DOWN
+  INTRADAY_5MIN   70%  1.45  150/214   IF Time_Block=afternoon & Day_Pos=green
+                                      → NEXT_1h_dir=1h_DOWN
+  INTRADAY_5MIN   68%  1.43  146/214   IF Time_Block=afternoon & Day_Pos=green
+                                      → NEXT_2h_dir=2h_DOWN
+  INTRADAY_5MIN   68%  1.38  145/214   IF Time_Block=afternoon & Day_Pos=green
+                                      → NEXT_30m_dir=30m_DOWN
+  INTRADAY_5MIN   66%  1.38  139/211   IF RSI=weak & MACD_H=neutral & EMA=bear
+                                      → NEXT_2h_dir=2h_DOWN
+  INTRADAY_5MIN   66%  1.34  132/201   IF Time_Block=afternoon & Rel_Vol=normal & RSI=neut
+                                      → NEXT_30m_dir=30m_DOWN
+  INTRADAY_5MIN   68%  1.43  131/192   IF Time_Block=afternoon & MACD_X=above & Day_Pos=de
+                                      → NEXT_2h_dir=2h_DOWN
+  INTRADAY_5MIN   65%  1.33  127/195   IF Time_Block=afternoon & RSI=neutral & EMA=slight_
+                                      → NEXT_30m_dir=30m_DOWN
+  INTRADAY_5MIN   68%  1.42  124/183   IF Bar_Dir=slight_up & Day_Pos=green
+                                      → NEXT_2h_dir=2h_DOWN
+  INTRADAY_5MIN   81%  1.69  123/152   IF Time_Block=afternoon & VWAP=far_below & EMA=bear
+                                      → NEXT_2h_dir=2h_DOWN
+  INTRADAY_5MIN   71%  1.48  121/170   IF RSI=neutral & BB_Pos=high_mid & Mom_3bar=flat
+                                      → NEXT_1h_dir=1h_DOWN
+  INTRADAY_5MIN   69%  1.44  120/173   IF Time_Block=afternoon & RSI=neutral & BB_Pos=high
+                                      → NEXT_1h_dir=1h_DOWN
+  INTRADAY_5MIN   69%  1.42  120/173   IF Time_Block=afternoon & RSI=neutral & BB_Pos=high
+                                      → NEXT_30m_dir=30m_DOWN
+  INTRADAY_5MIN   74%  1.53  116/157   IF Time_Block=afternoon & MACD_H=neutral & Day_Pos=
+                                      → NEXT_1h_dir=1h_DOWN
+  INTRADAY_5MIN   73%  1.52  115/158   IF Time_Block=afternoon & MACD_H=neutral & VWAP=far
+                                      → NEXT_2h_dir=2h_DOWN
+  INTRADAY_5MIN   66%  1.36  115/173   IF Bar_Range=normal & Rel_Vol=normal & RSI=neutral
+                                      → NEXT_30m_dir=30m_DOWN
+
+=====================================================================================
+  Last computed: 2026-06-18 19:24
   Run: python3 compute_rules.py
 =====================================================================================

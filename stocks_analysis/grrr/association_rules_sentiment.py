@@ -224,7 +224,7 @@ def get_market_context(dt, daily):
 
     # Trend: use EMA5 (fast) instead of SMA10 (was lagging during crashes)
     if len(prior) >= 5:
-        ema5 = prior["Close"].ewm(span=5, adjust=False).iloc[-1]
+        ema5 = prior["Close"].ewm(span=5, adjust=False).mean().iloc[-1]
         sma5 = prior["Close"].tail(5).mean()
         context["trend"] = "uptrend" if last["Close"] > ema5 else "downtrend"
     else:

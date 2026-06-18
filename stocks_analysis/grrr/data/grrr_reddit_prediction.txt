@@ -1,46 +1,47 @@
 ======================================================================
   GRRR REDDIT-BASED NEXT-DAY PREDICTION
-  Generated: 2026-04-10 18:55
-  Today: Friday | Predicting: Monday
+  Generated: 2026-06-18 19:24
+  Today: Thursday | Predicting: Friday
 ======================================================================
 
   ╔════════════════════════════════════════════════╗
-  ║  PREDICTION:  NEUTRAL                            ║
-  ║  CONFIDENCE:    9.6%                          ║
-  ║  COMPOSITE:   +0.0481                         ║
+  ║  PREDICTION:  LEAN BUY                           ║
+  ║  CONFIDENCE:   29.6%                          ║
+  ║  COMPOSITE:   +0.1481                         ║
   ╚════════════════════════════════════════════════╝
 
 REDDIT STATS:
-  Total posts scraped:    147
-  Posts in last 24h:      19 (viral)
-  Weekend posts:          44
-  Avg polarity:           +0.0767 (neutral)
-  Sentiment trend:        +0.0849 (improving)
+  Total posts scraped:    12
+  Posts in last 24h:      5 (moderate)
+  Weekend posts:          1
+  Avg polarity:           -0.0249 (neutral)
+  Sentiment trend:        +0.0000 (unknown)
 
 FACTOR BREAKDOWN:
 ----------------------------------------------------------------------
   Factor                    Raw  Weight   Score  Detail
 ----------------------------------------------------------------------
   weekend_buzz           +0.00     3.0  +0.000  Not weekend/Monday pre-market. Weekend posts 
-                                               were: 44
-  mean_reversion         -0.10     2.5  -0.250  Mild rally +2.8% → slight fade
-  buzz_volume            +0.30     1.5  +0.450  Posts in last 24h: 19 (viral). Rule: moderate
-                                               _buzz → next day UP 70% (30/43)
-  avg_polarity           +0.00     1.0  +0.000  Avg polarity: 0.0767 (neutral). Contrarian ru
-                                               le: negative → next day UP 86% (18/21). Contr
-                                               arian bonus: +0.0
-  polarity_trend         -0.10     1.5  -0.150  Trend: +0.0849 (improving). Recent 24h avg: 0
-                                               .0767 (19 posts), Prior 24h avg: -0.0082 (36 
-                                               posts). Rule: deteriorating → next day UP 86%
-  day_of_week            +0.30     2.0  +0.600  Today is Friday. Score: +0.3. 71% → Monday UP
-                                                (15/21)
-  extreme_ratio          +0.00     1.0  +0.000  Extreme posts: 1 strong neg, 3 strong pos out
-                                                of 19 (21% extreme). Strong neg ratio: 5%
-  buzz_acceleration      +0.00     1.0  +0.000  Last 12h: 9 posts, Prior 12h: 10 posts. Accel
-                                               eration: -10.0%
+                                               were: 1
+  mean_reversion         +1.00     2.5  +2.500  BIG DROP -6.6% → STRONG bounce signal. Rule: 
+                                               big_down+wide→gap UP 80% (4/5) [TREND BREAKIN
+                                               G: EMA5 dist -4.1%]
+  buzz_volume            +0.20     1.5  +0.300  Posts in last 24h: 5 (moderate). Rule: modera
+                                               te_buzz → next day UP 70% (30/43)
+  avg_polarity           +0.00     1.0  +0.000  Avg polarity: -0.0249 (neutral). Contrarian r
+                                               ule: negative → next day UP 86% (18/21). Cont
+                                               rarian bonus: +0.0
+  polarity_trend         +0.00     1.5  +0.000  Not enough data for trend (need 2+ posts in e
+                                               ach 24h window). Recent: 5, Prior: 1
+  day_of_week            -0.40     2.0  -0.800  Today is Thursday. Score: -0.4. 63% → Friday 
+                                               DOWN (17/27)
+  extreme_ratio          +0.00     1.0  +0.000  Extreme posts: 0 strong neg, 0 strong pos out
+                                                of 5 (0% extreme). Strong neg ratio: 0%
+  buzz_acceleration      +0.00     1.0  +0.000  Last 12h: 3 posts, Prior 12h: 2 posts. Accele
+                                               ration: +50.0%
 ----------------------------------------------------------------------
-  COMPOSITE                        13.5  +0.650
-  NORMALIZED                             +0.0481
+  COMPOSITE                        13.5  +2.000
+  NORMALIZED                             +0.1481
 
 SCORING THRESHOLDS:
   Buzz:      dead(0-1), quiet(2-3), moderate(4-7), high(8-14), viral(15+)
