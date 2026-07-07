@@ -1,16 +1,16 @@
 {
-  "generated": "2026-07-07T19:44:40.495545",
+  "generated": "2026-07-07T19:57:12.936132",
   "direction": "NEUTRAL",
   "confidence": 8.1,
   "composite": 0.0407,
   "next_day": "Wednesday",
   "today": "Tuesday",
   "stats": {
-    "total_posts": 197,
-    "posts_24h": 31,
-    "posts_weekend": 99,
-    "avg_polarity": 0.022,
-    "trend_diff": -0.0048,
+    "total_posts": 221,
+    "posts_24h": 35,
+    "posts_weekend": 105,
+    "avg_polarity": 0.048,
+    "trend_diff": 0.0429,
     "pol_bucket": "neutral",
     "trend_bucket": "stable",
     "buzz_bucket": "viral"
