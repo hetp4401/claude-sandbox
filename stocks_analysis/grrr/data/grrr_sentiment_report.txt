@@ -1,68 +1,75 @@
 ============================================================
   GRRR NEWS SENTIMENT REPORT
-  Generated: 2026-06-18 19:18
+  Generated: 2026-07-07 19:38
   Lookback:  30 days
 ============================================================
 
 OVERALL SENTIMENT:
-  Total articles:  129
-  Positive:        23 (17.8%)
-  Negative:        40 (31.0%)
-  Neutral:         66 (51.2%)
-  Avg polarity:    -0.0624 (bearish)
-  Avg subjectivity:0.2978
+  Total articles:  79
+  Positive:        15 (19.0%)
+  Negative:        17 (21.5%)
+  Neutral:         47 (59.5%)
+  Avg polarity:    -0.0177 (neutral)
+  Avg subjectivity:0.2777
 
-  >>> SENTIMENT GAUGE: MILDLY BEARISH <<<
+  >>> SENTIMENT GAUGE: NEUTRAL <<<
 
 DAILY BREAKDOWN:
 ------------------------------------------------------------
 Date         Articles   Avg Pol  Pos  Neg  Neu   Ratio
 ------------------------------------------------------------
-2026-06-18          1    0.0000    0    0    1  0.0000
-2026-06-17          6    0.0847    1    0    5  0.1667
-2026-06-16          7   -0.2017    1    5    1 -0.5714
-2026-06-14          2    0.0952    1    0    1  0.5000
-2026-06-12          5   -0.2252    1    4    0 -0.6000
-2026-06-11          3   -0.2443    0    2    1 -0.6667
-2026-06-10          2   -0.2416    0    2    0 -1.0000
-2026-06-08          3    0.0667    1    0    2  0.3333
-2026-06-06          1    0.0000    0    0    1  0.0000
-2026-06-05          2    0.0081    0    0    2  0.0000
-2026-06-04          9   -0.0024    3    1    5  0.2222
-2026-06-03         23   -0.1165    1    8   14 -0.3043
-2026-06-02         15   -0.0393    2    3   10 -0.0667
-2026-06-01          2   -0.1750    0    1    1 -0.5000
-2026-05-30          2   -0.3734    0    2    0 -1.0000
-2026-05-29          8   -0.1120    1    3    4 -0.2500
-2026-05-28          4   -0.0508    1    2    1 -0.2500
-2026-05-27         26    0.0106   10    6   10  0.1538
-2026-05-26          8    0.0001    0    1    7 -0.1250
+2026-07-07          1    0.0000    0    0    1  0.0000
+2026-07-06          2    0.0000    0    0    2  0.0000
+2026-07-05          2    0.0250    1    0    1  0.5000
+2026-07-04          3    0.0289    1    1    1  0.0000
+2026-07-03          3   -0.0857    0    2    1 -0.6667
+2026-07-02          2   -0.0639    1    1    0  0.0000
+2026-07-01         10   -0.0838    1    3    6 -0.2000
+2026-06-30          3    0.1111    1    0    2  0.3333
+2026-06-29          7   -0.0910    0    2    5 -0.2857
+2026-06-28          3    0.1767    2    0    1  0.6667
+2026-06-26          3    0.1111    1    0    2  0.3333
+2026-06-25          1    0.0000    0    0    1  0.0000
+2026-06-24          3    0.2056    3    0    0  1.0000
+2026-06-23         13   -0.0075    3    2    8  0.0769
+2026-06-18          2    0.0000    0    0    2  0.0000
+2026-06-17          2    0.0489    0    0    2  0.0000
+2026-06-16          1    0.0000    0    0    1  0.0000
+2026-06-15          1    0.0179    0    0    1  0.0000
+2026-06-14          2   -0.0772    0    1    1 -0.5000
+2026-06-12          2   -0.1750    0    1    1 -0.5000
+2026-06-11          3   -0.1277    0    1    2 -0.3333
+2026-06-10          2    0.0428    0    0    2  0.0000
+2026-06-08          2    0.1704    1    0    1  0.5000
+2026-06-05          1    0.0162    0    0    1  0.0000
+2026-06-03          3   -0.1989    0    1    2 -0.3333
+2026-06-02          2   -0.2308    0    2    0 -1.0000
 
 MOST POSITIVE ARTICLES:
 ------------------------------------------------------------
-  [+0.467] Gorilla Technology Group Inc (GRRRW) Valuation: PE, PB & Fair Value Analysis - T
-          2026-06-17 21:53 | TradingKey
-  [+0.391] $Gorilla Technology (GRRR.US)$ finally able to buy more! thanks moomoo ❤️ easy 5
-          2026-06-12 16:51 | Moomoo
-  [+0.289] Earnings call transcript: Gorilla Tech’s Q1 2026 sees strong revenue growth - In
-          2026-05-27 07:00 | Investing.com
-  [+0.250] Undercovered Dozen: Hess Midstream, Gorilla Technology, Vertiv Holdings, And Mor
-          2026-06-08 07:00 | Seeking Alpha
-  [+0.244] High Growth US Tech Stocks To Watch In May 2026
-          2026-05-27 11:38 | Yahoo Finance
+  [+0.425] $Gorilla Technology (GRRR.US)$ Beautiful... - Moomoo
+          2026-07-01 16:24 | Moomoo
+  [+0.333] Wall Street Analysts Are Bullish on Top Industrial Goods Picks - The Globe and M
+          2026-06-30 13:22 | The Globe and Mail
+  [+0.333] Analysts Are Bullish on These Industrial Goods Stocks: Safe Pro Group, Inc. (SPA
+          2026-06-26 07:00 | The Globe and Mail
+  [+0.280] Based on the current median of this year's guidance at $180 million, what is the
+          2026-06-28 07:00 | Moomoo
+  [+0.267] Today’s free chart updates: $ADUR | $INTU | $ZVRA | $QQQ - KuCoin
+          2026-07-04 01:09 | KuCoin
 
 MOST NEGATIVE ARTICLES:
 ------------------------------------------------------------
   [-0.700] GRRR Stock Slides Premarket Despite A $2B AI Deal With Supermicro — Here's Why
           2026-06-03 08:07 | Stocktwits
-  [-0.467] Gorilla Technology Group Inc (GRRR) Institutional Confidence - TradingKey
-          2026-06-16 07:00 | TradingKey
-  [-0.467] Gorilla Technology Group (GRRR) Stock After US$107m Convertible Notes Offering H
-          2026-06-12 11:37 | simplywall.st
-  [-0.467] Gorilla Technology (GRRR) Price Target Raised to $40 After Stron - GuruFocus
-          2026-06-04 07:00 | GuruFocus
-  [-0.467] ROYAL ENFIELD IGNITES BENGALURU WITH THE HIGH-OCTANE ‘GRRR NIGHTS X UNDERGROUND’
-          2026-06-03 13:45 | This Week India
+  [-0.467] Analysts Are Bullish on These Technology Stocks: Gorilla Technology Group Inc. (
+          2026-07-01 13:54 | The Globe and Mail
+  [-0.467] Gorilla Technology Group (GRRR) Is Up 16.3% After Hiking Q2 2026 AI Revenue Guid
+          2026-07-01 12:14 | Yahoo Finance
+  [-0.467] Gorilla Technology Group (GRRR) Projects Q2 2026 Revenue of At L - GuruFocus
+          2026-06-29 07:00 | GuruFocus
+  [-0.400] Gorilla Technology Group (GRRR) Is Up 16.3% After Raising Q2 Revenue Outlook to 
+          2026-07-01 16:56 | simplywall.st
 
 ============================================================
 Sources: yfinance, Yahoo Finance RSS, Google News RSS

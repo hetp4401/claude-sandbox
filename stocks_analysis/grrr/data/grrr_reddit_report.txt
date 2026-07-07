@@ -1,17 +1,17 @@
 =================================================================
   GRRR REDDIT SENTIMENT REPORT
-  Generated: 2026-06-18 19:18
+  Generated: 2026-07-07 19:39
   Lookback:  30 days
   Method:    Google News RSS (site:reddit.com)
 =================================================================
 
 OVERALL REDDIT SENTIMENT:
-  Total discussions: 108
-  Positive:          15 (13.9%)
-  Negative:          19 (17.6%)
-  Neutral:           74 (68.5%)
-  Avg polarity:      -0.0145
-  Weighted avg:      -0.0145
+  Total discussions: 184
+  Positive:          36 (19.6%)
+  Negative:          19 (10.3%)
+  Neutral:           129 (70.1%)
+  Avg polarity:      0.0281
+  Weighted avg:      0.0281
 
   >>> REDDIT SENTIMENT GAUGE: NEUTRAL <<<
 
@@ -19,68 +19,72 @@ SUBREDDIT BREAKDOWN:
 -----------------------------------------------------------------
 Subreddit                  Posts  Avg Polarity
 -----------------------------------------------------------------
-r/unknown                    108       -0.0145
+r/unknown                    182        0.0267
+r/NewMaxx                      1        0.2945
+r/Gemini                       1        0.0000
 
 DAILY BREAKDOWN:
 -----------------------------------------------------------------
 Date          Items   Avg Pol  Pos  Neg  Neu
 -----------------------------------------------------------------
-2026-06-18       15   -0.0128    0    2   13
-2026-06-17       15    0.0699    5    1    9
-2026-06-16        9    0.0339    1    0    8
-2026-06-15        1    0.1400    1    0    0
-2026-06-14        3   -0.0083    1    1    1
-2026-06-13        3    0.0000    0    0    3
-2026-06-12        5    0.1600    2    0    3
-2026-06-11        3    0.0933    1    0    2
-2026-06-09        4   -0.1925    0    2    2
-2026-06-08        2   -0.0875    0    1    1
-2026-06-07        3    0.0000    0    0    3
-2026-06-06        2    0.0800    1    0    1
-2026-06-05        3   -0.0500    0    0    3
-2026-06-04        2   -0.1750    0    1    1
-2026-06-03        5    0.0100    0    0    5
-2026-06-02        4   -0.2182    0    3    1
-2026-06-01        5   -0.1750    0    3    2
-2026-05-31        2    0.0000    0    0    2
-2026-05-29        4   -0.0596    1    1    2
-2026-05-28        3   -0.2000    1    2    0
-2026-05-27        5   -0.0855    0    2    3
-2026-05-26        4    0.0227    0    0    4
-2026-05-25        1    0.2636    1    0    0
-2026-05-22        2    0.0000    0    0    2
-2026-05-20        3   -0.0104    0    0    3
+2026-07-07        8    0.1114    3    0    5
+2026-07-06       22    0.0072    2    2   18
+2026-07-05       17    0.0211    4    2   11
+2026-07-04       16    0.0461    3    2   11
+2026-07-03       10    0.0166    2    2    6
+2026-07-02       10   -0.0367    1    1    8
+2026-07-01       15   -0.0280    1    2   12
+2026-06-30        5   -0.0250    0    1    4
+2026-06-29       14    0.0169    3    2    9
+2026-06-28        2    0.2426    1    0    1
+2026-06-27        4   -0.1650    0    2    2
+2026-06-26        4    0.0000    0    0    4
+2026-06-25        2    0.1476    1    1    0
+2026-06-24       10    0.1257    4    0    6
+2026-06-23        9    0.0447    2    1    6
+2026-06-22        6   -0.0889    0    1    5
+2026-06-20        1    0.0000    0    0    1
+2026-06-19        3    0.0917    1    0    2
+2026-06-18        8    0.0960    3    0    5
+2026-06-17        2    0.0534    1    0    1
+2026-06-16        4    0.0580    1    0    3
+2026-06-15        3    0.1333    1    0    2
+2026-06-14        2    0.0928    1    0    1
+2026-06-12        4    0.0700    1    0    3
+2026-06-10        1    0.0333    0    0    1
+2026-06-09        1    0.0000    0    0    1
+2026-06-08        1    0.0000    0    0    1
 
 MOST BULLISH DISCUSSIONS:
 -----------------------------------------------------------------
-  [+0.533] r/unknown | Alex Pereira's Kickboxing Legacy: All-Time Great or Overhype
-           2026-06-12 12:15
-  [+0.375] r/unknown | Remember when mighty ape was good? - Reddit
-           2026-06-17 19:30
-  [+0.280] r/unknown | List of most promising stocks to swing trade? - Reddit
-           2026-06-11 22:31
-  [+0.264] r/unknown | If all goes well, I'll buy more Grab shares on Thursday. Buy
-           2026-05-25 07:00
-  [+0.240] r/unknown | RGNT scrapped its own share offering and a 2.8M float ran it
-           2026-06-16 00:09
+  [+0.533] r/unknown | Having A Great Time - Reddit
+           2026-07-04 21:43
+  [+0.503] r/unknown | Wonderful interview of Jack Smith today by Nicolle Wallace -
+           2026-07-03 00:58
+  [+0.440] r/unknown | Update: My (29F) husband (33M) says I changed after having k
+           2026-06-24 07:00
+  [+0.429] r/unknown | Many family cars are now too powerful for their own good - R
+           2026-06-25 10:54
+  [+0.407] r/unknown | hot take: i enjoy dbd!!!! - Reddit
+           2026-07-04 20:16
 
 MOST BEARISH DISCUSSIONS:
 -----------------------------------------------------------------
-  [-0.595] r/unknown | Grange Resources ( ASX: GRR) is extremely ugly; and that's h
-           2026-06-09 00:17
-  [-0.467] r/unknown | $75k GRRR YOLO 🙈 🚀 - Reddit
-           2026-06-02 07:00
-  [-0.467] r/unknown | Is anyone watching over Gorilla Technology (GRRR) what are y
-           2026-05-28 07:00
-  [-0.350] r/unknown | GRRR: An AI Stock That Hasn’t Boarded the Hype Train - Reddi
-           2026-06-04 16:58
-  [-0.350] r/unknown | $GRRR $500M mc vs $5B GPUaaS backlog - Reddit
-           2026-06-01 07:00
+  [-0.533] r/unknown | Y’all ever hate literally everything you pull out of the kil
+           2026-06-22 07:00
+  [-0.500] r/unknown | EVIL (Insidious) Is Leaving Winter Coalition - Reddit
+           2026-07-02 20:50
+  [-0.500] r/unknown | Indexing and trading, Anyone got the Grim? - Reddit
+           2026-06-27 05:38
+  [-0.417] r/unknown | Can I be mad about this for a minute? - Reddit
+           2026-06-29 07:00
+  [-0.350] r/unknown | breakfast (grrr) - Reddit
+           2026-07-04 15:13
 
 BUZZ TREND (last 7 days vs prior):
-  Recent avg/day: 7.3
-  Prior avg/day:  3.2
-  Change:         +130.1%
+  Recent avg/day: 14.0
+  Prior avg/day:  4.3
+  Change:         +225.6%
   >>> BUZZ SURGING <<<
 
 =================================================================
