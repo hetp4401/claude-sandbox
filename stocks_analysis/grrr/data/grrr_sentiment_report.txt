@@ -1,16 +1,16 @@
 ============================================================
   GRRR NEWS SENTIMENT REPORT
-  Generated: 2026-07-07 19:38
+  Generated: 2026-07-09 17:34
   Lookback:  30 days
 ============================================================
 
 OVERALL SENTIMENT:
-  Total articles:  79
-  Positive:        15 (19.0%)
-  Negative:        17 (21.5%)
-  Neutral:         47 (59.5%)
-  Avg polarity:    -0.0177 (neutral)
-  Avg subjectivity:0.2777
+  Total articles:  76
+  Positive:        15 (19.7%)
+  Negative:        15 (19.7%)
+  Neutral:         46 (60.5%)
+  Avg polarity:    -0.0024 (neutral)
+  Avg subjectivity:0.2535
 
   >>> SENTIMENT GAUGE: NEUTRAL <<<
 
@@ -18,58 +18,57 @@ DAILY BREAKDOWN:
 ------------------------------------------------------------
 Date         Articles   Avg Pol  Pos  Neg  Neu   Ratio
 ------------------------------------------------------------
-2026-07-07          1    0.0000    0    0    1  0.0000
-2026-07-06          2    0.0000    0    0    2  0.0000
-2026-07-05          2    0.0250    1    0    1  0.5000
-2026-07-04          3    0.0289    1    1    1  0.0000
+2026-07-08          6    0.0542    1    0    5  0.1667
+2026-07-07          2    0.0000    0    0    2  0.0000
+2026-07-06          2   -0.0500    0    0    2  0.0000
+2026-07-05          1    0.1500    1    0    0  1.0000
+2026-07-04          2   -0.0900    0    1    1 -0.5000
 2026-07-03          3   -0.0857    0    2    1 -0.6667
 2026-07-02          2   -0.0639    1    1    0  0.0000
-2026-07-01         10   -0.0838    1    3    6 -0.2000
-2026-06-30          3    0.1111    1    0    2  0.3333
-2026-06-29          7   -0.0910    0    2    5 -0.2857
-2026-06-28          3    0.1767    2    0    1  0.6667
-2026-06-26          3    0.1111    1    0    2  0.3333
+2026-07-01          8   -0.1048    1    3    4 -0.2500
+2026-06-30          2    0.0000    0    0    2  0.0000
+2026-06-29          5   -0.0340    0    1    4 -0.2000
+2026-06-28          5    0.0500    1    0    4  0.2000
+2026-06-26          1    0.0000    0    0    1  0.0000
 2026-06-25          1    0.0000    0    0    1  0.0000
-2026-06-24          3    0.2056    3    0    0  1.0000
-2026-06-23         13   -0.0075    3    2    8  0.0769
-2026-06-18          2    0.0000    0    0    2  0.0000
-2026-06-17          2    0.0489    0    0    2  0.0000
+2026-06-24          4    0.0986    3    1    0  0.5000
+2026-06-23         12   -0.0193    2    2    8  0.0000
+2026-06-20          1    0.1000    0    0    1  0.0000
+2026-06-19          1    0.3333    1    0    0  1.0000
+2026-06-18          1    0.0000    0    0    1  0.0000
+2026-06-17          6    0.1635    3    0    3  0.5000
 2026-06-16          1    0.0000    0    0    1  0.0000
-2026-06-15          1    0.0179    0    0    1  0.0000
-2026-06-14          2   -0.0772    0    1    1 -0.5000
-2026-06-12          2   -0.1750    0    1    1 -0.5000
-2026-06-11          3   -0.1277    0    1    2 -0.3333
-2026-06-10          2    0.0428    0    0    2  0.0000
-2026-06-08          2    0.1704    1    0    1  0.5000
-2026-06-05          1    0.0162    0    0    1  0.0000
-2026-06-03          3   -0.1989    0    1    2 -0.3333
-2026-06-02          2   -0.2308    0    2    0 -1.0000
+2026-06-15          3    0.0893    1    0    2  0.3333
+2026-06-14          2   -0.2172    0    2    0 -1.0000
+2026-06-12          1   -0.3500    0    1    0 -1.0000
+2026-06-11          1   -0.0978    0    0    1  0.0000
+2026-06-10          3   -0.0665    0    1    2 -0.3333
 
 MOST POSITIVE ARTICLES:
 ------------------------------------------------------------
+  [+0.500] Best ELD Devices for Truckers: Prices & Features Compared 2026 - tech.co
+          2026-06-17 07:00 | tech.co
   [+0.425] $Gorilla Technology (GRRR.US)$ Beautiful... - Moomoo
           2026-07-01 16:24 | Moomoo
-  [+0.333] Wall Street Analysts Are Bullish on Top Industrial Goods Picks - The Globe and M
-          2026-06-30 13:22 | The Globe and Mail
-  [+0.333] Analysts Are Bullish on These Industrial Goods Stocks: Safe Pro Group, Inc. (SPA
-          2026-06-26 07:00 | The Globe and Mail
-  [+0.280] Based on the current median of this year's guidance at $180 million, what is the
-          2026-06-28 07:00 | Moomoo
-  [+0.267] Today’s free chart updates: $ADUR | $INTU | $ZVRA | $QQQ - KuCoin
-          2026-07-04 01:09 | KuCoin
+  [+0.333] GLW vs. BAND: Which AI Connectivity Stock is the Better Buy Now? - TradingView
+          2026-07-08 13:59 | TradingView
+  [+0.333] Wall Street Analysts Are Bullish on Top Technology Picks - The Globe and Mail
+          2026-06-19 07:00 | The Globe and Mail
+  [+0.250] A $2.5 Billion Reason to Buy Gorilla Technology Stock Here
+          2026-06-28 17:30 | Yahoo Finance
 
 MOST NEGATIVE ARTICLES:
 ------------------------------------------------------------
-  [-0.700] GRRR Stock Slides Premarket Despite A $2B AI Deal With Supermicro — Here's Why
-          2026-06-03 08:07 | Stocktwits
   [-0.467] Analysts Are Bullish on These Technology Stocks: Gorilla Technology Group Inc. (
           2026-07-01 13:54 | The Globe and Mail
   [-0.467] Gorilla Technology Group (GRRR) Is Up 16.3% After Hiking Q2 2026 AI Revenue Guid
           2026-07-01 12:14 | Yahoo Finance
-  [-0.467] Gorilla Technology Group (GRRR) Projects Q2 2026 Revenue of At L - GuruFocus
-          2026-06-29 07:00 | GuruFocus
   [-0.400] Gorilla Technology Group (GRRR) Is Up 16.3% After Raising Q2 Revenue Outlook to 
           2026-07-01 16:56 | simplywall.st
+  [-0.350] Liquidity Mapping Around (GRRR) Price Events - Stock Traders Daily
+          2026-07-02 16:08 | Stock Traders Daily
+  [-0.350] $GRRR stock is up 10% today. Here's what we see in our data. - Quiver Quantitati
+          2026-06-23 07:00 | Quiver Quantitative
 
 ============================================================
 Sources: yfinance, Yahoo Finance RSS, Google News RSS
